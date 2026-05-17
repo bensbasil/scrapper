@@ -22,3 +22,9 @@
 2026-05-17 14:03:50,486 - WARNING - [EmailExtractor] - Failed to fetch https://smileconceptsdentalcare.com/about: 404 Client Error: Not Found for url: https://smileconceptsdentalcare.com/about
 2026-05-17 14:03:50,701 - WARNING - [EmailExtractor] - Failed to fetch https://smileconceptsdentalcare.com/about-us: 404 Client Error: Not Found for url: https://smileconceptsdentalcare.com/about-us
 2026-05-17 14:03:50,703 - INFO - [EmailExtractor] - [DR AKHIL'S SMILE CONCEPTS DENTAL CARE & IMPLANT CENTRE] Extraction complete. Total unique emails: 0
+2026-05-17 14:25:17,672 - INFO - [EmailExtractor] - [DR AKHIL'S SMILE CONCEPTS DENTAL CARE & IMPLANT CENTRE] /: found 0 email(s)
+2026-05-17 14:25:17,860 - WARNING - [EmailExtractor] - Failed to fetch https://smileconceptsdentalcare.com/contact: 404 Client Error: Not Found for url: https://smileconceptsdentalcare.com/contact
+2026-05-17 14:25:18,048 - WARNING - [EmailExtractor] - Failed to fetch https://smileconceptsdentalcare.com/contact-us: 404 Client Error: Not Found for url: https://smileconceptsdentalcare.com/contact-us
+2026-05-17 14:25:18,209 - WARNING - [EmailExtractor] - Failed to fetch https://smileconceptsdentalcare.com/about: 404 Client Error: Not Found for url: https://smileconceptsdentalcare.com/about
+2026-05-17 14:25:18,382 - WARNING - [EmailExtractor] - Failed to fetch https://smileconceptsdentalcare.com/about-us: 404 Client Error: Not Found for url: https://smileconceptsdentalcare.com/about-us
+2026-05-17 14:25:18,383 - INFO - [EmailExtractor] - [DR AKHIL'S SMILE CONCEPTS DENTAL CARE & IMPLANT CENTRE] Extraction complete. Total unique emails: 0

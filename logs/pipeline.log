@@ -2822,3 +2822,21 @@
 2026-05-17 14:03:50,761 - INFO - [MVP_Pipeline] - - Dr.Nathanis Diagnostic Clinic (90.00/100 opportunity)
 2026-05-17 14:03:50,761 - INFO - [MVP_Pipeline] - - Dr.Nathanis Diagnostic Clinic (90.00/100 opportunity)
 2026-05-17 14:03:50,761 - INFO - [MVP_Pipeline] - - Aryaas Park Veg Restaurant (90.00/100 opportunity)
+2026-05-17 14:24:17,021 - INFO - [MVP_Pipeline] - Starting pipeline. Location: 'Trivandrum'. Categories: 1. Limit per category: 1
+2026-05-17 14:24:17,051 - INFO - [MVP_Pipeline] - Initializing Pipeline Modules...
+2026-05-17 14:24:17,416 - INFO - [MVP_Pipeline] - Verifying database schema...
+2026-05-17 14:24:17,673 - INFO - [MVP_Pipeline] - Executing search for: 'Dentist in Trivandrum'
+2026-05-17 14:24:17,673 - INFO - [MVP_Pipeline] - ========== PIPELINE STARTED: 'Dentist in Trivandrum' ==========
+2026-05-17 14:24:17,673 - INFO - [MVP_Pipeline] - Phase 1: Scraping Google Maps...
+2026-05-17 14:25:16,398 - INFO - [MVP_Pipeline] - Scraped 1 businesses. Moving to processing phase.
+2026-05-17 14:25:16,399 - INFO - [MVP_Pipeline] - --- Processing 1/1: DR AKHIL'S SMILE CONCEPTS DENTAL CARE & IMPLANT CENTRE ---
+2026-05-17 14:25:16,530 - INFO - [MVP_Pipeline] - [DR AKHIL'S SMILE CONCEPTS DENTAL CARE & IMPLANT CENTRE] Stored. DB ID: 739. Commencing analysis...
+2026-05-17 14:25:17,271 - INFO - [MVP_Pipeline] - [DR AKHIL'S SMILE CONCEPTS DENTAL CARE & IMPLANT CENTRE] Scanning website tech stack for https://smileconceptsdentalcare.com/...
+2026-05-17 14:25:17,509 - INFO - [MVP_Pipeline] - [DR AKHIL'S SMILE CONCEPTS DENTAL CARE & IMPLANT CENTRE] Crawling website for email addresses on https://smileconceptsdentalcare.com/...
+2026-05-17 14:25:18,413 - INFO - [MVP_Pipeline] - [DR AKHIL'S SMILE CONCEPTS DENTAL CARE & IMPLANT CENTRE] Pipeline completed successfully. Opportunity Score: 30.5
+2026-05-17 14:25:18,413 - INFO - [MVP_Pipeline] - ========== PIPELINE FINISHED ==========
+2026-05-17 14:25:18,413 - INFO - [MVP_Pipeline] - Successfully processed 1/1 businesses end-to-end.
+2026-05-17 14:25:18,443 - INFO - [MVP_Pipeline] - Identified 3 high-priority leads:
+2026-05-17 14:25:18,444 - INFO - [MVP_Pipeline] - - Dr.Nathanis Diagnostic Clinic (90.00/100 opportunity)
+2026-05-17 14:25:18,444 - INFO - [MVP_Pipeline] - - Dr.Nathanis Diagnostic Clinic (90.00/100 opportunity)
+2026-05-17 14:25:18,444 - INFO - [MVP_Pipeline] - - Aryaas Park Veg Restaurant (90.00/100 opportunity)
