@@ -1,0 +1,29 @@
+[
+    {
+        "business_name": "Technopark Trivandrum",
+        "category": "Technology park",
+        "website": null,
+        "google_rating": 4.5,
+        "review_count": null,
+        "phone": "0471 270 0222",
+        "address": "Park Centre, Technopark Campus, Thiruvananthapuram, Kerala 695581"
+    },
+    {
+        "business_name": "Scipy Technologies Pvt Ltd",
+        "category": "Software company",
+        "website": "/url?q=https://www.scipytechnologies.com/&opi=79508299&sa=U&ved=0ahUKEwjgyJiy_LyUAxXra2wGHWLnAeMQ61gIFygS&usg=AOvVaw0sPTACIoeXzyTJQLM2SGbD",
+        "google_rating": 4.9,
+        "review_count": null,
+        "phone": "073562 38071",
+        "address": "First Floor, Crown Plaza, Kesavadasapuram, 47, National Highway, near St. Mary's School, Pattom, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "Vinvish Technologies Pvt. Ltd.",
+        "category": "Electronics Company",
+        "website": "/url?q=https://vinvish.com/&opi=79508299&sa=U&ved=0ahUKEwjUgKuz_LyUAxU6RWcHHdS4BnUQ61gIFygS&usg=AOvVaw3Ah3DznMBnxLmM6AMJOTIU",
+        "google_rating": 4.4,
+        "review_count": null,
+        "phone": "0471 406 1938",
+        "address": "C-16, Thejaswini, Technopark Rd, Technopark Campus, Thiruvananthapuram, Kerala 695581"
+    }
+]

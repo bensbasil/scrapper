@@ -1,0 +1,29 @@
+[
+    {
+        "business_name": "Aryaas Park Veg Restaurant",
+        "category": "South Indian restaurant",
+        "website": null,
+        "google_rating": 4.0,
+        "review_count": null,
+        "phone": "090728 63449",
+        "address": "FXQ2+634, Theatre Station Road, near Apollo Dimora & Sreekumar, Overbridge, Thampanoor, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "Restaurant Chef Pillai Trivandrum",
+        "category": "Indian restaurant",
+        "website": "/url?q=http://chefpillai.com/&opi=79508299&sa=U&ved=0ahUKEwi6jriB3byUAxWuUGcHHUaaL70Q61gIFygS&usg=AOvVaw2DCHMyGvQQXFZsB4MW_wVz",
+        "google_rating": 4.5,
+        "review_count": null,
+        "phone": "090729 39090",
+        "address": "Panachamoottil square, near Bypass Road, Enchakkal, Vallakkadavu, Thiruvananthapuram, Kerala 695008"
+    },
+    {
+        "business_name": "Cafe Jade - All Day Dining (24X7)",
+        "category": "Coffee shop",
+        "website": "/url?q=http://www.hycinthhotels.com/&opi=79508299&sa=U&ved=0ahUKEwjUhtuI3byUAxU8T2wGHQdpOk0Q61gIHSgS&usg=AOvVaw0tZnf9YeiMcMs2oSW3QKcd",
+        "google_rating": 4.6,
+        "review_count": null,
+        "phone": "0471 255 2999",
+        "address": "Manorama Office, Hycinth Hotels, Manorama Rd, near Malayala Manorama, Thampanoor, Thiruvananthapuram, Kerala 695001"
+    }
+]

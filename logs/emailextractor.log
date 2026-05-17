@@ -1,0 +1,6 @@
+2026-05-17 13:59:14,498 - INFO - [EmailExtractor] - [Example Corp] /: found 0 email(s)
+2026-05-17 13:59:14,676 - WARNING - [EmailExtractor] - Failed to fetch https://example.com/contact: 404 Client Error: Not Found for url: https://example.com/contact
+2026-05-17 13:59:14,878 - WARNING - [EmailExtractor] - Failed to fetch https://example.com/contact-us: 404 Client Error: Not Found for url: https://example.com/contact-us
+2026-05-17 13:59:15,038 - WARNING - [EmailExtractor] - Failed to fetch https://example.com/about: 404 Client Error: Not Found for url: https://example.com/about
+2026-05-17 13:59:15,265 - WARNING - [EmailExtractor] - Failed to fetch https://example.com/about-us: 404 Client Error: Not Found for url: https://example.com/about-us
+2026-05-17 13:59:15,266 - INFO - [EmailExtractor] - [Example Corp] Extraction complete. Total unique emails: 0

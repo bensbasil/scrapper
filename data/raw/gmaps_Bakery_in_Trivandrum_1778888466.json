@@ -1,0 +1,29 @@
+[
+    {
+        "business_name": "Supreme Bakers",
+        "category": "Bakery and Cake Shop",
+        "website": "/url?q=http://www.supremebakers.in/&opi=79508299&sa=U&ved=0ahUKEwimtbaFvLyUAxXE4jgGHUtENKsQ61gIHSgS&usg=AOvVaw20qHP1r2wPAyou232CkV-W",
+        "google_rating": 4.3,
+        "review_count": null,
+        "phone": "0471 272 3322",
+        "address": "Ground Floor Musaliar Buildings, Pattom - Kowdiar Rd, Kuravankonam, Thiruvananthapuram, Kerala 695003"
+    },
+    {
+        "business_name": "Ambrosia ( a classic bakehouse)",
+        "category": "Bakery and Cake Shop",
+        "website": "/url?q=https://theambrosia.com/&opi=79508299&sa=U&ved=0ahUKEwj38L-GvLyUAxVMzjgGHZ3kM6UQ61gIHCgS&usg=AOvVaw1z2g98MLWdOKqJ4payhMR0",
+        "google_rating": 4.0,
+        "review_count": null,
+        "phone": "0471 233 2211",
+        "address": "Krishna Building, Junction Road, Oottukuzhy, Thycaud, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "The Muffin House",
+        "category": "Bakery and Cake Shop",
+        "website": "/url?q=http://www.themuffinhouse.in/&opi=79508299&sa=U&ved=0ahUKEwjD38-HvLyUAxWR1DgGHc_FNzQQ61gIHSgS&usg=AOvVaw35qmAaw0V879I5i30o4GRT",
+        "google_rating": 4.3,
+        "review_count": null,
+        "phone": "095448 89000",
+        "address": "Muffin Towers, Kovalam Rd, near Ambalathara UP School, Ambalathara, Thiruvananthapuram, Kerala 695026"
+    }
+]

@@ -1,0 +1,902 @@
+[
+    {
+        "business_name": "Ramachandran Textiles",
+        "category": "Clothing store",
+        "website": "/url?q=http://www.ramachandrantextiles.com/pazhavangadi/&opi=79508299&sa=U&ved=0ahUKEwjF6ay7_LyUAxUubmwGHSnFJxMQ61gIFSgQ&usg=AOvVaw1eL5zGi_81k_G-B0KkoBEu",
+        "google_rating": 4.0,
+        "review_count": null,
+        "phone": "088930 99999",
+        "address": "Pazhavangadi St, East Fort, Padma Nagar, Pazhavangadi, Thiruvananthapuram, Kerala 695023"
+    },
+    {
+        "business_name": "Fashion Factory",
+        "category": "Clothing store",
+        "website": "/url?q=https://location.reliancefashionfactorystores.com/fashion-factory-ff-trivendrum-heena-clothing-stores-kowdiar-thiruvananthapuram-286945/Home%3Futm_source%3Dlocator%26utm_medium%3Dgoogleplaces&opi=79508299&sa=U&ved=0ahUKEwjqz7-8_LyUAxVBcWwGHV6mEmAQ61gIFygS&usg=AOvVaw3hv4fcHuoBUV1jiMgmCZf0",
+        "google_rating": 4.0,
+        "review_count": null,
+        "phone": "1800 891 0001",
+        "address": "Heera Highlife Mall, Keston Rd, Kanaka Nagar, Kowdiar, Thiruvananthapuram, Kerala 695003"
+    },
+    {
+        "business_name": "Variety Mall",
+        "category": "Jewelry store",
+        "website": "/url?q=http://www.varietymall.in/&opi=79508299&sa=U&ved=0ahUKEwiWpNm9_LyUAxWuUWwGHacACjcQ61gIFSgQ&usg=AOvVaw2l-EOWJPeYSRs2mu_bVkA7",
+        "google_rating": 4.1,
+        "review_count": null,
+        "phone": "0471 247 6896",
+        "address": "General Hospital Rd, Palayam, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "Reliance SMART Bazaar",
+        "category": "Hypermarket",
+        "website": "/url?q=https://stores.reliancesmartbazaar.com/reliance-smart-bazaar-hypermarket-pazhavangadi-thiruvananthapuram-303348/Home%3Futm_source%3Dlocator%26utm_medium%3Dgoogleplaces&opi=79508299&sa=U&ved=0ahUKEwjC_-2-_LyUAxWbaHADHaTQA9oQ61gIFygS&usg=AOvVaw3nCSLB7l8yZ6fue8PPbyxj",
+        "google_rating": 3.5,
+        "review_count": null,
+        "phone": "1800 891 0001",
+        "address": "Ravi Arcade, Malabar Castle, Mahatma Gandhi Rd, opposite Malabar Gold, Pazhavangadi, Chalai Bazaar, Chalai, Thiruvananthapuram, Kerala 695036"
+    },
+    {
+        "business_name": "Style PLUS",
+        "category": "Department store",
+        "website": "/url?q=https://www.styleplus.co.in/index.php&opi=79508299&sa=U&ved=0ahUKEwjq8IfA_LyUAxWncmwGHbhMBZUQ61gIFygS&usg=AOvVaw1G8_t2wnl5nHqCp4QCGx6p",
+        "google_rating": 4.2,
+        "review_count": null,
+        "phone": "094951 10400",
+        "address": "Keston road, Near, Devaswom Board Jct, Kowdiar, Thiruvananthapuram, Kerala 695003"
+    },
+    {
+        "business_name": "LuLu Fashion Store",
+        "category": "Clothing store",
+        "website": "/url?q=https://thiruvananthapuram.lulumall.in/shop/lulu-fashion-store/&opi=79508299&sa=U&ved=0ahUKEwiI6ZjB_LyUAxW3SGwGHRcMNDgQ61gIFSgQ&usg=AOvVaw1HLUbqsvwTX-XcKc7k9M3R",
+        "google_rating": 3.4,
+        "review_count": null,
+        "phone": "0471 277 7788",
+        "address": "First Floor, LuLu Mall, Kochuveli, Thiruvananthapuram, Kerala 695029"
+    },
+    {
+        "business_name": "RETAIL.ROAD EXPORT SURPLUS",
+        "category": "Outlet store",
+        "website": null,
+        "google_rating": 4.2,
+        "review_count": null,
+        "phone": "099950 81048",
+        "address": "Andlee tower, opposite Asiatic Business Center, near axis bank, Kulathoor, Kazhakkoottam, Thiruvananthapuram, Kerala 695581"
+    },
+    {
+        "business_name": "LuLu Hypermarket Thiruvananthapuram",
+        "category": "Hypermarket",
+        "website": "/url?q=https://thiruvananthapuram.lulumall.in/shop/lulu-hypermarket/&opi=79508299&sa=U&ved=0ahUKEwjYzIzq_LyUAxV94DgGHSqQCAAQ61gIFygS&usg=AOvVaw2zfXUeKCRXOwYMaSm0eN31",
+        "google_rating": 4.5,
+        "review_count": null,
+        "phone": "0471 277 7777",
+        "address": "Unit No. l 02, LuLu Mall, Anayara, Thiruvananthapuram, Kerala 695029"
+    },
+    {
+        "business_name": "We Store Trivandrum",
+        "category": "Cell phone store",
+        "website": null,
+        "google_rating": 4.8,
+        "review_count": null,
+        "phone": null,
+        "address": "TC 95/469 (2, Sinduhu Tower, Poonthi Rd, PO, Kumarapuram, Thiruvananthapuram, Kerala 695029"
+    },
+    {
+        "business_name": "City Stores",
+        "category": "Supermarket",
+        "website": null,
+        "google_rating": 4.3,
+        "review_count": null,
+        "phone": null,
+        "address": "Panjapura Junction, Nandavanam, Palayam, Thiruvananthapuram, Kerala 695033"
+    },
+    {
+        "business_name": "Bean Town, The Pop-Up Store, Trivandrum",
+        "category": "Outlet mall",
+        "website": "/url?q=https://www.beantown.in/&opi=79508299&sa=U&ved=0ahUKEwiw8pC2_LyUAxVma2wGHZPPFRMQ61gIugQoEQ&usg=AOvVaw3YLNGJeUDbstHFiOA_mbY5",
+        "google_rating": 5.0,
+        "review_count": null,
+        "phone": "062383 57355",
+        "address": "Junction, next to Ramraj, Pattom, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "Mall of Travancore",
+        "category": "Shopping mall",
+        "website": "/url?q=http://www.malloftravancore.com/&opi=79508299&sa=U&ved=0ahUKEwjPj9uD_byUAxU_-jgGHRS_A-UQ61gIFygS&usg=AOvVaw2vdZW6cnSsrv46OiZE1sT4",
+        "google_rating": 4.3,
+        "review_count": null,
+        "phone": "0471 424 9916",
+        "address": "Int'l Airport Rd, near Ananthapuri Hospital, Eanchakkal, Thiruvananthapuram, Kerala 695024"
+    },
+    {
+        "business_name": "Babu Store Wholesale and Retail",
+        "category": "Grocery store",
+        "website": null,
+        "google_rating": 3.8,
+        "review_count": null,
+        "phone": "0471 245 7922",
+        "address": "28, Ganga Nagar, Attakulangara, Thiruvananthapuram, Kerala 695009"
+    },
+    {
+        "business_name": "Max",
+        "category": "Shopping mall",
+        "website": "/url?q=https://stores.maxfashion.in/max-pulimoodu-shopping-centre-pulimoodu-thiruvananthapuram-281900/Home%3Futm_source%3Dlocator%26utm_medium%3Dgoogleplaces&opi=79508299&sa=U&ved=0ahUKEwjy-Oiv_byUAxWmn2MGHf6NOaEQ61gIFygS&usg=AOvVaw04QvU0PG1kV5cNnhuP0IlD",
+        "google_rating": 4.1,
+        "review_count": null,
+        "phone": "086063 85656",
+        "address": "1st Floor, Qrs Square, 25, Mahatma Gandhi Rd, Puthenchanthai, Santhi Nagar, Pulimoodu, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "Family Shopping Centre",
+        "category": "Grocery store",
+        "website": null,
+        "google_rating": 3.8,
+        "review_count": null,
+        "phone": "098957 58262",
+        "address": "G.P.O, Commercial Complex, Ambujavilasam Rd, near Bana Sahib, Kunnumpuram, Vanchiyoor, Thiruvananthapuram, Kerala 695035"
+    },
+    {
+        "business_name": "EasyBuy",
+        "category": "Clothing store",
+        "website": "/url?q=https://www.easybuyindia.com/%3Futm_source%3Dstore_locator%26utm_medium%3Dgoogleplaces&opi=79508299&sa=U&ved=0ahUKEwii2J7V_byUAxXxcGwGHaRYNPgQ61gIFygS&usg=AOvVaw18yoIQZe7Da6UYBZoodOGk",
+        "google_rating": 4.9,
+        "review_count": null,
+        "phone": "1800 202 4454",
+        "address": "Rd Malabar Commercial Plaza, 2nd Flr, Mall of Travancore, near International Airport Road, Chacka, Thiruvananthapuram, Kerala 695024"
+    },
+    {
+        "business_name": "Chellam Umbrella Mart",
+        "category": "Shopping mall",
+        "website": null,
+        "google_rating": 4.1,
+        "review_count": null,
+        "phone": "098471 01309",
+        "address": "Sree Renga Towers, Mahatma Gandhi Rd, Pazhavangadi, Thiruvananthapuram, Kerala 695036"
+    },
+    {
+        "business_name": "Jayalakshmi Silks",
+        "category": "Clothing store",
+        "website": "/url?q=http://www.jayalakshmisilks.com/&opi=79508299&sa=U&ved=0ahUKEwjc5-Tp_byUAxU8SWwGHToRAqkQ61gIESgM&usg=AOvVaw3D6LmwPq9wPQjz2f-Pr7kC",
+        "google_rating": 4.0,
+        "review_count": null,
+        "phone": null,
+        "address": "Mahatma Gandhi Rd, Overbridge, Vanchiyoor, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "Derik Mart Apparels (Thiruvananthapuram)",
+        "category": "Clothing store",
+        "website": "/url?q=http://www.derikmart.com/&opi=79508299&sa=U&ved=0ahUKEwiC77P2_byUAxUIb2wGHUc0MO0Q61gIFygS&usg=AOvVaw34gyNYF6yAkeSe4U6tTu0v",
+        "google_rating": 3.4,
+        "review_count": null,
+        "phone": "0471 230 5730",
+        "address": "NH 66, NH47, PMG Rd, near Lourde Church, Palayam, Thiruvananthapuram, Kerala 695033"
+    },
+    {
+        "business_name": "Prisma Store",
+        "category": "Clothing store",
+        "website": "/url?q=https://myprisma.in/&opi=79508299&sa=U&ved=0ahUKEwiXvcX3_byUAxW-WGwGHeBqIOYQ61gIFygS&usg=AOvVaw1eB_kLpH7ZdyT16FY6XWUk",
+        "google_rating": 4.5,
+        "review_count": null,
+        "phone": "090875 35419",
+        "address": "Tc 2/3578, Lalitham, Opp Petrol Pump, Kesavadasapuram, near Bata Showrom, Post, Pattom, Kerala 695004"
+    },
+    {
+        "business_name": "Basics Life. Trivandrum",
+        "category": "Men's clothing store",
+        "website": null,
+        "google_rating": 4.9,
+        "review_count": null,
+        "phone": "0471 401 8484",
+        "address": "Kesari Memorial Building, JN, Mahatma Gandhi Rd, Santhi Nagar, Pulimoodu, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "Oxygen Digital Shop - Pattom",
+        "category": "Electronics store",
+        "website": "/url?q=https://oxygendigitalshop.com/location/mobile-laptop-shop-pattom.html%3Futm_source%3DGMB%26utm_medium%3Dorganic&opi=79508299&sa=U&ved=0ahUKEwio8q-2_ryUAxX6UGwGHRm2FpwQ61gIFygS&usg=AOvVaw32Nf3uyTGXhqq21VWxlBle",
+        "google_rating": 4.5,
+        "review_count": null,
+        "phone": "090726 07503",
+        "address": "2/2422-3, Pattom Palace Rd Penang Tower, opposite Josco Jwellers, Pattom, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "PETER ENGLAND SHOWROOM- PULIMOODU, THIRUVANANTHAPURAM",
+        "category": "Clothing store",
+        "website": "/url?q=https://www.peterengland.com/%3Futm_source%3Dgoogle%26utm_medium%3Dgmb%26utm_campaign%3Dpeter-england-pulimoodu-mg-road-trivandrum%26utm_content%3Dwebsite&opi=79508299&sa=U&ved=0ahUKEwjVo_24_ryUAxXNXGwGHZBpJ4sQ61gIFygS&usg=AOvVaw0jjZ0JPYzR0plqYWy8ekaN",
+        "google_rating": 4.2,
+        "review_count": null,
+        "phone": "0471 405 0039",
+        "address": "TC 26/192, Ground and 1st Floor, Mahatma Gandhi Rd, opp. GPO, Statue, Pulimoodu, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "Allen Solly Store",
+        "category": "Clothing store",
+        "website": "/url?q=https://www.allensolly.com/%3Futm_source%3Dgoogle%26utm_medium%3Dgmb%26utm_campaign%3Dallen-solly-mg-road-pulimoodu-trivandrum%26utm_content%3Dwebsite&opi=79508299&sa=U&ved=0ahUKEwjS7Mns_byUAxX1TWcHHWPjDEUQ61gIFygS&usg=AOvVaw30NxtOCxF9GTu2xAYW_ErA",
+        "google_rating": 4.3,
+        "review_count": null,
+        "phone": "0471 401 5656",
+        "address": "No 25, 2451, Mahatma Gandhi Rd, Puthenchanthai, Pulimoodu, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "Decathlon Sports - Trivandrum",
+        "category": "Sporting goods store",
+        "website": "/url?q=https://www.decathlon.in/store/trivandrum&opi=79508299&sa=U&ved=0ahUKEwjUo5bq_ryUAxV3TmwGHbnWFh8Q61gIFSgQ&usg=AOvVaw2QFhnfjUmOd52T8TFuGKVA",
+        "google_rating": 4.6,
+        "review_count": null,
+        "phone": "095132 10553",
+        "address": "P T, Ulloor, Chacko Nagar, Kochulloor, Ulloor, Thiruvananthapuram, Kerala 695011"
+    },
+    {
+        "business_name": "TRENDS",
+        "category": "Clothing store",
+        "website": "/url?q=https://trends.shop/page/trends-kowdiar-trivandrum&opi=79508299&sa=U&ved=0ahUKEwjRtLXs_ryUAxXHfGwGHfH4OH4Q61gIFSgQ&usg=AOvVaw0Jc53cBGcPaOfMe0E1AYOf",
+        "google_rating": 3.9,
+        "review_count": null,
+        "phone": "062389 01620",
+        "address": "Devasom Board Junction, Kanaka Nagar, Kowdiar, Thiruvananthapuram, Kerala 695003"
+    },
+    {
+        "business_name": "Vinayaka Super Market",
+        "category": "Grocery store",
+        "website": "/url?q=https://instagram.com/vinayakasupermarket_tvm%3Figshid%3DNGVhN2U2NjQ0Yg%3D%3D&opi=79508299&sa=U&ved=0ahUKEwi8uq79_ryUAxWvS2wGHV8EAYoQ61gIEygO&usg=AOvVaw0elAPEiCOzQrfhqU2Pi2dh",
+        "google_rating": 4.3,
+        "review_count": null,
+        "phone": "094955 40295",
+        "address": "Kalady, Thaliyal, Thiruvananthapuram, Kerala 695002"
+    },
+    {
+        "business_name": "MKS Store",
+        "category": "Indian grocery store",
+        "website": null,
+        "google_rating": 4.5,
+        "review_count": null,
+        "phone": "094471 50526",
+        "address": "Shop No:23, Connemara Market, University of Kerala Senate House Campus, Palayam, Thiruvananthapuram, Kerala 695034"
+    },
+    {
+        "business_name": "Melel She Square",
+        "category": "Grocery store",
+        "website": null,
+        "google_rating": 3.4,
+        "review_count": null,
+        "phone": "0471 230 3141",
+        "address": "She Square Building, Oppo to Anadiyil Hospital, Thekkumood Junction, Pattom P.O, Thiruvananthapuram, Kerala 695035"
+    },
+    {
+        "business_name": "More Supermarket",
+        "category": "Grocery store",
+        "website": "/url?q=https://more.in/&opi=79508299&sa=U&ved=0ahUKEwiU3PXV_7yUAxWOSmwGHUfoATMQ61gIFSgQ&usg=AOvVaw2tCJaPGbJ2CokIyXLoL1Yi",
+        "google_rating": 3.9,
+        "review_count": null,
+        "phone": "081081 38000",
+        "address": "General Hospital TC 27/1491, Sabari Heights, Convent Road, General Hospital Jn, Thiruvananthapuram, Kerala 695035"
+    },
+    {
+        "business_name": "Balaji Winners Store",
+        "category": "Art supply store",
+        "website": null,
+        "google_rating": 4.3,
+        "review_count": null,
+        "phone": "0471 232 8673",
+        "address": "Junction, opposite GPO Lane, Statue, Pulimoodu, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "2PAC Kesavadasapuram Junction Trivandrum",
+        "category": "Men's clothing store",
+        "website": "/url?q=https://www.instagram.com/fashionstore_kesavadasapuram%3Figsh%3DM2htZnRteGc3bDM1%26utm_source%3Dqr&opi=79508299&sa=U&ved=0ahUKEwjbue_a_7yUAxV9S2wGHU_7N44Q61gIFygS&usg=AOvVaw1hzLP-m0mxIHnVAucke9Gz",
+        "google_rating": 4.3,
+        "review_count": null,
+        "phone": "096330 44561",
+        "address": "Kesavadasapuram Jct, near Roundabout, NSP Nagar, Kesavadasapuram, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "Amart Stores & Supermarket",
+        "category": "Grocery store",
+        "website": null,
+        "google_rating": 4.2,
+        "review_count": null,
+        "phone": null,
+        "address": "P.O, Near Subramanian Swamy temple, Poonthi Rd, Kumarapuram, Thiruvananthapuram, Kerala 695011"
+    },
+    {
+        "business_name": "Van Heusen Men & Women Clothing Store, M.G Road - Trivandrum",
+        "category": "Clothing store",
+        "website": "/url?q=http://vanheusenindia.com/&opi=79508299&sa=U&ved=0ahUKEwj2wpWGgL2UAxVKZmwGHev8KiwQ61gIFygS&usg=AOvVaw0IWsFMhJJHLYoQc9cXa7rz",
+        "google_rating": 4.3,
+        "review_count": null,
+        "phone": "0471 233 5576",
+        "address": "no: 25/2425, Van Heusen Store, Pulimood Jn, Van Heusen Store no: 25/2425 Van Heusen Store no: 25/2425, Ground Floor Van Heusen Store no: 25/2425, Swastik Centre, no: 25/2425, Mahatma Gandhi Rd, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "PUMA Store",
+        "category": "Sportswear store",
+        "website": "/url?q=https://store-in.puma.com/puma-store-trivandrum-2-kerala-sports-apparel-pulimoodu-jn-thiruvananthapuram-542182/Home&opi=79508299&sa=U&ved=0ahUKEwi959WPgL2UAxWgV2wGHemnMnwQ61gIFygS&usg=AOvVaw1EH9wPH91DnSOczLBjgV60",
+        "google_rating": 4.8,
+        "review_count": null,
+        "phone": "079 4272 5418",
+        "address": "No Tc 25/198 M G Road, Jn, near General Post Office, Pulimoodu, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "Avenue Centre Shoppe Multi Branded Shopping Complex",
+        "category": "Shopping mall",
+        "website": "/url?q=http://www.facebook.com/avenuecentreshoppe&opi=79508299&sa=U&ved=0ahUKEwi2tJiSgL2UAxW7SmwGHQSGDVYQ61gIFSgQ&usg=AOvVaw0H2-c43BSJssnO7-58nlMH",
+        "google_rating": 4.0,
+        "review_count": null,
+        "phone": "094470 55396",
+        "address": "SH 1, Mannanthala Junction, Near, Mannanthala, Thiruvananthapuram, Kerala 695015"
+    },
+    {
+        "business_name": "RMC MULTISHOPPE SUPERMARKET",
+        "category": "Grocery store",
+        "website": null,
+        "google_rating": 4.3,
+        "review_count": null,
+        "phone": "080860 32333",
+        "address": "Sreevalssam Tower Near Kalabhavan Theatre, Vazhuthacaud, Thiruvananthapuram, Kerala 695014"
+    },
+    {
+        "business_name": "Chithra Store",
+        "category": "Indian grocery store",
+        "website": "/url?q=http://www.swiggy.com/genie/chithrastore&opi=79508299&sa=U&ved=0ahUKEwjNhb7K_7yUAxV7aHADHdSeMpgQ61gIFygS&usg=AOvVaw3siBXLhwNVFozU13xp79io",
+        "google_rating": 4.0,
+        "review_count": null,
+        "phone": "088484 89780",
+        "address": "Tc 26, 502(1, Vanross Junction, Statue, Palayam, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "Sahakarana Super Bazaar",
+        "category": "Grocery store",
+        "website": null,
+        "google_rating": 4.6,
+        "review_count": null,
+        "phone": null,
+        "address": "GX43+CC5, Nandavanam, Palayam, Thiruvananthapuram, Kerala 695033"
+    },
+    {
+        "business_name": "Godrej Interio - Furniture Store in Palayam, Thiruvananthapuram",
+        "category": "Furniture store",
+        "website": "/url?q=https://stores.godrejinterio.com/godrej-interio-furniture-store-in-palayam-thiruvananthapuram-trivandrum-coco-home-furniture-shop-palayam-thiruvananthapuram-282500/Home%3Futm_source%3Dlocator%26utm_medium%3Dgoogleplaces&opi=79508299&sa=U&ved=0ahUKEwjaheu8gL2UAxViUGwGHbIEMvYQ61gIFygS&usg=AOvVaw3U_0MGxc4DbXHn4SCU7dLc",
+        "google_rating": 4.4,
+        "review_count": null,
+        "phone": "096195 71351",
+        "address": "St Marys Malankara Building Complex, opposite to Kerala University Library, University of Kerala Senate House Campus, Palayam, Thiruvananthapuram, Kerala 695034"
+    },
+    {
+        "business_name": "Wildcraft",
+        "category": "Bag shop",
+        "website": "/url?q=https://stores.wildcraft.com/wildcraft-kesavadasapuram-outdoor-clothing-equipment-store-kesavadasapuram-thiruvananthapuram/Home&opi=79508299&sa=U&ved=0ahUKEwiR0pu_gL2UAxXdTmwGHcRMNOAQ61gIFygS&usg=AOvVaw0M32k8wPoGX9PjP7j1ASvb",
+        "google_rating": 4.6,
+        "review_count": null,
+        "phone": "0471 400 0177",
+        "address": "4518/1, Ocean Outfitters, No. 15, MG Road, near Boots, NSP Nagar, Kesavadasapuram, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "Ananth Store",
+        "category": "Stationery store",
+        "website": "/url?q=https://www.instagram.com/ananthstore/&opi=79508299&sa=U&ved=0ahUKEwjZnNvHgL2UAxVcUGcHHTGkG9EQ61gIESgM&usg=AOvVaw2IA0O_025XZKPa3EM_rD5o",
+        "google_rating": 4.9,
+        "review_count": null,
+        "phone": null,
+        "address": "Pattom Kumarapuram Rd, Pottakkuzhi, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "SONU Shopping Centre",
+        "category": "Supermarket",
+        "website": null,
+        "google_rating": 4.1,
+        "review_count": null,
+        "phone": "0471 243 0934",
+        "address": "Kowdiar, Thiruvananthapuram, Kerala 695003"
+    },
+    {
+        "business_name": "Buy 'N' Save margin free Bazaar, trivandrum",
+        "category": "Grocery store",
+        "website": null,
+        "google_rating": 4.2,
+        "review_count": null,
+        "phone": "075939 31456",
+        "address": "Kazhakuttam Menamkulam Rd, Thiruvananthapuram, Menamkulam, Kerala 695582"
+    },
+    {
+        "business_name": "Ramraj Cotton - Pattom, Thiruvananthapuram",
+        "category": "Clothing store",
+        "website": "/url?q=https://ramrajcotton.in/%3Futm_source%3Dgmb%26utm_medium%3Dorganic%26utm_campaign%3Dsulekhapromanage_ramraj_cotton&opi=79508299&sa=U&ved=0ahUKEwiplqWUgb2UAxVC2DgGHZ-_Mr4Q61gIFygS&usg=AOvVaw354Ry2s6P1imdixoKdH7q_",
+        "google_rating": 4.2,
+        "review_count": null,
+        "phone": "081389 99147",
+        "address": "No. 15/3475&15/3476, Pattom - Kowdiar Rd, near Hindustan Petroleum, Pattom, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "Le Panache Trivandrum",
+        "category": "Women's clothing store",
+        "website": null,
+        "google_rating": 4.8,
+        "review_count": null,
+        "phone": "094870 57633",
+        "address": "Junction, opp. Rahath Hotel, Manacaud, Thiruvananthapuram, Kerala 695009"
+    },
+    {
+        "business_name": "kappa",
+        "category": "Clothing store",
+        "website": null,
+        "google_rating": 4.3,
+        "review_count": null,
+        "phone": "062386 16662",
+        "address": "Mahatma Gandhi Rd, opposite Hotel Azad, Overbridge, Nalumukku, Pazhavangadi, Thiruvananthapuram, Kerala 695023"
+    },
+    {
+        "business_name": "Organic India Store",
+        "category": "Organic shop",
+        "website": "/url?q=https://store.organicindia.com/organic-india/thiruvananthapuram/kowdiar/organic-india-store-in-kowdiar-thiruvananthapuram--98ff5e6d-fcf4-43ca-91e6-3974ba31aa82/home&opi=79508299&sa=U&ved=0ahUKEwjQm5qzgb2UAxU8yDgGHRigIN4Q61gIFygS&usg=AOvVaw2JkWyF3xPq9Jl0gj3nYgU4",
+        "google_rating": 4.8,
+        "review_count": null,
+        "phone": "080 3776 2765",
+        "address": "Vasantham, Pattom - Kowdiar Rd, opposite Azad Bread Factory, Pandits Colony Extension, Kowdiar, Thiruvananthapuram, Kerala 695003"
+    },
+    {
+        "business_name": "S.M Stores",
+        "category": "Home goods store",
+        "website": null,
+        "google_rating": 4.3,
+        "review_count": null,
+        "phone": "092495 52111",
+        "address": "FWJX+VJX, Ruby Nagar Rd, East Fort, Chalai, Thiruvananthapuram, Kerala 695036"
+    },
+    {
+        "business_name": "Samsung Experience Store Pattom",
+        "category": "Cell phone store",
+        "website": "/url?q=https://www.samsungexclusivestores.in/samsung-experience-store-pattom-mobile-phone-shop-pattom-thiruvananthapuram-289903/Home&opi=79508299&sa=U&ved=0ahUKEwiJy7j3_ryUAxXwS3ADHdYfIE8Q61gIFygS&usg=AOvVaw3HiOOqoqpSa-Umw4sA0yqr",
+        "google_rating": 4.9,
+        "review_count": null,
+        "phone": "099954 61040",
+        "address": "TC 15, 3074, Plamoodu - Thekkamoodu Rd, opposite Meditrina Hospital, Pattom, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "Offer Bazaar",
+        "category": "Clothing store",
+        "website": null,
+        "google_rating": 4.5,
+        "review_count": null,
+        "phone": "079946 25617",
+        "address": "building, Maruthumkuzhi Offer, 02, Bazaar, near Bridge, Vattiyoorkavu, Thiruvananthapuram, Kerala 695030"
+    },
+    {
+        "business_name": "Giant Margin Free Store",
+        "category": "Grocery store",
+        "website": null,
+        "google_rating": 3.5,
+        "review_count": null,
+        "phone": null,
+        "address": "GW8R+W5C, Pattom Kumarapuram Rd, Vrindavan Gardens, Pattom, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "myG Pattom",
+        "category": "Electronics store",
+        "website": "/url?q=http://www.myg.in/&opi=79508299&sa=U&ved=0ahUKEwjh4_Sxgr2UAxWiV3ADHUQ5K6gQ61gIFygS&usg=AOvVaw2SeOUdqSzLcPErC6PwqBB7",
+        "google_rating": 4.1,
+        "review_count": null,
+        "phone": "073067 79922",
+        "address": "Soudha Manzil Building, Plamoodu - Thekkamoodu Rd, Pattom, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "GRIHA WHOLESALE AND RETAIL",
+        "category": "Supermarket",
+        "website": null,
+        "google_rating": 4.8,
+        "review_count": null,
+        "phone": "095142 42205",
+        "address": "FW8G+5VW, Valiyathura, Thiruvananthapuram, Kerala 695008"
+    },
+    {
+        "business_name": "Fashion Tab",
+        "category": "Clothing store",
+        "website": null,
+        "google_rating": 4.4,
+        "review_count": null,
+        "phone": "098953 35060",
+        "address": "FWQW+RR5, Over Bridge, Opp. SMV School, Mahatma Gandhi Rd, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "BINARY The Goodlife Store",
+        "category": "Spice store",
+        "website": null,
+        "google_rating": 4.5,
+        "review_count": null,
+        "phone": "098956 88887",
+        "address": "PKP Manor, Mahatma Gandhi Rd, Puthenchanthai, Santhi Nagar, Pulimoodu, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "Vanaura Organics Store Trivandrum",
+        "category": "Beauty supply store",
+        "website": "/url?q=https://vanauraorganics.com/&opi=79508299&sa=U&ved=0ahUKEwi_s5G9_ryUAxXScmwGHWybCaMQ61gIsAYoCQ&usg=AOvVaw1D5Seu_oDOLWNyeTC0uuXZ",
+        "google_rating": 4.9,
+        "review_count": null,
+        "phone": null,
+        "address": "NSP Nagar, Kesavadasapuram, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "Go Colors - MG Road, Trivandrum | Women's Bottom Wear Store",
+        "category": "Clothing store",
+        "website": "/url?q=https://gocolors.com/%3Futm_source%3DGoogle%26utm_medium%3DGMB&opi=79508299&sa=U&ved=0ahUKEwjb4P6qg72UAxVZTWwGHbHcNFwQ61gIFygS&usg=AOvVaw3XuiBUDX8CEhSXMVQvy9k_",
+        "google_rating": 4.6,
+        "review_count": null,
+        "phone": "073587 10444",
+        "address": "Saga Tower, 25/235, Saga tower, Pulimoondu junction Road, 81/381, Mahatma Gandhi Rd, near Santha Paint House, Pulimoodu, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "Ethnic Weaves Boutique",
+        "category": "Boutique",
+        "website": "/url?q=https://www.instagram.com/ethnic.weaves&opi=79508299&sa=U&ved=0ahUKEwit6dGtg72UAxX2UWwGHQjoLiMQ61gIFygS&usg=AOvVaw2RvIBHH4e7UKU57zSrQNpM",
+        "google_rating": 4.0,
+        "review_count": null,
+        "phone": "098460 14489",
+        "address": "Columbia Villa, near Bank of Baroda, Kesavadasapuram, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "Louis Philippe - Pattom",
+        "category": "Clothing store",
+        "website": "/url?q=https://content.abfrl.in/store%3FstoreId%3D13779%26brand%3Dlp&opi=79508299&sa=U&ved=0ahUKEwjTg_2yg72UAxV1RmwGHTCYJNMQ61gIFygS&usg=AOvVaw1NQ-oP6ztIM_y1r2YJCuFg",
+        "google_rating": 4.3,
+        "review_count": null,
+        "phone": "0471 401 0294",
+        "address": "Rohini Compound, 2/3246(2) & 2/3244, Road, opp. to LIC Lane, Pattom, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "SM STORE",
+        "category": "General store",
+        "website": null,
+        "google_rating": 4.0,
+        "review_count": null,
+        "phone": "085472 20441",
+        "address": "GWHQ+9FC, Kailash Nagar, Vivekananda Nagar, Kesavadasapuram, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "JS CRAFT STORE",
+        "category": "Craft store",
+        "website": null,
+        "google_rating": 4.5,
+        "review_count": null,
+        "phone": "093834 84294",
+        "address": "First floor, bluebell craft and fancy, Tutors Ln, Statue, Palayam, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "Pepperfry Kesavadasapuram - Multi Brand Furniture, Mattress & Home Furnishings Shop",
+        "category": "Furniture store",
+        "website": "/url?q=https://www.pepperfry.com/stores/location/furniture-store-in-kesavadasapuram.html%3Futm_source%3Dlocator%26utm_medium%3Dgoogleplaces&opi=79508299&sa=U&ved=0ahUKEwjDrL7Gg72UAxWhT2wGHftqG9MQ61gIFygS&usg=AOvVaw1ZBmD7O14gV7JlUZQsw2mJ",
+        "google_rating": 4.4,
+        "review_count": null,
+        "phone": "080 3750 0099",
+        "address": "Ground Floor, Kesavadasapuram-Ulloor Rd, opposite Paragon Hotel, Aiswarya Nagar, Kesavadasapuram, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "More Supermarket - Marappalam",
+        "category": "Grocery store",
+        "website": "/url?q=https://more.in/&opi=79508299&sa=U&ved=0ahUKEwjYm_KXg72UAxWs1jgGHTQMG5EQ61gIFygS&usg=AOvVaw10zl3GMasKZzRnwDaDM6Ar",
+        "google_rating": 3.8,
+        "review_count": null,
+        "phone": "081081 38000",
+        "address": "Ground Floor, Marappalam Rd, Pattom, Thiruvananthapuram, Kerala 695003"
+    },
+    {
+        "business_name": "Mahadev's Shop 'N' Save",
+        "category": "Supermarket",
+        "website": null,
+        "google_rating": 4.0,
+        "review_count": null,
+        "phone": "0471 246 0122",
+        "address": "FWMR+9G3, Prasanthi Nagar, Pazhavangadi, Thiruvananthapuram, Kerala 695023"
+    },
+    {
+        "business_name": "Lulu Connect",
+        "category": "Electronics store",
+        "website": "/url?q=https://thiruvananthapuram.lulumall.in/shop/lulu-connect/&opi=79508299&sa=U&ved=0ahUKEwjgyuXchL2UAxUubmwGHXDPJygQ61gIFSgQ&usg=AOvVaw3SPf1gpkfQaHG792P8Rbeq",
+        "google_rating": 3.9,
+        "review_count": null,
+        "phone": "0471 277 7777",
+        "address": "Second Floor, Lulu mall, Kochuveli, Thiruvananthapuram, Kerala 695029"
+    },
+    {
+        "business_name": "S S Stores",
+        "category": "General store",
+        "website": null,
+        "google_rating": 4.6,
+        "review_count": null,
+        "phone": "099950 51836",
+        "address": "82/5782, Kunnumpuram Rd, near ayurveda hospital, Kunnumpuram, Vanchiyoor, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "Looms & Weaves",
+        "category": "Clothing store",
+        "website": "/url?q=https://www.weaveskart.com/&opi=79508299&sa=U&ved=0ahUKEwi0ntfwhL2UAxVrVWwGHdjdNtsQ61gIEygO&usg=AOvVaw0D7bpPrTcdiIXDH888NAPP",
+        "google_rating": 4.8,
+        "review_count": null,
+        "phone": "094460 65205",
+        "address": "NSP Nagar, Kesavadasapuram, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "Keerthi Stores, HS Junction, Kachani",
+        "category": "Department store",
+        "website": null,
+        "google_rating": 4.5,
+        "review_count": null,
+        "phone": null,
+        "address": "TC/34/123,Punnakonam line, High School Junction, Kachani, Thiruvananthapuram, Kerala 695013"
+    },
+    {
+        "business_name": "The Haven Supermarket & Apartments",
+        "category": "Supermarket",
+        "website": "/url?q=https://www.facebook.com/profile.php%3Fid%3D100086715366311&opi=79508299&sa=U&ved=0ahUKEwiq9_27g72UAxV3bmwGHSNlApUQ61gIFygS&usg=AOvVaw04wYtKXRW77347J0gPTPhh",
+        "google_rating": 4.3,
+        "review_count": null,
+        "phone": "088485 27796",
+        "address": "TC 97, 1356-4, Aakkulam, Thiruvananthapuram, Kerala 695017"
+    },
+    {
+        "business_name": "Connemara Market, Palayam",
+        "category": "Market",
+        "website": null,
+        "google_rating": 4.0,
+        "review_count": null,
+        "phone": "099954 86825",
+        "address": "Al Ameen Shop, Palayam Market Road, University of Kerala Senate House Campus, Palayam, Thiruvananthapuram, Kerala 695034"
+    },
+    {
+        "business_name": "1983 Cricket Store",
+        "category": "Cricket shop",
+        "website": "/url?q=http://www.1983abodeofcricket.com/&opi=79508299&sa=U&ved=0ahUKEwicvJOohr2UAxXnSGcHHZfhDdAQ61gIFygS&usg=AOvVaw3HQhx0YLKWSc8N9-2_F_KK",
+        "google_rating": 4.7,
+        "review_count": null,
+        "phone": "098468 35999",
+        "address": "First Floor, Neduvaccattu Building, Pipeline Rd, behind Windsor Rajadhani Hotel, Kowdiar, Thiruvananthapuram, Kerala 695003"
+    },
+    {
+        "business_name": "Renas Export Surplus",
+        "category": "Clothing store",
+        "website": null,
+        "google_rating": 4.2,
+        "review_count": null,
+        "phone": null,
+        "address": "Near, Palayam mosque, near Sevana medicals, saji footwear, Palayam, Thiruvananthapuram, Kerala 695034"
+    },
+    {
+        "business_name": "ONBOARD",
+        "category": "Clothing store",
+        "website": null,
+        "google_rating": 3.8,
+        "review_count": null,
+        "phone": "075590 31899",
+        "address": "OPP:BHARAT PETROLEUM PUMP, Kailash Nagar, PATTOM, Kesavadasapuram, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "INTUNE",
+        "category": "Outlet mall",
+        "website": "/url?q=https://www.shoppersstop.com/INTUNE&opi=79508299&sa=U&ved=0ahUKEwjbm_uWhr2UAxW7SGcHHY2XOZoQ61gIFygS&usg=AOvVaw0EvQh_hax81Vzk23HfH-z9",
+        "google_rating": 4.8,
+        "review_count": null,
+        "phone": "079077 16153",
+        "address": "Major Archbishop House, Ed Heights, Junction, LIC E Ln, opp. St Marys Malankara Building Complex, Pattom, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "TRAVEL STORE",
+        "category": "Bag shop",
+        "website": null,
+        "google_rating": 3.0,
+        "review_count": null,
+        "phone": null,
+        "address": "opp. Kedaram Complex, NSP Nagar, Kesavadasapuram, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "Red Cotton by Geosam",
+        "category": "Window treatment store",
+        "website": "/url?q=http://www.redcotton.in/&opi=79508299&sa=U&ved=0ahUKEwit19avhr2UAxX5T2wGHa2WH50Q61gIFygS&usg=AOvVaw1mLcyKdvOkzZQVNG4JlL0k",
+        "google_rating": 4.9,
+        "review_count": null,
+        "phone": "098955 44445",
+        "address": "Kesavadasapuram-Ulloor Rd, near FCI, above Pepperfry.com, Aiswarya Nagar, Kesavadasapuram, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "ANSONS",
+        "category": "Cosmetics store",
+        "website": null,
+        "google_rating": 4.2,
+        "review_count": null,
+        "phone": "0471 232 7010",
+        "address": "Central Plaza, CV Raman Road, Nandavanam, Vazhuthacaud, Thiruvananthapuram, Kerala 695014"
+    },
+    {
+        "business_name": "Welgate Lifestyle",
+        "category": "Organic shop",
+        "website": "/url?q=https://welgatelifestyle.com/&opi=79508299&sa=U&ved=0ahUKEwj3ws_zhb2UAxWMT2wGHSakIqkQ61gIFSgQ&usg=AOvVaw0SGJuPnXkPRk7xj1VB-hAW",
+        "google_rating": 4.3,
+        "review_count": null,
+        "phone": "095392 25555",
+        "address": "Pattom - Kowdiar Rd, Kuravankonam, Thiruvananthapuram, Kerala 695003"
+    },
+    {
+        "business_name": "Rural Beads- The GI Tagged Store",
+        "category": "Outlet mall",
+        "website": "/url?q=https://www.ruralbeads.com/&opi=79508299&sa=U&ved=0ahUKEwia2uK6g72UAxXlaHADHbl9MxMQ61gIFygS&usg=AOvVaw1Q8MS-cJa9jcSZ3OGlyJAG",
+        "google_rating": 4.9,
+        "review_count": null,
+        "phone": "097784 69670",
+        "address": "Ammini Towers, All India Radio Rd, opp. Janayugom, DPI, Vazhuthacaud, Thiruvananthapuram, Kerala 695014"
+    },
+    {
+        "business_name": "Superdry Trivandrum",
+        "category": "Clothing store",
+        "website": "/url?q=http://www.superdry.in/&opi=79508299&sa=U&ved=0ahUKEwipocmGib2UAxW8UGcHHWEDNioQ61gIEigN&usg=AOvVaw2qEJdFaTNprEtr0IVo_86y",
+        "google_rating": 4.3,
+        "review_count": null,
+        "phone": null,
+        "address": "GV8X+47X, LULU MALL,GROUND FLOOR,ANAYARA POST, Akkulam Bridge, near Tasva, Kochuveli, Thiruvananthapuram, Kerala 695029"
+    },
+    {
+        "business_name": "Ali Shopping Mall",
+        "category": "Shopping mall",
+        "website": null,
+        "google_rating": 4.0,
+        "review_count": null,
+        "phone": "099956 53571",
+        "address": "JV9X+PJJ, Opposite Town Masjid, Pothencode, Thiruvananthapuram, Keezhthonnakkal, Kerala 695584"
+    },
+    {
+        "business_name": "Kunnil Hypermarket",
+        "category": "Hypermarket",
+        "website": "/url?q=http://www.kunnilhypermarket.com/&opi=79508299&sa=U&ved=0ahUKEwjw_vmWib2UAxXeR2wGHdK4AesQ61gIFygS&usg=AOvVaw03ns2Dbpn4SCKx30yp7u6u",
+        "google_rating": 4.1,
+        "review_count": null,
+        "phone": "0471 259 0370",
+        "address": "Kunnil Heights, NH 47, Bypass Road, near Infosys Campus, Kulathoor, Thiruvananthapuram, Kerala 695583"
+    },
+    {
+        "business_name": "Ramachandran Thirumala",
+        "category": "Shopping mall",
+        "website": "/url?q=https://www.ramachandrantextiles.com/&opi=79508299&sa=U&ved=0ahUKEwjc_KqUib2UAxWKTmwGHWoAKi4Q61gIFSgQ&usg=AOvVaw3C1IHeF4QdfIeLa7JAEPNh",
+        "google_rating": 4.7,
+        "review_count": null,
+        "phone": "088930 99999",
+        "address": "Block no 50, Thirumala, Thiruvananthapuram, Kerala 695006"
+    },
+    {
+        "business_name": "Nandilath G-Mart",
+        "category": "Appliance store",
+        "website": "/url?q=http://www.nandilathgmart.com/&opi=79508299&sa=U&ved=0ahUKEwiK9uzvh72UAxXPr1YBHb1-FSYQ61gI-wEoEQ&usg=AOvVaw12nPsrZg12TxGeF090x6X1",
+        "google_rating": 3.9,
+        "review_count": null,
+        "phone": "085920 80806",
+        "address": "Sree Dhanya Boulevard, Salem - Kochi Highway, Kailash Nagar, Vivekananda Nagar, Kesavadasapuram, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "Salim Store",
+        "category": "General store",
+        "website": null,
+        "google_rating": 3.8,
+        "review_count": null,
+        "phone": "0471 653 2499",
+        "address": "FWVH+XH9, Pettah, Thiruvananthapuram, Kerala 695024"
+    },
+    {
+        "business_name": "Vibe Company",
+        "category": "Clothing store",
+        "website": null,
+        "google_rating": 3.7,
+        "review_count": null,
+        "phone": null,
+        "address": "2nd Floor Kedaram Complex Shop No 39, Kesavadasapuram Rd, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "August",
+        "category": "Stationery store",
+        "website": "/url?q=https://helloaugust.in/&opi=79508299&sa=U&ved=0ahUKEwigyurOh72UAxVMV3ADHe6ONUQQ61gIFygS&usg=AOvVaw3MPI0zObbwXIfOhJ7RAFXj",
+        "google_rating": 4.9,
+        "review_count": null,
+        "phone": "088488 00208",
+        "address": "Stationery Shop, PMRA-C3, Pattom Pottakuzhy Rd, opposite to Smile Design Dental Clinic, Pottakkuzhi, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "Supreme Gourmet",
+        "category": "Grocery store",
+        "website": "/url?q=http://supremefoodco.com/&opi=79508299&sa=U&ved=0ahUKEwj3mJPJir2UAxVZRWcHHWWVNuwQ61gIESgM&usg=AOvVaw3jjT-7xSYR1KzVUqxM_kWP",
+        "google_rating": 4.4,
+        "review_count": null,
+        "phone": null,
+        "address": "Heera Grace, Kowdiar, Thiruvananthapuram, Kerala 695003"
+    },
+    {
+        "business_name": "Asha Store",
+        "category": "General store",
+        "website": null,
+        "google_rating": 4.5,
+        "review_count": null,
+        "phone": "094463 22708",
+        "address": "Opposite, General Hospital Rd, P.O, Rishimangalam, Vanchiyoor, Thiruvananthapuram, Kerala 695035"
+    },
+    {
+        "business_name": "TVMKart.com | Online Stationery Store in Trivandrum",
+        "category": "Stationery store",
+        "website": "/url?q=http://www.tvmkart.com/&opi=79508299&sa=U&ved=0ahUKEwj5leT1ir2UAxXoUWwGHRC7ATMQ61gIEygO&usg=AOvVaw1-7vJtTzqORnx6wD4qrt_I",
+        "google_rating": 4.9,
+        "review_count": null,
+        "phone": "081291 33020",
+        "address": "Kochulloor, Ulloor, Thiruvananthapuram, Kerala 695011"
+    },
+    {
+        "business_name": "All The Plus Size Store",
+        "category": "Clothing store",
+        "website": null,
+        "google_rating": null,
+        "review_count": null,
+        "phone": null,
+        "address": "FWPX+W49, Overbridge, Pavithra Nagar, Santhi Nagar, Thampanoor, Thiruvananthapuram, Kerala 695036"
+    },
+    {
+        "business_name": "Bata Shoe Store",
+        "category": "Clothing store",
+        "website": "/url?q=https://stores.bata.com/bata-shoes-sandals-store-in-keshavadasapuram-thiruvananthapuram&opi=79508299&sa=U&ved=0ahUKEwiK9uzvh72UAxXPr1YBHb1-FSYQ61gIwgQoEQ&usg=AOvVaw3VlddAwgqHUFZEg2q2v22e",
+        "google_rating": 4.0,
+        "review_count": null,
+        "phone": "089213 11811",
+        "address": "SM Towers, Kesavadasapuram Rd, near St Mary's School, Kailash Nagar, Vivekananda Nagar, Kesavadasapuram, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "Utsa by Westside - Kuravankonam Thiruvananthapuram",
+        "category": "Women's clothing store",
+        "website": null,
+        "google_rating": 4.1,
+        "review_count": null,
+        "phone": "086556 83667",
+        "address": "Junction, Kuravankonam, Thiruvananthapuram, Kerala 695003"
+    },
+    {
+        "business_name": "Pattoor Stores",
+        "category": "General store",
+        "website": null,
+        "google_rating": 5.0,
+        "review_count": null,
+        "phone": "094958 57559",
+        "address": "Pattoor - Vanchiyoor Rd, near Carnival Mall, Pattoor Junction, Rishimangalam, Vanchiyoor, Thiruvananthapuram, Kerala 695035"
+    },
+    {
+        "business_name": "Malankara Avenue",
+        "category": "Shopping mall",
+        "website": null,
+        "google_rating": 3.9,
+        "review_count": null,
+        "phone": null,
+        "address": "GWFQ+WWF, LIC, Lekshmi Nagar, Pattom, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "Aasco Grand mart discount bazar",
+        "category": "Supermarket",
+        "website": null,
+        "google_rating": 4.0,
+        "review_count": null,
+        "phone": "085905 01566",
+        "address": "Kizhakkemukkola, Thiruvananthapuram, Kerala 695043"
+    },
+    {
+        "business_name": "LOYALCITY Supermarket",
+        "category": "Grocery store",
+        "website": "/url?q=http://loyalcitytvm.com/index.html&opi=79508299&sa=U&ved=0ahUKEwi2gKOBib2UAxW3SGcHHUQmAyMQ61gIFygS&usg=AOvVaw20DaOkBnV8_SeaIyqASV3U",
+        "google_rating": 4.2,
+        "review_count": null,
+        "phone": "073065 06916",
+        "address": "Thundathil, Kariyavattom - Chenkottukonam Rd, Karyavattom, Thiruvananthapuram, Kerala 695581"
+    },
+    {
+        "business_name": "Prestige Xclusive - Pattom, Thiruvananthapuram",
+        "category": "Kitchen supply store",
+        "website": "/url?q=https://shop.ttkprestige.com/&opi=79508299&sa=U&ved=0ahUKEwi63InEjr2UAxVaXGwGHeuGPXsQ61gIFygS&usg=AOvVaw3_GpxmOAvUOJzP_pQSLW1Y",
+        "google_rating": 4.5,
+        "review_count": null,
+        "phone": "080780 90190",
+        "address": "Ground Floor, Kesavadasapuram Rd, opp. Indus Motors, Lekshmi Nagar, Pattom, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "KUNNIL SUPERMARKET THIRUMALA",
+        "category": "Supermarket",
+        "website": null,
+        "google_rating": 4.0,
+        "review_count": null,
+        "phone": "094461 82890",
+        "address": "TC8-1441-20, Thirumala, Thiruvananthapuram, Kerala 695006"
+    }
+]

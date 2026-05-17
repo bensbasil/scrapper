@@ -1,0 +1,29 @@
+[
+    {
+        "business_name": "Villa Maya",
+        "category": "Fine dining restaurant",
+        "website": "/url?q=http://www.villamaya.in/&opi=79508299&sa=U&ved=0ahUKEwi-i9ix3byUAxXvTWwGHRruAZQQ61gIGCgS&usg=AOvVaw2Z8_G2-PpmjEC1xo_PpYOA",
+        "google_rating": 4.5,
+        "review_count": null,
+        "phone": "0471 257 8901",
+        "address": "MUTHOOT SKY CHEF, No-120 Palayam Airport Road Near, Vallakkadavu, Thiruvananthapuram, Kerala 695008"
+    },
+    {
+        "business_name": "Paragon Restaurant",
+        "category": "Asian restaurant",
+        "website": "/url?q=https://paragonrestaurant.in/&opi=79508299&sa=U&ved=0ahUKEwifiOWy3byUAxUcRmwGHcTIN8QQ61gIHSgS&usg=AOvVaw2dHmqQO-BN_9KPvivrEZwz",
+        "google_rating": 4.2,
+        "review_count": null,
+        "phone": "089439 97755",
+        "address": "TC 2, South Indian Bank, 5,OPPO, 44, Ulloor Brg, Kesavadasapuram, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "Aryaas Park Veg Restaurant",
+        "category": "South Indian restaurant",
+        "website": null,
+        "google_rating": 4.0,
+        "review_count": null,
+        "phone": "090728 63449",
+        "address": "FXQ2+634, Theatre Station Road, near Apollo Dimora & Sreekumar, Overbridge, Thampanoor, Thiruvananthapuram, Kerala 695001"
+    }
+]

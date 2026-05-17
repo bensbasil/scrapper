@@ -1,0 +1,29 @@
+[
+    {
+        "business_name": "Sree Uthradom Thirunal (SUT) Hospital",
+        "category": "Private hospital",
+        "website": "/url?q=https://sutpattom.com/&opi=79508299&sa=U&ved=0ahUKEwjdsqDT3LyUAxWkTGwGHZpGEe4Q61gIFSgQ&usg=AOvVaw1fDNdz2X0sVnIg9yIg1lrS",
+        "google_rating": 4.8,
+        "review_count": null,
+        "phone": "0471 407 7777",
+        "address": "Near, Palace View Rd, Vrindavan Gardens, Pattom, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "India Hospital",
+        "category": "General hospital",
+        "website": "/url?q=http://www.indiahospitalkerala.com/&opi=79508299&sa=U&ved=0ahUKEwjf7t7M3LyUAxWJV2wGHdRDOO0Q61gI1AEoEQ&usg=AOvVaw3ZPUM-kHKf1KRSqkYM71AI",
+        "google_rating": 4.5,
+        "review_count": null,
+        "phone": "093878 04668",
+        "address": "Ems Rd, near Subramonia temple, Mele, Thampanoor, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "Ananthapuri Hospitals and Research Institute (AHRI)",
+        "category": "Private hospital",
+        "website": "/url?q=http://www.ananthapurihospitals.com/&opi=79508299&sa=U&ved=0ahUKEwicrfrZ3LyUAxWCWXADHfWcA1UQ61gIFygS&usg=AOvVaw2uogxuN5e1Ux5sRQXZsovY",
+        "google_rating": 4.1,
+        "review_count": null,
+        "phone": "0471 660 9900",
+        "address": "NH bypass 66, Airport Rd, near Courtyard Garden, Chackai, Thiruvananthapuram, Kerala 695024"
+    }
+]

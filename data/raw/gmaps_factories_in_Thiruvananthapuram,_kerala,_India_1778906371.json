@@ -1,0 +1,29 @@
+[
+    {
+        "business_name": "Travancore Titanium Products Limited",
+        "category": "Chemical Manufacturer",
+        "website": "/url?q=https://travancoretitanium.com/&opi=79508299&sa=U&ved=0ahUKEwjjxObs_ryUAxUPSmwGHcnzKZsQ61gIFCgP&usg=AOvVaw1JfGvQRKS0Km_YaON8yXEA",
+        "google_rating": 4.3,
+        "review_count": null,
+        "phone": "1800 233 7315",
+        "address": "GW32+2F8, Balanagar, Karikkakam, Thiruvananthapuram, Kerala 695021"
+    },
+    {
+        "business_name": "The India Cements Ltd",
+        "category": "Cement Manufacturer",
+        "website": "/url?q=https://www.indiacements.co.in/&opi=79508299&sa=U&ved=0ahUKEwiA9Lr3_ryUAxVV1jgGHXz0I_QQ61gIFCgP&usg=AOvVaw33ZlDmhXmwZJs4PUPDOALM",
+        "google_rating": 5.0,
+        "review_count": null,
+        "phone": "0471 405 8800",
+        "address": "GW8X+77Q, Plammoodu, Thiruvananthapuram, Kerala 695003"
+    },
+    {
+        "business_name": "Fresh N Fine Products (India) Pvt. Ltd",
+        "category": "Manufacturer",
+        "website": "/url?q=http://www.freshnfine.com/&opi=79508299&sa=U&ved=0ahUKEwjm-tb4_ryUAxVvhGMGHYrOKMgQ61gIFSgQ&usg=AOvVaw3hI2E7LQupijqLXn2d6dku",
+        "google_rating": 4.4,
+        "review_count": null,
+        "phone": "092880 21144",
+        "address": "Kinfra Parks, Thumba, Thiruvananthapuram, Kerala 695586"
+    }
+]

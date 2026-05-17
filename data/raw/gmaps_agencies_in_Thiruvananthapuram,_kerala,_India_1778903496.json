@@ -1,0 +1,785 @@
+[
+    {
+        "business_name": "RCD HR SOLUTIONS",
+        "category": "Employment consultant",
+        "website": null,
+        "google_rating": 4.8,
+        "review_count": null,
+        "phone": "099469 41122",
+        "address": "Akkulam, Ulloor - Akkulam Rd, Thiruvananthapuram, Kerala 695011"
+    },
+    {
+        "business_name": "Worldstar Enterprises, Trivandrum jobs",
+        "category": "Unemployment office",
+        "website": "/url?q=http://www.fb.me/jobworldstar.tvm&opi=79508299&sa=U&ved=0ahUKEwiPqOiG9LyUAxXmTWwGHWAVI84Q61gIFygS&usg=AOvVaw1QfxJMDureo77YAz_wRp5P",
+        "google_rating": 4.4,
+        "review_count": null,
+        "phone": "090206 09290",
+        "address": "SS Kovil Rd, opp. Chemist Bhavan, near Ayyappan Kovil, Overbridge, Thampanoor, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "Suhail Enterprises",
+        "category": "Unemployment office",
+        "website": "/url?q=http://www.suhailmanpower.com/&opi=79508299&sa=U&ved=0ahUKEwixhPyH9LyUAxV7SmwGHfJFLbgQ61gIEygO&usg=AOvVaw23nl1SYPlTmN4Eh8zsHYbg",
+        "google_rating": 4.5,
+        "review_count": null,
+        "phone": "0471 257 1970",
+        "address": "Attakulangara, Thiruvananthapuram, Kerala 695009"
+    },
+    {
+        "business_name": "Connecting2Work - HR Solutions",
+        "category": "Human resource consulting",
+        "website": "/url?q=http://www.connecting2work.com/&opi=79508299&sa=U&ved=0ahUKEwjRkY-J9LyUAxXETGwGHW9CNQYQ61gIEygO&usg=AOvVaw2atf244_Kzd4jXQqlc-wlk",
+        "google_rating": 4.8,
+        "review_count": null,
+        "phone": "0471 401 1026",
+        "address": "(Corp HQ) Opp Kalady Junction Bus Stop ,Karamana, Thiruvananthapuram, Kerala 695002"
+    },
+    {
+        "business_name": "Connecting2Work HR Solutions",
+        "category": "Human resource consulting",
+        "website": "/url?q=http://www.connecting2work.com/&opi=79508299&sa=U&ved=0ahUKEwjA96eK9LyUAxXq1jgGHSBZHNAQ61gIFygS&usg=AOvVaw1J_crVeruGi6Sc-RpqLO24",
+        "google_rating": 4.7,
+        "review_count": null,
+        "phone": "0471 401 1026",
+        "address": "TC 2/1398 (5) Thulasi Towers, near Techno Park, Pallinada, Kazhakkoottam, Kerala 695582"
+    },
+    {
+        "business_name": "Career Home | Placement Service, Facility Management and Job consultancy",
+        "category": "Employment consultant",
+        "website": "/url?q=http://careerhometvm.com/&opi=79508299&sa=U&ved=0ahUKEwjQ-M2L9LyUAxV94jgGHUzCKe8Q61gIFygS&usg=AOvVaw1G1ORYvMXNH2EBK3eErnCd",
+        "google_rating": 4.7,
+        "review_count": null,
+        "phone": "095440 97966",
+        "address": "RS Complex, opp. LIC LIC Junction, Pattom, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "Friends Home Nurse Consultancy",
+        "category": "Unemployment office",
+        "website": null,
+        "google_rating": 4.7,
+        "review_count": null,
+        "phone": "094460 66333",
+        "address": "opp. Narmada Shopping Complex, Toll Junction, Kowdiar, Thiruvananthapuram, Kerala 695003"
+    },
+    {
+        "business_name": "JOBS 'n TA HR Services",
+        "category": "Employment agency",
+        "website": "/url?q=http://www.jobsnta.com/&opi=79508299&sa=U&ved=0ahUKEwjl1pn_87yUAxWUcGwGHV3mISYQ61gInAIoEQ&usg=AOvVaw3tr95bXmMi9wjSj2E2uefE",
+        "google_rating": 3.6,
+        "review_count": null,
+        "phone": "077360 65911",
+        "address": "Roshni, TC 4/250-1, Gnra-12, Opp SNDP Office, PO, Kuravankonam Ambalamukku Rd, Kowdiar, Thiruvananthapuram, Kerala 695003"
+    },
+    {
+        "business_name": "New Belief Overseas Recruitment services Pvt.Ltd",
+        "category": "Recruiter",
+        "website": "/url?q=https://newbelief.co.in/&opi=79508299&sa=U&ved=0ahUKEwjq2_Wi9LyUAxVOxDgGHXuAAaoQ61gIFygS&usg=AOvVaw3opTas042cJzOogp8axqew",
+        "google_rating": 4.3,
+        "review_count": null,
+        "phone": "073066 86936",
+        "address": "First Floor, Mikasa Square, TC – 6/741, near Sreedevi Lab And Scans, Ulloor, Kochulloor, Ulloor, Thiruvananthapuram, Kerala 695011"
+    },
+    {
+        "business_name": "Career world jobs",
+        "category": "Employment agency",
+        "website": null,
+        "google_rating": 4.2,
+        "review_count": null,
+        "phone": "070123 88928",
+        "address": "Scp buildings East, Thampanoor, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "Chinmaya Jobs & Travel services",
+        "category": "Travel agency",
+        "website": null,
+        "google_rating": 4.9,
+        "review_count": null,
+        "phone": "088913 27540",
+        "address": "TC 16/1657,CRYOGENICS, JUNCTION, opposite MUTHOOT FINCORP, DPI, Jagathy, Thiruvananthapuram, Kerala 695014"
+    },
+    {
+        "business_name": "Dial A Job",
+        "category": "Employment consultant",
+        "website": null,
+        "google_rating": 3.3,
+        "review_count": null,
+        "phone": "096050 12124",
+        "address": "4th floor, Statue, Opposite Secretariat, Palayam, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "Space International Travel Service Manpower Consultant",
+        "category": "Recruiter",
+        "website": "/url?q=http://spaceinternational.co/&opi=79508299&sa=U&ved=0ahUKEwi548ao9LyUAxWdRmwGHXr1EB8Q61gIFygS&usg=AOvVaw1dk1EQdPOn8jtI2DOoR992",
+        "google_rating": 3.6,
+        "review_count": null,
+        "phone": "098471 46622",
+        "address": "T.C 28/2797, First Floor, Chettikulangara Temple Jn, Vanchiyoor, Thiruvananthapuram, Kerala 695035"
+    },
+    {
+        "business_name": "Jobcaps HR Consultancy",
+        "category": "Human resource consulting",
+        "website": "/url?q=https://www.jobcapsindia.com/&opi=79508299&sa=U&ved=0ahUKEwi2wJau9LyUAxV-RmcHHe7rFxMQ61gIFygS&usg=AOvVaw3PfATrUnjtVpKaoWrXap6B",
+        "google_rating": 4.5,
+        "review_count": null,
+        "phone": "0471 409 9914",
+        "address": "Valsala Nursing home Road, Paris Rd, Nandavanam, Palayam, Thiruvananthapuram, Kerala 695033"
+    },
+    {
+        "business_name": "Sujina Manpower Consultants",
+        "category": "Recruiter",
+        "website": null,
+        "google_rating": 2.8,
+        "review_count": null,
+        "phone": "0471 247 2240",
+        "address": "Nallumuku, Pallimukku, Pettah, Thiruvananthapuram, Kerala 695024"
+    },
+    {
+        "business_name": "C2W",
+        "category": "Employment agency",
+        "website": "/url?q=http://www.connecting2work.com/&opi=79508299&sa=U&ved=0ahUKEwj93_yw9LyUAxUORmwGHQMfCh0Q61gIFSgQ&usg=AOvVaw09G90TGXfhqrR0drOpW8T2",
+        "google_rating": 3.7,
+        "review_count": null,
+        "phone": "077360 43614",
+        "address": "C2W, Nh, Kazhakootam - Kovalam Bypass Rd, near Technopark Phase III Main Road, Thiruvananthapuram, Kerala 695583"
+    },
+    {
+        "business_name": "Lakshya job consultancy",
+        "category": "Employment center",
+        "website": null,
+        "google_rating": 3.4,
+        "review_count": null,
+        "phone": null,
+        "address": "GX25+5HX, MP Appan Rd, DPI, Vazhuthacaud, Thiruvananthapuram, Kerala 695014"
+    },
+    {
+        "business_name": "Deepam Employment Service",
+        "category": "Employment agency",
+        "website": null,
+        "google_rating": 4.0,
+        "review_count": null,
+        "phone": "094006 00164",
+        "address": "2nd Floor, Rajadani Building, Fort, East Fort, Pazhavangadi, Thiruvananthapuram, Kerala 695023"
+    },
+    {
+        "business_name": "Scintila Recruiter",
+        "category": "Unemployment office",
+        "website": null,
+        "google_rating": 4.7,
+        "review_count": null,
+        "phone": "0471 232 4748",
+        "address": "Kenton Tower, 5A, Vellayambalam - Vazhuthacaud Road, near Kalabhavan Theatre, DPI, Vazhuthacaud, Thiruvananthapuram, Kerala 695014"
+    },
+    {
+        "business_name": "Quick Job Consultancy",
+        "category": "Employment agency",
+        "website": null,
+        "google_rating": 4.0,
+        "review_count": null,
+        "phone": "0471 401 1136",
+        "address": "FXR2+6H8, SS Kovil Rd, Santhi Nagar, Thampanoor, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "Riya - The Travel Expert | Thiruvananthapuram",
+        "category": "Travel agency",
+        "website": "/url?q=https://www.riya.travel/&opi=79508299&sa=U&ved=0ahUKEwj4_N3Y9LyUAxU_RmwGHXEQENEQ61gIFSgQ&usg=AOvVaw1CZ7CIqv2RvQ0DIqa0S5Qd",
+        "google_rating": 4.1,
+        "review_count": null,
+        "phone": "0471 408 5000",
+        "address": "Taarra Towers, Althara Nagar, Sasthamangalam, Thiruvananthapuram, Kerala 695010"
+    },
+    {
+        "business_name": "Attitude Worldwide",
+        "category": "Unemployment office",
+        "website": "/url?q=http://attitudeworldwide.com/&opi=79508299&sa=U&ved=0ahUKEwji5_3b9LyUAxUaTmwGHYzaAn0Q61gIFygS&usg=AOvVaw0tGSVOuQK4l20oXLO83ZxO",
+        "google_rating": 4.3,
+        "review_count": null,
+        "phone": "081388 88070",
+        "address": "TC20/1230/1 Karamana, Parachira Road, Melarannoor, Junction, Thiruvananthapuram, Kerala 695002"
+    },
+    {
+        "business_name": "Medisol Placements Private Limited :Leading Healthcare recruitment consultancy",
+        "category": "Employment consultant",
+        "website": "/url?q=http://www.medisolplacements.com/&opi=79508299&sa=U&ved=0ahUKEwjkyoXi9LyUAxUgWHADHTY0LMUQ61gIFygS&usg=AOvVaw31XEu8B8sH-ap0_57G-1So",
+        "google_rating": 3.8,
+        "review_count": null,
+        "phone": "097784 11951",
+        "address": "Medical college P O, pin code, TC14/1530(1, Padinjattil Ln, Thiruvananthapuram, Kerala 695011"
+    },
+    {
+        "business_name": "Smart Job consultancy",
+        "category": "Employment agency",
+        "website": null,
+        "google_rating": 3.8,
+        "review_count": null,
+        "phone": "070250 06049",
+        "address": "Kesava Buildings, SS Kovil Rd, Overbridge, Thampanoor, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "Akbar Travels of India Pvt Ltd - Trivandrum",
+        "category": "Travel agency",
+        "website": "/url?q=https://www.akbartravels.com/&opi=79508299&sa=U&ved=0ahUKEwi9gbDk9LyUAxV1TmwGHSNeCCUQ61gIFSgQ&usg=AOvVaw3FjB8O7Zo4jXUbD1NfB9D1",
+        "google_rating": 4.6,
+        "review_count": null,
+        "phone": "0471 415 6000",
+        "address": "Our Towers, Althara Nagar, Vellayambalam, Thiruvananthapuram, Kerala 695010"
+    },
+    {
+        "business_name": "KAILAS AGENCIES",
+        "category": "Electronics wholesaler",
+        "website": null,
+        "google_rating": 4.0,
+        "review_count": null,
+        "phone": "080860 76861",
+        "address": "Manikandeswaram Temple, Peroorkada Manikanteswaram Nettayam Rd, NETTAYAM, Thiruvananthapuram, Kerala 695013"
+    },
+    {
+        "business_name": "International Agencies",
+        "category": "Pharmaceutical Products Wholesaler",
+        "website": null,
+        "google_rating": 3.4,
+        "review_count": null,
+        "phone": null,
+        "address": "CPGP Towers, Palayam, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "VICTORY AGENCIES",
+        "category": "Building materials store",
+        "website": null,
+        "google_rating": 4.7,
+        "review_count": null,
+        "phone": "099610 22569",
+        "address": "BY PASS ROAD, Killipalam, Attakulangara, Thiruvananthapuram, Kerala 695009"
+    },
+    {
+        "business_name": "Guideline job consultancy",
+        "category": "Employment center",
+        "website": null,
+        "google_rating": 4.0,
+        "review_count": null,
+        "phone": "073566 17634",
+        "address": "2nd floor sreekrish arcade, Maruthumkuzhi, Thiruvananthapuram, Kerala 695030"
+    },
+    {
+        "business_name": "Careerline Travel Consultant",
+        "category": "Travel agency",
+        "website": "/url?q=http://www.careerlineonline.com/&opi=79508299&sa=U&ved=0ahUKEwjPg9bw9LyUAxW7WHADHW7ZA4cQ61gIFygS&usg=AOvVaw3JVCtPqcgYV3cOorlxZ9KA",
+        "google_rating": 4.2,
+        "review_count": null,
+        "phone": "094966 52205",
+        "address": "Mullasseri Tower, Gandhari Amman Kovil Rd, Santhi Nagar, Pulimoodu, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "Amina Agencies",
+        "category": "Manufacturer",
+        "website": null,
+        "google_rating": 4.5,
+        "review_count": null,
+        "phone": "099955 54164",
+        "address": "East Fort, Chalai Bazaar, Chalai, Thiruvananthapuram, Kerala 695036"
+    },
+    {
+        "business_name": "Universal Migration",
+        "category": "Educational consultant",
+        "website": "/url?q=http://www.universalmigration.com/&opi=79508299&sa=U&ved=0ahUKEwjcwO_Z9LyUAxWrUGwGHVLYI5EQ61gIFygS&usg=AOvVaw2EJxcE97kzdjA-aaLc8Urm",
+        "google_rating": 4.6,
+        "review_count": null,
+        "phone": "099467 91000",
+        "address": "Ground Floor, Primrose building, Bakery Jct Rd, Oottukuzhy, Thycaud, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "Metro Agencies",
+        "category": "Roofing supply store",
+        "website": null,
+        "google_rating": 4.2,
+        "review_count": null,
+        "phone": "095260 87772",
+        "address": "Manava Nagar, Eanchakkal, Thiruvananthapuram, Kerala 695008"
+    },
+    {
+        "business_name": "Connect 2 Job HR Consultancy services",
+        "category": "Human resource consulting",
+        "website": "/url?q=http://hr4you.co.in/&opi=79508299&sa=U&ved=0ahUKEwivwdeo9byUAxWjcmwGHRiaKH4Q61gIFygS&usg=AOvVaw0aHMMjmRKdQD3as6_tBaou",
+        "google_rating": 4.9,
+        "review_count": null,
+        "phone": "063036 48923",
+        "address": "SRA 62, Gokulam, opp. Fathima Engineering Pvt Ltd, Nalumukku, Kaithamukku, Thiruvananthapuram, Kerala 695023"
+    },
+    {
+        "business_name": "M&G Immigration & Study Abroad Consultants | Best Canada Immigration Consultants in Trivandrum | Overseas Education Kerala",
+        "category": "Educational consultant",
+        "website": "/url?q=https://www.mandgworld.com/&opi=79508299&sa=U&ved=0ahUKEwjXlNTm9LyUAxVXRmwGHRFwESUQ61gIFygS&usg=AOvVaw2yy0r7WvApmiFo1Te5m8il",
+        "google_rating": 4.9,
+        "review_count": null,
+        "phone": "085940 55555",
+        "address": "1st Floor, Nikunjam Saras Building, 47, National Highway, Pattom, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "Airtravel Enterprises India Limited",
+        "category": "Travel agency",
+        "website": "/url?q=https://www.ate.travel/&opi=79508299&sa=U&ved=0ahUKEwiDitH09LyUAxXBXGwGHQrNFIoQ61gIFygS&usg=AOvVaw0cRsn4F4wwphTHpvpZAgI-",
+        "google_rating": 4.2,
+        "review_count": null,
+        "phone": "099958 09901",
+        "address": "LMS Junction, Corporation Building, Ground Floor, New, Palayam, Thiruvananthapuram, Kerala 695033"
+    },
+    {
+        "business_name": "Good Way Solutions",
+        "category": "Consultant",
+        "website": null,
+        "google_rating": 4.5,
+        "review_count": null,
+        "phone": "088486 68021",
+        "address": "Ayurveda College Junction, Pulimoodu, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "Kerala Travels",
+        "category": "Travel agency",
+        "website": "/url?q=http://www.keralatravels.in/&opi=79508299&sa=U&ved=0ahUKEwiF6YC79byUAxWgUGwGHcTIGpYQ61gIFSgQ&usg=AOvVaw0-RdJ3t37EG4C2nVObw6xn",
+        "google_rating": 4.7,
+        "review_count": null,
+        "phone": "0471 402 1630",
+        "address": "Yaathrika, Vellayambalam Jct, Althara Nagar, Vellayambalam, Thiruvananthapuram, Kerala 695010"
+    },
+    {
+        "business_name": "Standard Agencies Hardware",
+        "category": "Hardware store",
+        "website": null,
+        "google_rating": 4.9,
+        "review_count": null,
+        "phone": "063667 78484",
+        "address": "SIJIS TRADE PLAZA, Marakkada Rd, Chalai Bazaar, Chalai, Thiruvananthapuram, Kerala 695036"
+    },
+    {
+        "business_name": "Ushus Services",
+        "category": "House cleaning service",
+        "website": "/url?q=http://ushuscleaningservices.com/&opi=79508299&sa=U&ved=0ahUKEwilu6eM9ryUAxXXZ2wGHYUYJy8Q61gIFygS&usg=AOvVaw2sNIwAE6Os4B1Nta-Y-nvU",
+        "google_rating": 5.0,
+        "review_count": null,
+        "phone": "079076 78077",
+        "address": "PRANAVAM TC 10, 925 8, Peroorkada Rd, PO, Ambalamukku, Thiruvananthapuram, Kerala 695003"
+    },
+    {
+        "business_name": "VK Agency",
+        "category": "Building materials supplier",
+        "website": "/url?q=https://vk-agency.ueniweb.com/&opi=79508299&sa=U&ved=0ahUKEwiNlNCN9ryUAxXBTGwGHb0GCTQQ61gIEygQ&usg=AOvVaw0pJSQhBke2FdaI1STgGibv",
+        "google_rating": null,
+        "review_count": null,
+        "phone": "097464 02666",
+        "address": "GX39+FF2, Kochar Rd, near Rdr Auditorium, Cotton Hill, Edapazhanji, Thiruvananthapuram, Kerala 695014"
+    },
+    {
+        "business_name": "Pratheeksha Job Consultancy",
+        "category": "Employment center",
+        "website": null,
+        "google_rating": 4.9,
+        "review_count": null,
+        "phone": "079947 43309",
+        "address": "Door No:28, 336, Hospital Rd, opposite District Hospital, Nedumangad, Kerala 695541"
+    },
+    {
+        "business_name": "ITJobcell",
+        "category": "Employment agency",
+        "website": "/url?q=http://www.itjobcell.com/&opi=79508299&sa=U&ved=0ahUKEwjV44nD9byUAxVYTWwGHTlIBn4Q61gIxgEoEQ&usg=AOvVaw3h8a6Ze7NeS_gQ5plEpi3M",
+        "google_rating": 4.7,
+        "review_count": null,
+        "phone": "095262 58800",
+        "address": "IInd Floor, Opp: Chaithanya Eye Hospital, National Highway 47, Kesavadasapuram, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "ALPHA TOURS AND TRAVEL AGENCY TRIVANDRUM",
+        "category": "Travel agency",
+        "website": "/url?q=https://alphatravelsolutions.com/&opi=79508299&sa=U&ved=0ahUKEwjV44nD9byUAxVYTWwGHTlIBn4Q61gI6AEoEQ&usg=AOvVaw1ZUjvzbGE3swjOFTYa9Zqx",
+        "google_rating": 4.9,
+        "review_count": null,
+        "phone": "097411 00032",
+        "address": "1st Floor, Ovil Complex, MC Rd, opp. Bus Stop, Prasanthnagar, Vattappara, Kerala 695028"
+    },
+    {
+        "business_name": "Travel Nivriti",
+        "category": "Travel agency",
+        "website": "/url?q=http://www.travelnivriti.com/&opi=79508299&sa=U&ved=0ahUKEwjpzLKU9ryUAxUmSmwGHSGsC9wQ61gIFygS&usg=AOvVaw3mSLzycowlmO00havgGdAM",
+        "google_rating": 4.9,
+        "review_count": null,
+        "phone": "099956 03261",
+        "address": "Catholic Centre Shopping Complex General Hospital, Junction, Statue Rd, near St. Joseph School, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "Destination Designers - Travel and Tour Management Company",
+        "category": "Travel agency",
+        "website": "/url?q=http://www.destinationdesigners.in/&opi=79508299&sa=U&ved=0ahUKEwiS4ZbJ9ryUAxVoRmcHHW7XFTQQ61gIFygS&usg=AOvVaw1WixDdRDz2P56ZBqe-YSxN",
+        "google_rating": 4.7,
+        "review_count": null,
+        "phone": "090726 46362",
+        "address": "Bhadra Center, Kunnumpuram Rd, opp. Dhanya Remya Theatre Complex, Ayurveda College Junction, Pulimoodu, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "Class one Tours and Travels",
+        "category": "Travel agency",
+        "website": "/url?q=http://www.classonekerala.com/&opi=79508299&sa=U&ved=0ahUKEwid_Pbo9ryUAxW6TWwGHYRQB6UQ61gIFygS&usg=AOvVaw0fJaKrlU-okI8m4RwYl8y6",
+        "google_rating": 4.4,
+        "review_count": null,
+        "phone": "098951 55258",
+        "address": "TC 36/1628(1, Vallakkadavu, Sra 71, PO, Muttathara, Thiruvananthapuram, Kerala 695008"
+    },
+    {
+        "business_name": "Talent Resource Management",
+        "category": "Employment agency",
+        "website": "/url?q=http://www.talentrm.com/&opi=79508299&sa=U&ved=0ahUKEwj57-KW9ryUAxU8TGcHHcnYKWoQ61gIFygS&usg=AOvVaw2mlPxNDMM-y6IzwMYgKacF",
+        "google_rating": 3.6,
+        "review_count": null,
+        "phone": "0471 232 2125",
+        "address": "TC.14/1819(2, MR Towers, Bakery Jct Rd, near St.Joseph's Cathedral, University of Kerala Senate House Campus, Palayam, Thiruvananthapuram, Kerala 695034"
+    },
+    {
+        "business_name": "MediaMate Advertising India (P) Ltd",
+        "category": "Advertising agency",
+        "website": "/url?q=http://www.mediamate.in/&opi=79508299&sa=U&ved=0ahUKEwiexLfr9ryUAxVjR2wGHZ-AGboQ61gIFygS&usg=AOvVaw1uIi3T1PUMQZoSOBWedr3R",
+        "google_rating": 4.3,
+        "review_count": null,
+        "phone": "0471 272 2721",
+        "address": "2, MLR 106A, Mangalam Ln, behind Post Office, Sasthamangalam, Thiruvananthapuram, Kerala 695010"
+    },
+    {
+        "business_name": "STS Travels Online.",
+        "category": "Travel agency",
+        "website": null,
+        "google_rating": 4.5,
+        "review_count": null,
+        "phone": "096334 47951",
+        "address": "Sulekha Textiles, TC 29/198 Second floor of, Vellayambalam - Sasthamangalam Rd, P.O, Thiruvananthapuram, Kerala 695010"
+    },
+    {
+        "business_name": "Phoenixwings HR Solutions",
+        "category": "Employment center",
+        "website": null,
+        "google_rating": 3.4,
+        "review_count": null,
+        "phone": "077367 94630",
+        "address": "TC 26/1754(1) Ground Floor DeviNandanam, Uppalam Rd, Statue, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "Pflege Career | Best German Consultancy In Kerala",
+        "category": "Educational consultant",
+        "website": "/url?q=https://www.pflegecareer.com/&opi=79508299&sa=U&ved=0ahUKEwjOxv_09ryUAxXF1zgGHUAbGlQQ61gIFygS&usg=AOvVaw2mt03eBZl_EchDphZ5NfU8",
+        "google_rating": 5.0,
+        "review_count": null,
+        "phone": "090748 47617",
+        "address": "1st Floor, Wee Spaces, RELCON PLAZA, 17/3478, opposite LIC T.C, Pattom, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "Career Home",
+        "category": "Employment agency",
+        "website": null,
+        "google_rating": 5.0,
+        "review_count": null,
+        "phone": null,
+        "address": "Sunrise Plaza, near South Indian Bank, Krishna Vihar, Kumarapuram, Thiruvananthapuram, Kerala 695011"
+    },
+    {
+        "business_name": "Universal Manpower Service, Trivandrum",
+        "category": "Employment agency",
+        "website": null,
+        "google_rating": 1.0,
+        "review_count": null,
+        "phone": "098952 54746",
+        "address": "GX34+C5H, Nandavanam, Palayam, Thiruvananthapuram, Kerala 695033"
+    },
+    {
+        "business_name": "Restik Brand",
+        "category": "Advertising agency",
+        "website": "/url?q=https://restikbrand.com/&opi=79508299&sa=U&ved=0ahUKEwjV44nD9byUAxVYTWwGHTlIBn4Q61gIjgQoEQ&usg=AOvVaw0wCmW5dtcMwUvsG91xtkrM",
+        "google_rating": 4.9,
+        "review_count": null,
+        "phone": "088482 09795",
+        "address": "1st floor, Relcon Plaza, T.C. 17/3478, opposite LIC Lane, Pattom, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "The Write People",
+        "category": "Marketing agency",
+        "website": "/url?q=http://www.thewritepeople.co/&opi=79508299&sa=U&ved=0ahUKEwjV44nD9byUAxVYTWwGHTlIBn4Q61gIxQUoDw&usg=AOvVaw0vU5CmG4dpVy8yinPwkf34",
+        "google_rating": 4.6,
+        "review_count": null,
+        "phone": "079071 52015",
+        "address": "The Write People, 77, Vrindavan Gardens, Pattom, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "Pioneer Agencies",
+        "category": "Hardware store",
+        "website": null,
+        "google_rating": 4.6,
+        "review_count": null,
+        "phone": "094477 21591",
+        "address": "Ulloor - Akkulam Rd, Pulayanarkotta, Thiruvananthapuram, Kerala 695011"
+    },
+    {
+        "business_name": "S K S Consultancy",
+        "category": "Employment center",
+        "website": null,
+        "google_rating": 2.8,
+        "review_count": null,
+        "phone": "095262 40136",
+        "address": "5 1st Floor, PRS Court, TC 25/2780, Statue, Ambujavilasam Rd, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "Texas Tours & Travels",
+        "category": "Travel agency",
+        "website": "https://sites.google.com/view/texastoursandtravels/home",
+        "google_rating": 4.1,
+        "review_count": null,
+        "phone": "099953 22999",
+        "address": "Kochar Raod Near Jagathy school, jagathy, Thiruvananthapuram, Kerala 695014"
+    },
+    {
+        "business_name": "Saraswathy Agencies",
+        "category": "Paint store",
+        "website": null,
+        "google_rating": 5.0,
+        "review_count": null,
+        "phone": "094474 13170",
+        "address": "Medical College, Prasanth Nagar, PO, Thiruvananthapuram, Kerala 695011"
+    },
+    {
+        "business_name": "Supriya Agencies Trivandrum",
+        "category": "Fertilizer Store",
+        "website": "https://sites.google.com/view/supriya-agencies/home",
+        "google_rating": 4.9,
+        "review_count": null,
+        "phone": "096565 64782",
+        "address": "main gate, opposite, St. Thomas School Rd, Mukkolakkal, Thiruvananthapuram, Kerala 695043"
+    },
+    {
+        "business_name": "Aruna Agencies",
+        "category": "Plumbing supply store",
+        "website": null,
+        "google_rating": 4.8,
+        "review_count": null,
+        "phone": "0471 244 9885",
+        "address": "GW9H+358, Krishna Vihar, Kumarapuram, Thiruvananthapuram, Kerala 695011"
+    },
+    {
+        "business_name": "Swiggy Onboarding Office Thiruvananthapuram",
+        "category": "Employment agency",
+        "website": null,
+        "google_rating": 2.5,
+        "review_count": null,
+        "phone": "072591 00795",
+        "address": "5th Floor, Ed Heights, Pattom, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "Sree Tours - Taxi Service / Wedding Car For Rent Trivandrum Luxury Marriage Car Hire",
+        "category": "Taxi service",
+        "website": "/url?q=http://sreetours.in/&opi=79508299&sa=U&ved=0ahUKEwjjrvv--LyUAxVQcGwGHSg3F7AQ61gIFSgQ&usg=AOvVaw3rt2Ed1a68G8KQ5NLp60Je",
+        "google_rating": 4.9,
+        "review_count": null,
+        "phone": "098470 19292",
+        "address": "TC 11/ 625/1 bell villa, nalanda jn, Nanthancodu, Thiruvananthapuram, Kerala 695003"
+    },
+    {
+        "business_name": "PALAZHY TOURS & TRAVELS PVT. LTD.",
+        "category": "Tour operator",
+        "website": "/url?q=http://www.palazhytourz.com/&opi=79508299&sa=U&ved=0ahUKEwid1JeA-byUAxXXSGwGHfW-FiEQ61gIFygS&usg=AOvVaw0GtTypcSlJt_atoYNjJY8g",
+        "google_rating": 4.6,
+        "review_count": null,
+        "phone": "094968 17647",
+        "address": "Omkaram Building, Pipinmoodu - Mannammola Rd, Jawahar Nagar, Sasthamangalam, Thiruvananthapuram, Kerala 695010"
+    },
+    {
+        "business_name": "PAMA AIR TRAVELS INDIA",
+        "category": "Travel agency",
+        "website": null,
+        "google_rating": 4.2,
+        "review_count": null,
+        "phone": "098958 98009",
+        "address": "TC 9, 2556, Vellayambalam - Sasthamangalam Rd, Althara Nagar, Vellayambalam, Thiruvananthapuram, Kerala 695010"
+    },
+    {
+        "business_name": "Thalikkunnil Sales Incorporate",
+        "category": "Waterproofing service",
+        "website": "/url?q=http://www.thalikkunnil.com/&opi=79508299&sa=U&ved=0ahUKEwjZ666F-byUAxU5SmwGHTvYN6UQ61gIFSgQ&usg=AOvVaw1dEID6bCuusToj5qB0St7L",
+        "google_rating": 4.8,
+        "review_count": null,
+        "phone": "092874 41333",
+        "address": "Vayalikkada Road, Kuravankonam - Maruthoor Rd, Rasmi Nagar, Kowdiar, Thiruvananthapuram, Kerala 695003"
+    },
+    {
+        "business_name": "Nava Karthika Agency",
+        "category": "Shopping mall",
+        "website": null,
+        "google_rating": 5.0,
+        "review_count": null,
+        "phone": "077368 07470",
+        "address": "PRRA67 PRRA67, Murinjapalam, Thiruvananthapuram, Kerala 695011"
+    },
+    {
+        "business_name": "Voyages Kerala",
+        "category": "Tour operator",
+        "website": "/url?q=https://www.voyageskerala.com/&opi=79508299&sa=U&ved=0ahUKEwidpJ2K-byUAxVwR2wGHRl_DYYQ61gIFigR&usg=AOvVaw2iDb7V8mAxjp_hTLRgamCv",
+        "google_rating": 4.2,
+        "review_count": null,
+        "phone": "093870 66801",
+        "address": "FXR4+H9W, opposite Amma Thotil, Housing Board, Thycaud, Thiruvananthapuram, Kerala 695014"
+    },
+    {
+        "business_name": "LLOYDS INSPECTION AGENCY PVT LTD | India Office",
+        "category": null,
+        "website": "/url?q=http://www.lloydsinspection.com/&opi=79508299&sa=U&ved=0ahUKEwj0jbiL-byUAxUfTmwGHfR2KfoQ61gIFygS&usg=AOvVaw1MU9al_B3zJVgjBIreqKlA",
+        "google_rating": 3.3,
+        "review_count": null,
+        "phone": "0484 487 0880",
+        "address": "TC 10, PO, near ISRO Office, Vattiyoorkavu, Valley View Gardens, Kumarapuram, Thiruvananthapuram, Kerala 695029"
+    },
+    {
+        "business_name": "Rajeevam Manpower Consultant",
+        "category": "Human resource consulting",
+        "website": null,
+        "google_rating": 3.0,
+        "review_count": null,
+        "phone": null,
+        "address": "HV8F+7VR, Near Revathy Dental Clinic, Bypass Junction, Kazhakkoottam, Kerala 695582"
+    },
+    {
+        "business_name": "Ozone Tourism and Travel",
+        "category": "Travel agency",
+        "website": "/url?q=http://www.ozonetravel.in/&opi=79508299&sa=U&ved=0ahUKEwi60MCj-ryUAxX0VmwGHSYOKc4Q61gIFygS&usg=AOvVaw1Gs3sf8eT94EXcqWUepprs",
+        "google_rating": 4.5,
+        "review_count": null,
+        "phone": "077363 46034",
+        "address": "Surya Hills, T.C. No.98/3632(1, near Technopark, Technopark Campus, Kazhakkoottam, Thiruvananthapuram, Kerala 695582"
+    },
+    {
+        "business_name": "Care Health Insurance",
+        "category": "Health insurance agency",
+        "website": "/url?q=https://www.careinsurance.com/%3Futm_source%3Dgmb%26utm_medium%3Dorganic%26utm_campaign%3DCHI9403&opi=79508299&sa=U&ved=0ahUKEwi0yoay-ryUAxXkR2wGHfHFLHcQ61gIFygS&usg=AOvVaw0--zdNskn0te4CxB9VJBTM",
+        "google_rating": 3.2,
+        "review_count": null,
+        "phone": "092894 54828",
+        "address": "3rd floor, Menathottam Chambers, Door number T.C. 2, 2442/9, Palace, Pattom, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "Thomson Trading Agencies vallakkadavu TVM",
+        "category": "Grocery store",
+        "website": null,
+        "google_rating": 4.6,
+        "review_count": null,
+        "phone": null,
+        "address": "Puthenpalam, Subhash Nagar, Thiruvananthapuram, Kerala 695008"
+    },
+    {
+        "business_name": "Axis Overseas Careers",
+        "category": "Immigration & naturalization service",
+        "website": "/url?q=https://axisoverseascareers.com/&opi=79508299&sa=U&ved=0ahUKEwjX0YC6-ryUAxVTVmwGHf_zEX0Q61gIFygS&usg=AOvVaw3a8c_MHIqsnhkEvi95JjkQ",
+        "google_rating": 4.7,
+        "review_count": null,
+        "phone": "090725 52111",
+        "address": "4th Floor, Malankara Avenue, Lekshmi Nagar, Pattom, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "RevolxIT Learning and AI solutions Pvt Ltd(Previously STC Technology)",
+        "category": "Software Training Institute",
+        "website": "/url?q=https://www.revolxit.com/&opi=79508299&sa=U&ved=0ahUKEwiXhbq8-ryUAxWpTWcHHfhkLXgQ61gIFygS&usg=AOvVaw1BrCYthlw8tqiunPJ2bIV6",
+        "google_rating": 4.5,
+        "review_count": null,
+        "phone": "085900 73104",
+        "address": "3rd Floor, Sona Building, TC 3/2777(5, Junction, above SBI Treasury Branch, opposite to Indian Oil Petrol Bunk, Pattom, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "VETTATH AGENCIES",
+        "category": "Auto parts store",
+        "website": null,
+        "google_rating": 4.2,
+        "review_count": null,
+        "phone": "0471 259 1029",
+        "address": "HW28+JPF, Market Rd, Sreekaryam, Thiruvananthapuram, Kerala 695017"
+    },
+    {
+        "business_name": "Keyar Agencies",
+        "category": "Electrical supply store",
+        "website": "/url?q=http://www.keyaragencies.in/&opi=79508299&sa=U&ved=0ahUKEwipg6Xp-7yUAxXBcmwGHaseAv4Q61gIFSgQ&usg=AOvVaw1MYmT1DWfHJhbSSZAu6AgL",
+        "google_rating": 3.9,
+        "review_count": null,
+        "phone": "082818 79492",
+        "address": "Kuzhivila Lane, Tilak Nagar, Pananvila, Thiruvananthapuram, Kerala 695015"
+    },
+    {
+        "business_name": "Devi Agencies",
+        "category": "Plumbing supply store",
+        "website": null,
+        "google_rating": 4.3,
+        "review_count": null,
+        "phone": "093872 23838",
+        "address": "GX9J+42F, Thiruvananthapuram, Kerala 695030"
+    },
+    {
+        "business_name": "Liberty General Insurance Ltd.",
+        "category": "Insurance company",
+        "website": "/url?q=https://www.libertyinsurance.in/&opi=79508299&sa=U&ved=0ahUKEwjkltz4-7yUAxVzSGcHHTyOCWQQ61gIFSgQ&usg=AOvVaw26gM-XO4lsDDT1-QYq-2wb",
+        "google_rating": 3.4,
+        "review_count": null,
+        "phone": "086559 49135",
+        "address": "4th Floor, Leela Tower, Kesavadasapuram, Pattom, PO, Kerala 695004"
+    },
+    {
+        "business_name": "Vigneswara agency lottery shop",
+        "category": "Lottery retailer",
+        "website": null,
+        "google_rating": 4.7,
+        "review_count": null,
+        "phone": "099477 92812",
+        "address": "SS Kovil Rd, Santhi Nagar, Thycaud, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "ARIES TRAVEL AND HOLIDAYS",
+        "category": "Tour agency",
+        "website": null,
+        "google_rating": 3.6,
+        "review_count": null,
+        "phone": "098957 76863",
+        "address": "Sivans studio building, Mahatma Gandhi Rd, Palayam, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "Aavin Milk and Milk Products Authorised Distributor - Quality Agencies",
+        "category": "Dairy store",
+        "website": null,
+        "google_rating": 4.1,
+        "review_count": null,
+        "phone": "0471 236 6056",
+        "address": "Chembai Rd, Fort, East Fort, Pazhavangadi, Thiruvananthapuram, Kerala 695023"
+    },
+    {
+        "business_name": "Pest Control & Cleaning Services",
+        "category": "Pest control service",
+        "website": "/url?q=https://www.pccsindia.com/&opi=79508299&sa=U&ved=0ahUKEwiI_I6F_LyUAxWGS3ADHVcYBEkQ61gIFygS&usg=AOvVaw2iRMkUQ6tJ6MCG8C6J6Q4K",
+        "google_rating": 4.7,
+        "review_count": null,
+        "phone": "0471 235 3735",
+        "address": "TC 7/1996, Temple View, Thiruvananthapuram - Neyyar Dam Rd, near Asianet Office, Edapazhanji, Thiruvananthapuram, Kerala 695006"
+    },
+    {
+        "business_name": "Heavens",
+        "category": "House cleaning service",
+        "website": "/url?q=http://heavenshousecleaning.com/&opi=79508299&sa=U&ved=0ahUKEwjT26mJ_LyUAxU2amwGHReGI_cQ61gIFygS&usg=AOvVaw3_dW6GlVMNS0u6dWle0bnH",
+        "google_rating": 4.9,
+        "review_count": null,
+        "phone": "079091 06803",
+        "address": "P.O, TC 28/87 Kaithamukku Oppo Co-operative Bank, Pettah, Thiruvananthapuram, Kerala 695008"
+    },
+    {
+        "business_name": "Kerala Matrimony, part of Matrimony Group - Vazhuthacaud, Trivandrum",
+        "category": "Marriage Consultant",
+        "website": "/url?q=https://www.keralamatrimony.com/&opi=79508299&sa=U&ved=0ahUKEwjfqeSL_LyUAxWeaHADHQwkHxIQ61gIFygS&usg=AOvVaw0RvAHJmlSuEK_veDUM9S_h",
+        "google_rating": 4.9,
+        "review_count": null,
+        "phone": "063665 28204",
+        "address": "Ground Floor, Berry Heights, Junction, opp. Reliance Fresh Edappazhanji, Sasthamangalam, Thiruvananthapuram, Kerala 695010"
+    },
+    {
+        "business_name": "We Care Facility Management Services",
+        "category": "Contractor",
+        "website": null,
+        "google_rating": 4.3,
+        "review_count": null,
+        "phone": "095676 09444",
+        "address": "Plamoodu - Thekkamoodu Rd, Plammoodu, Thiruvananthapuram, Kerala 695003"
+    }
+]

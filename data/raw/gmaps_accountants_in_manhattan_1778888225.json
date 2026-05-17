@@ -1,0 +1,29 @@
+[
+    {
+        "business_name": "George Dimov CPA",
+        "category": "Tax consultant",
+        "website": "/url?q=https://www.nycaccountingconsulting.com/cpa-services-in-new-york/%3Futm_campaign%3Dgmb&opi=79508299&sa=U&ved=0ahUKEwi2q66Uu7yUAxVgz6ACHT22CMAQ61gIFSgQ&usg=AOvVaw2pAQmKT9VqYPz3-4Fc3uZl",
+        "google_rating": 4.5,
+        "review_count": null,
+        "phone": "+1 212-641-0673",
+        "address": "211 E 43rd St Suite 7-100, New York, NY 10017, United States"
+    },
+    {
+        "business_name": "Miller & Company LLP: CPA of NYC",
+        "category": "Certified public accountant",
+        "website": "/url?q=https://www.cpafirmnyc.com/&opi=79508299&sa=U&ved=0ahUKEwi8mr-Vu7yUAxXD2jgGHc8tHjYQ61gIFSgQ&usg=AOvVaw0PPw4R6RqC9GlFOFi7BTfI",
+        "google_rating": 4.7,
+        "review_count": null,
+        "phone": "+1 646-865-1444",
+        "address": "274 Madison Ave # 402, New York, NY 10016, United States"
+    },
+    {
+        "business_name": "CHAN & COMPANY LLC",
+        "category": "Certified public accountant",
+        "website": "/url?q=http://www.chancompanyllc.us/&opi=79508299&sa=U&ved=0ahUKEwjIjsuWu7yUAxVr1jgGHZduONUQ61gIFSgQ&usg=AOvVaw0UtQgSg9jfarPv2X2_9byB",
+        "google_rating": 4.9,
+        "review_count": null,
+        "phone": "+1 212-566-0560",
+        "address": "11 E Broadway 6th floor, New York, NY 10038, United States"
+    }
+]

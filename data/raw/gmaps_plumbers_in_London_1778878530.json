@@ -1,0 +1,20 @@
+[
+    {
+        "business_name": "Pimlico Plumbers",
+        "category": "Plumber",
+        "website": "/url?q=https://www.pimlicoplumbers.com/&opi=79508299&sa=U&ved=0ahUKEwjFy_KDl7yUAxUsS2wGHUniJIsQ61gIFygS&usg=AOvVaw1xGt-9WMaImSXzZUPDgiYT",
+        "google_rating": 4.0,
+        "review_count": null,
+        "phone": "+44 20 8108 0808",
+        "address": "Pimlico House, 1 Sail St, London SE11 6NQ, United Kingdom"
+    },
+    {
+        "business_name": "Aza & Sons Services Domestic & Commercial Plumber, Gas Engineer & Ac Engineer In London Ltd",
+        "category": "Plumber",
+        "website": "/url?q=https://www.azasons.com/&opi=79508299&sa=U&ved=0ahUKEwjMvPyEl7yUAxXMaHADHV7JGbEQ61gICigF&usg=AOvVaw2cN0AUgxZG7HUOxbckA7yb",
+        "google_rating": 5.0,
+        "review_count": null,
+        "phone": "+44 7955 014805",
+        "address": null
+    }
+]

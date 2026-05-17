@@ -1,0 +1,29 @@
+[
+    {
+        "business_name": "SP Medifort Hospital",
+        "category": "Hospital",
+        "website": "/url?q=https://spmediforthospital.com/&opi=79508299&sa=U&ved=0ahUKEwiCtqn__LyUAxWGd2wGHXBBNwAQ61gIEygO&usg=AOvVaw3UWzk_hJxj9RSRNIXWej11",
+        "google_rating": 4.8,
+        "review_count": null,
+        "phone": "0471 310 0100",
+        "address": "Eanchakkal, Thiruvananthapuram, Kerala 695008"
+    },
+    {
+        "business_name": "Sree Uthradom Thirunal (SUT) Hospital",
+        "category": "Private hospital",
+        "website": "/url?q=https://sutpattom.com/&opi=79508299&sa=U&ved=0ahUKEwiTic6A_byUAxUFTGwGHRI6HUwQ61gIFSgQ&usg=AOvVaw0nTmMxa0zDlOKP1bpbLRS1",
+        "google_rating": 4.8,
+        "review_count": null,
+        "phone": "0471 407 7777",
+        "address": "Near, Palace View Rd, Vrindavan Gardens, Pattom, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "GG Hospital",
+        "category": "Hospital",
+        "website": "/url?q=http://www.gg-hospital.com/&opi=79508299&sa=U&ved=0ahUKEwji25WE_byUAxUOT2wGHeqXCJ4Q61gIFygS&usg=AOvVaw0o__lLbw974hLK3WOOW45R",
+        "google_rating": 4.6,
+        "review_count": null,
+        "phone": "0471 429 9299",
+        "address": "Medical College, Pattom Kumarapuram Rd, Murinjapalam, Thiruvananthapuram, Kerala 695011"
+    }
+]

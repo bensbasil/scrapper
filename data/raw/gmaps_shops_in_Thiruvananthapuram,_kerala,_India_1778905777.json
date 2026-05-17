@@ -1,0 +1,29 @@
+[
+    {
+        "business_name": "LuLu Mall Thiruvananthapuram",
+        "category": "Shopping mall",
+        "website": "/url?q=https://thiruvananthapuram.lulumall.in/&opi=79508299&sa=U&ved=0ahUKEwjevf7T_LyUAxVVWXADHTe_CJIQ61gIFygS&usg=AOvVaw17kkgJnj52ALKDWJX-CtFx",
+        "google_rating": 4.6,
+        "review_count": null,
+        "phone": "0471 277 7777",
+        "address": "Lulu International Shopping Mall Pvt. Ltd TC 91/270, Akkulam Bridge, Anayara Post, Thiruvananthapuram, Kerala 695029"
+    },
+    {
+        "business_name": "Variety Mall",
+        "category": "Jewelry store",
+        "website": "/url?q=http://www.varietymall.in/&opi=79508299&sa=U&ved=0ahUKEwiCjobX_LyUAxWPbWwGHQFlNPoQ61gIFSgQ&usg=AOvVaw0x6erqtXFyfTA52HgwhHC6",
+        "google_rating": 4.1,
+        "review_count": null,
+        "phone": "0471 247 6896",
+        "address": "General Hospital Rd, Palayam, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "Ramachandran Textiles",
+        "category": "Clothing store",
+        "website": "/url?q=http://www.ramachandrantextiles.com/pazhavangadi/&opi=79508299&sa=U&ved=0ahUKEwiWwt3Z_LyUAxWES2wGHUVzLAoQ61gIFSgQ&usg=AOvVaw1Z9SEwWMSeA9-VGdsa3EQo",
+        "google_rating": 4.0,
+        "review_count": null,
+        "phone": "088930 99999",
+        "address": "Pazhavangadi St, East Fort, Padma Nagar, Pazhavangadi, Thiruvananthapuram, Kerala 695023"
+    }
+]

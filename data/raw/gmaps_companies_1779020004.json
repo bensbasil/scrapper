@@ -1,0 +1,29 @@
+[
+    {
+        "business_name": "i-Cons Technologies",
+        "category": "BPO Company",
+        "website": "/url?q=https://i-constech.com/&opi=79508299&sa=U&ved=0ahUKEwjyhJ2hpsCUAxXiUGwGHWtIBeMQ61gIFygS&usg=AOvVaw1DL92lewQ2DzyDgOAqH2i0",
+        "google_rating": 3.7,
+        "review_count": null,
+        "phone": "0422 437 4377",
+        "address": "247, Shiv Chambers, Alagesan Rd, Saibaba Mission, Post, Coimbatore, Tamil Nadu 641011"
+    },
+    {
+        "business_name": "Global Solutions",
+        "category": "Software company",
+        "website": null,
+        "google_rating": 4.6,
+        "review_count": null,
+        "phone": null,
+        "address": "206-3, 2nd Floor, 7th Street, Gandhipuram, Tamil Nadu 641012"
+    },
+    {
+        "business_name": "BPO Integra India Private Limited",
+        "category": "BPO Company",
+        "website": "/url?q=https://www.globalintegra.com/&opi=79508299&sa=U&ved=0ahUKEwjTmMGjpsCUAxVQR2wGHWRgNQoQ61gIFygS&usg=AOvVaw3Me0Uujxdq1tltkajbfaHp",
+        "google_rating": 3.5,
+        "review_count": null,
+        "phone": "0422 432 8555",
+        "address": "1st Floor, Kanapathy towers, Deccan Karvel Junction, 43- E3-E6, Sathy Rd, opp. BSNL Exchange, Ganapathy, Coimbatore, Tamil Nadu 641006"
+    }
+]

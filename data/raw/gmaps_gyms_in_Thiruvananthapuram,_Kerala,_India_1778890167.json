@@ -1,0 +1,47 @@
+[
+    {
+        "business_name": "Jones Gym Trivandrum",
+        "category": "Gym",
+        "website": "/url?q=http://jonesgym.in/&opi=79508299&sa=U&ved=0ahUKEwio6aHIwryUAxXF1zgGHUAbGlQQ61gIFygS&usg=AOvVaw15VVIDqNbnmkk7GwsPDpX5",
+        "google_rating": 4.9,
+        "review_count": null,
+        "phone": "082818 22345",
+        "address": "Kowdiar P.O, Devaswom Board Jct, Jn, Nanthancodu, Thiruvananthapuram, Kerala 695003"
+    },
+    {
+        "business_name": "Lifetime Unisex Gym",
+        "category": "Fitness center",
+        "website": "/url?q=https://life-time-gym.web.app/&opi=79508299&sa=U&ved=0ahUKEwj-zrLJwryUAxWh2TgGHXTqN4wQ61gIFygS&usg=AOvVaw3AGlXPp1219DGADMBTqajV",
+        "google_rating": 4.9,
+        "review_count": null,
+        "phone": "085907 18636",
+        "address": "Thennala Building, Sasthamangalam, Pipinmoodu Rd, Sasthamangalam, Thiruvananthapuram, Kerala 695010"
+    },
+    {
+        "business_name": "Spartan fitness",
+        "category": "Gym",
+        "website": "/url?q=https://www.instagram.com/spartanfit_ness/%3Figsh%3DMWtscG5zM3E4dXhnbQ%3D%3D%26utm_source%3Dqr&opi=79508299&sa=U&ved=0ahUKEwjCjczKwryUAxV-1TgGHSXaGoUQ61gIFygS&usg=AOvVaw2IPLCp8LmiA1Q04tjAkK-j",
+        "google_rating": 4.9,
+        "review_count": null,
+        "phone": "080895 50018",
+        "address": "Kazhakkootam, Opposite to cooperation office, Opposite to kseb near, Kazhakkoottam, Kerala 695582"
+    },
+    {
+        "business_name": "Lion Gym Vazhuthacaud",
+        "category": "Gym",
+        "website": "/url?q=http://www.liongym.in/&opi=79508299&sa=U&ved=0ahUKEwit19jLwryUAxU61jgGHYp9BisQ61gIFygS&usg=AOvVaw2vrw2x9iaegOCSrBY8OX_f",
+        "google_rating": 4.9,
+        "review_count": null,
+        "phone": "075590 86732",
+        "address": "3rd and 4th Floor, Lion Gym, Sree Valsam Building (Dianby World, near Kalabhavan Theatre, DPI, Vazhuthacaud, Thiruvananthapuram, Kerala 695014"
+    },
+    {
+        "business_name": "Liger Gym",
+        "category": "Gym",
+        "website": null,
+        "google_rating": 5.0,
+        "review_count": null,
+        "phone": null,
+        "address": "Second Floor, KSHB Building, opposite traffic Police Station, near SUT Hospital Road, Vrindavan Gardens, Pattom, Thiruvananthapuram, Kerala 695004"
+    }
+]

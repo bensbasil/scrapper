@@ -1,0 +1,902 @@
+[
+    {
+        "business_name": "Villa Maya",
+        "category": "Fine dining restaurant",
+        "website": "/url?q=http://www.villamaya.in/&opi=79508299&sa=U&ved=0ahUKEwiUjv7T3LyUAxVVbGwGHZIFD8YQ61gIGCgS&usg=AOvVaw1IhRvuFffANv762LlgTf-2",
+        "google_rating": 4.5,
+        "review_count": null,
+        "phone": "0471 257 8901",
+        "address": "MUTHOOT SKY CHEF, No-120 Palayam Airport Road Near, Vallakkadavu, Thiruvananthapuram, Kerala 695008"
+    },
+    {
+        "business_name": "Aryaas Park Veg Restaurant",
+        "category": "South Indian restaurant",
+        "website": null,
+        "google_rating": 4.0,
+        "review_count": null,
+        "phone": "090728 63449",
+        "address": "FXQ2+634, Theatre Station Road, near Apollo Dimora & Sreekumar, Overbridge, Thampanoor, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "Restaurant Chef Pillai Trivandrum",
+        "category": "Indian restaurant",
+        "website": "/url?q=http://chefpillai.com/&opi=79508299&sa=U&ved=0ahUKEwinpZvN3LyUAxUvWnADHUPUAncQ61gI7AMoEQ&usg=AOvVaw1w7wPpoZko-j1pzph9IB4o",
+        "google_rating": 4.5,
+        "review_count": null,
+        "phone": "090729 39090",
+        "address": "Panachamoottil square, near Bypass Road, Enchakkal, Vallakkadavu, Thiruvananthapuram, Kerala 695008"
+    },
+    {
+        "business_name": "Cafe Jade - All Day Dining (24X7)",
+        "category": "Coffee shop",
+        "website": "/url?q=http://www.hycinthhotels.com/&opi=79508299&sa=U&ved=0ahUKEwjVw7vS3LyUAxXub2wGHWaVBwMQ61gIHSgS&usg=AOvVaw2rSTlZFxShVgriKpLc0iAQ",
+        "google_rating": 4.6,
+        "review_count": null,
+        "phone": "0471 255 2999",
+        "address": "Manorama Office, Hycinth Hotels, Manorama Rd, near Malayala Manorama, Thampanoor, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "Imperial Kitchen Venpalavattom",
+        "category": "Eclectic restaurant",
+        "website": "/url?q=http://www.imperial-kitchen.in/&opi=79508299&sa=U&ved=0ahUKEwjzmNfv3LyUAxVYb2wGHRwgOdcQ61gIFigR&usg=AOvVaw0H24S40APtid3rE3ZdLG_r",
+        "google_rating": 4.4,
+        "review_count": null,
+        "phone": "077361 61222",
+        "address": "GW63+4VM Favourite Homes, Ground Floor, Grand Avenue, Pettah - Venpalavattom Rd, Venpalavattom, Thiruvananthapuram, Kerala 695029"
+    },
+    {
+        "business_name": "The Olive Restaurant",
+        "category": "Arab restaurant",
+        "website": "/url?q=http://www.theoliverestaurants.com/&opi=79508299&sa=U&ved=0ahUKEwinpZvN3LyUAxUvWnADHUPUAncQ61gI6gcoDw&usg=AOvVaw0chr9LlzZ2h_RJPfEEM_EA",
+        "google_rating": 4.1,
+        "review_count": null,
+        "phone": "090205 45454",
+        "address": "O-1, Jawahar Nagar Rd, Bhagavathy Nagar, Kowdiar, Thiruvananthapuram, Kerala 695003"
+    },
+    {
+        "business_name": "Zam Zam Restaurant",
+        "category": "Arab restaurant",
+        "website": "/url?q=http://www.zamzamrestaurants.com/&opi=79508299&sa=U&ved=0ahUKEwiE8JHu3LyUAxV1bGwGHeiiEYoQ61gIGygQ&usg=AOvVaw0PVKASAokXWxShmaYpDjRL",
+        "google_rating": 4.1,
+        "review_count": null,
+        "phone": "098099 98080",
+        "address": "opp. MLA Hostel, University of Kerala Senate House Campus, Palayam, Thiruvananthapuram, Kerala 695034"
+    },
+    {
+        "business_name": "Azad Restaurant at Over Bridge",
+        "category": "Non Vegetarian Restaurant",
+        "website": "/url?q=http://www.azadazad.com/&opi=79508299&sa=U&ved=0ahUKEwinpZvN3LyUAxUvWnADHUPUAncQ61gIkQcoDQ&usg=AOvVaw010-3OaQPTsqDqNPdyumcx",
+        "google_rating": 3.8,
+        "review_count": null,
+        "phone": "097458 97450",
+        "address": "Overbridge, Mele, Pazhavangadi, Thiruvananthapuram, Kerala 695036"
+    },
+    {
+        "business_name": "Pankayam",
+        "category": "Seafood restaurant",
+        "website": "/url?q=http://pankayamindia.com/&opi=79508299&sa=U&ved=0ahUKEwjqqZuO3byUAxUKbmwGHUCbGscQ61gIHSgS&usg=AOvVaw09po41ihNDbJv9Y6t65qCy",
+        "google_rating": 4.0,
+        "review_count": null,
+        "phone": "094950 29029",
+        "address": "JUST AFTER UNDERPASS, Bakery Flyover, Nandavanam, Palayam, Thiruvananthapuram, Kerala 695033"
+    },
+    {
+        "business_name": "Longtime",
+        "category": "Fine dining restaurant",
+        "website": "/url?q=https://www.facebook.com/pg/longtimeindia&opi=79508299&sa=U&ved=0ahUKEwidt7GP3byUAxVAUGcHHUkkJncQ61gIGygQ&usg=AOvVaw1wuqp0RiYNG5wL7r_2gi0d",
+        "google_rating": 4.3,
+        "review_count": null,
+        "phone": "098958 05888",
+        "address": "A 23, Jawahar Nagar, Sasthamangalam, Thiruvananthapuram, Kerala 695003"
+    },
+    {
+        "business_name": "Imperial Kitchen Kowdiar",
+        "category": "Fine dining restaurant",
+        "website": "/url?q=https://imperialkitchen.in/&opi=79508299&sa=U&ved=0ahUKEwinpZvN3LyUAxUvWnADHUPUAncQ61gIogsoEQ&usg=AOvVaw1_t42k0PUrhqsUydnfP2gm",
+        "google_rating": 4.1,
+        "review_count": null,
+        "phone": "0471 231 1789",
+        "address": "Favourite Centrium, KowdiarTTC Road, Kowdiar, Devaswom Board Jct, near Federal Bank, Kowdiar, Thiruvananthapuram, Kerala 695003"
+    },
+    {
+        "business_name": "Nadan Restaurant",
+        "category": "Restaurant",
+        "website": null,
+        "google_rating": 4.8,
+        "review_count": null,
+        "phone": null,
+        "address": "Lawish Groceries- RESTAURANT, Kesavadasapuram-Ulloor Rd, Kesavadasapuram, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "Deyvee Restaurant",
+        "category": "Restaurant",
+        "website": "/url?q=https://qbuypanda.com/store/9&opi=79508299&sa=U&ved=0ahUKEwjT8srG3byUAxW3XmwGHdl9NZEQ61gIGSgQ&usg=AOvVaw0ZtZ2F4Ek6wjDD5R-hA_Bx",
+        "google_rating": 4.1,
+        "review_count": null,
+        "phone": "094976 89245",
+        "address": "Nalumukku-Kaithamukku Rd, Nalumukku, Kaithamukku, Thiruvananthapuram, Kerala 695008"
+    },
+    {
+        "business_name": "Paragon Restaurant",
+        "category": "Asian restaurant",
+        "website": "/url?q=https://paragonrestaurant.in/&opi=79508299&sa=U&ved=0ahUKEwjx_OXV3LyUAxUJWHADHfz4LT0Q61gIHSgS&usg=AOvVaw2HKHIfF4KRBfWxtvP4_EY7",
+        "google_rating": 4.2,
+        "review_count": null,
+        "phone": "089439 97755",
+        "address": "TC 2, South Indian Bank, 5,OPPO, 44, Ulloor Brg, Kesavadasapuram, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "O Café",
+        "category": "Buffet restaurant",
+        "website": "/url?q=https://www.obytamara.com/hotel-trivandrum/restaurants/o-cafe.html&opi=79508299&sa=U&ved=0ahUKEwiDpOzZ3LyUAxVjSGwGHVtXFrsQ61gIFCgO&usg=AOvVaw36RT3TAFxxefuP9WcB-H0l",
+        "google_rating": 4.5,
+        "review_count": null,
+        "phone": "080 6555 1111",
+        "address": "Oruvathilkotta, Aakkulam, Thiruvananthapuram, Kerala 695029"
+    },
+    {
+        "business_name": "The Yellow Chilli",
+        "category": "North Indian restaurant",
+        "website": "/url?q=https://facebook.com/pg/theyellowchillitrivandrum&opi=79508299&sa=U&ved=0ahUKEwjP2_Lz3byUAxUeUGwGHQ3YDaIQ61gIHCgR&usg=AOvVaw2rT7QKDu8uBx7FxEGMcME4",
+        "google_rating": 4.4,
+        "review_count": null,
+        "phone": "073561 05999",
+        "address": "GXJ6+JW9, Aswathy Complex, Near Narmada Shopping Complex, Pipeline Rd, Ambalamukku, Thiruvananthapuram, Kerala 695003"
+    },
+    {
+        "business_name": "Plated Trivandrum",
+        "category": "Middle Eastern restaurant",
+        "website": "/url?q=https://instagram.com/plated.trivandrum%3Figshid%3DYmMyMTA2M2Y%3D&opi=79508299&sa=U&ved=0ahUKEwi4g5b13byUAxWSb2wGHcdpCyoQ61gIGSgQ&usg=AOvVaw1OZqAKKz-u6UE2uQfIdq9U",
+        "google_rating": 4.4,
+        "review_count": null,
+        "phone": "087144 78718",
+        "address": "Trivandrum Bakery Palayam Rd, Housing Board, Thycaud, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "Amrutam Vegetarian Restaurant",
+        "category": "Vegetarian restaurant",
+        "website": "/url?q=https://www.amrutamrestaurant.com/&opi=79508299&sa=U&ved=0ahUKEwj8r6763byUAxWSUGcHHQ6BMjwQ61gIGigQ&usg=AOvVaw00FheMrVU27WDPgDgXp3ry",
+        "google_rating": 4.5,
+        "review_count": null,
+        "phone": "096331 44544",
+        "address": "Devaswom Board Jct, Nanthancodu, Thiruvananthapuram, Kerala 695003"
+    },
+    {
+        "business_name": "Lantern Grove Restaurant",
+        "category": "Restaurant",
+        "website": "/url?q=https://www.lanterngrove.in/&opi=79508299&sa=U&ved=0ahUKEwjD-crK3byUAxVtSWwGHa3BFG8Q61gIHSgS&usg=AOvVaw01d_WqXq18X0aUuMxQsn3v",
+        "google_rating": 4.3,
+        "review_count": null,
+        "phone": "090483 99979",
+        "address": "All India Radio Rd, opposite La posh, Cotton Hill, Vazhuthacaud, Thiruvananthapuram, Kerala 695014"
+    },
+    {
+        "business_name": "Alibaba & 41 Dishes - Trivandrum",
+        "category": "Kerala restaurant",
+        "website": "/url?q=http://www.alibaba41dishes.com/&opi=79508299&sa=U&ved=0ahUKEwiSod-Y3byUAxWUzTgGHVuABXsQ61gI2AcoEQ&usg=AOvVaw3FrBm3eNR2UgZEDzGi1nmN",
+        "google_rating": 3.8,
+        "review_count": null,
+        "phone": "080890 61122",
+        "address": "Sasthamangalam Rd, opp. Indira Bhavan, Althara Nagar, Vellayambalam, Thiruvananthapuram, Kerala 695010"
+    },
+    {
+        "business_name": "Bab Arabia",
+        "category": "Turkish restaurant",
+        "website": null,
+        "google_rating": 4.2,
+        "review_count": null,
+        "phone": "073567 79888",
+        "address": "Pattom - Kowdiar Rd, next to SFS Mayfair Appartment, Marappalam, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "The Kanchipuram Cafe",
+        "category": "Indian restaurant",
+        "website": null,
+        "google_rating": 4.2,
+        "review_count": null,
+        "phone": "080757 25208",
+        "address": "Gangothri, AIR Road, Cotton Hill, Vazhuthacaud, Thiruvananthapuram, Kerala 695014"
+    },
+    {
+        "business_name": "Sree Arul Jyothi",
+        "category": "South Indian restaurant",
+        "website": null,
+        "google_rating": 4.0,
+        "review_count": null,
+        "phone": "0471 247 0240",
+        "address": "FWWX+H7M, Mahatma Gandhi Rd, Opposite Secretariat, Palayam, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "Trivanz Food Court – Seafood Restaurant in Trivandrum",
+        "category": "Seafood restaurant",
+        "website": "/url?q=https://trivanzseafoodrestaurant.com/&opi=79508299&sa=U&ved=0ahUKEwjcndPH3ryUAxXYaHADHfvbCgoQ61gIFygS&usg=AOvVaw1LcmVVq02Pd4o3eqyDSdOE",
+        "google_rating": 3.6,
+        "review_count": null,
+        "phone": "073060 74916",
+        "address": "World Market Rd, near LULU MALL, opposite O by Tamara, Anayara, Thiruvananthapuram, Kerala 695029"
+    },
+    {
+        "business_name": "Café Mojo",
+        "category": "South Indian restaurant",
+        "website": "/url?q=https://m.facebook.com/Cafemojotrv/&opi=79508299&sa=U&ved=0ahUKEwjSuMSH3ryUAxXNRmcHHV5uDCwQ61gIGygQ&usg=AOvVaw2KyxL9dAZRRh0F38md1I67",
+        "google_rating": 4.1,
+        "review_count": null,
+        "phone": "0471 243 0437",
+        "address": "Shaheen Building Pattom Kowdiar Road Near Kuravankonam, Kowdiar, Thiruvananthapuram, Kerala 695003"
+    },
+    {
+        "business_name": "Steampot Restaurant",
+        "category": "Kerala restaurant",
+        "website": "/url?q=https://www.steampot.in/&opi=79508299&sa=U&ved=0ahUKEwjcsJHQ3ryUAxUBZmwGHS0UCQUQ61gIGygS&usg=AOvVaw2Y9F09BsfEsj4Xb_f_IeNL",
+        "google_rating": 3.7,
+        "review_count": null,
+        "phone": "091421 34992",
+        "address": "TC 82/1133, Raj Tower, Pattoor - Vanchiyoor Rd, Vanchiyoor, Thiruvananthapuram, Kerala 695035"
+    },
+    {
+        "business_name": "Zam Zam Restaurants YMR",
+        "category": "Cafe",
+        "website": "/url?q=https://www.zamzamrestaurants.com/buncafe.html&opi=79508299&sa=U&ved=0ahUKEwjLyLTT3ryUAxUgWHADHTY0LMUQ61gIHCgS&usg=AOvVaw2OtSr1QqiAlJ0Qy1j9pa9e",
+        "google_rating": 4.2,
+        "review_count": null,
+        "phone": "098099 98080",
+        "address": "YMR Nandancode Road, YMR Jct, Nanthancodu, Thiruvananthapuram, Kerala 695003"
+    },
+    {
+        "business_name": "Mothers Veg Plaza",
+        "category": "Vegetarian restaurant",
+        "website": "/url?q=https://mothersvegplaza.in/&opi=79508299&sa=U&ved=0ahUKEwiewJDs3ryUAxXkcmwGHbmCIWMQ61gIGygS&usg=AOvVaw3jpVo4dTdARpz_7ImGHp4n",
+        "google_rating": 4.1,
+        "review_count": null,
+        "phone": "0471 401 2255",
+        "address": "Bakery Jct Rd, near Russian Cultural Center, Vanross, Palayam, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "Garden Grille & Bar",
+        "category": "Restaurant",
+        "website": null,
+        "google_rating": 4.2,
+        "review_count": null,
+        "phone": "081118 86844",
+        "address": "FWXX+QW8, Punnen Rd, Statue, Palayam, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "BLND Restobar",
+        "category": "Restaurant",
+        "website": "/url?q=https://sfshomebridge.in/pyramid/restobar&opi=79508299&sa=U&ved=0ahUKEwjcjr2O37yUAxVcZmwGHdxeOB0Q61gIGCgS&usg=AOvVaw29TEbBITm4XWGlu6Lhp-_P",
+        "google_rating": 4.5,
+        "review_count": null,
+        "phone": "096330 53222",
+        "address": "SFS Cyber Palms Rd, near Nexa Motors, Karimanal, Kochuveli, Thiruvananthapuram, Kerala 695583"
+    },
+    {
+        "business_name": "Khana Peena",
+        "category": "South Indian restaurant",
+        "website": null,
+        "google_rating": 4.2,
+        "review_count": null,
+        "phone": "081291 92889",
+        "address": "Joy Alukkas, Trivandrum Vizhinjam Rd, East Fort, Attakulangara, Thiruvananthapuram, Kerala 695036"
+    },
+    {
+        "business_name": "Varnam Seafood Restaurant",
+        "category": "Seafood restaurant",
+        "website": "/url?q=http://www.varnamcaterers.com/&opi=79508299&sa=U&ved=0ahUKEwjNz82j37yUAxWQe2wGHVprMoAQ61gIHCgS&usg=AOvVaw2jiL-ruxIbuDo6wQRKg_3G",
+        "google_rating": 3.6,
+        "review_count": null,
+        "phone": "0471 232 0327",
+        "address": "Bakery Jct Rd, Near RBI, Nandavanam, Palayam, Thiruvananthapuram, Kerala 695033"
+    },
+    {
+        "business_name": "Ruchi Veg Restaurant",
+        "category": "Vegetarian restaurant",
+        "website": "/url?q=https://www.ruchifoods.org/&opi=79508299&sa=U&ved=0ahUKEwii3O2x37yUAxWqXWwGHdu7FMkQ61gIFygO&usg=AOvVaw1YiTdp3iGQ1KTy2B2NptVt",
+        "google_rating": 4.2,
+        "review_count": null,
+        "phone": "085907 09059",
+        "address": "Aroma building, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "Diners' Summit - Restaurant, North Indian, Naden food, buffet, vegetarian restaurant",
+        "category": "North Indian restaurant",
+        "website": null,
+        "google_rating": 4.6,
+        "review_count": null,
+        "phone": "086069 00603",
+        "address": "Biverah Hotel & Suites, Kumarapuram Pattom Road, Medical Collage (Post ), 695011, Thiruvananthapuram, Kerala 695011"
+    },
+    {
+        "business_name": "PLAV",
+        "category": "South Indian restaurant",
+        "website": null,
+        "google_rating": 4.1,
+        "review_count": null,
+        "phone": "094965 02958",
+        "address": "TC 28 304, Pound Road , Thycaud Police Parade Ground, Rd, Thiruvananthapuram, Kerala 695014"
+    },
+    {
+        "business_name": "Vayalil Restaurant, The Finedine, eanchakkal",
+        "category": "Family restaurant",
+        "website": null,
+        "google_rating": 3.7,
+        "review_count": null,
+        "phone": "096336 79707",
+        "address": "Thiruvananthapuram Byp, opposite SBI ATM, Eanchakkal, Thiruvananthapuram, Kerala 695008"
+    },
+    {
+        "business_name": "Ariya Nivaas Restaurant",
+        "category": "Vegetarian restaurant",
+        "website": null,
+        "google_rating": 4.2,
+        "review_count": null,
+        "phone": "094000 00769",
+        "address": "Manorama Rd, near Thampanoor, Aristo Junction, Thampanoor, Thiruvananthapuram, Kerala 695014"
+    },
+    {
+        "business_name": "Supreme Upper Crust",
+        "category": "Italian restaurant",
+        "website": null,
+        "google_rating": 4.3,
+        "review_count": null,
+        "phone": "0471 272 7722",
+        "address": "Kuravankonam - Maruthoor Rd, opposite Welgate organic, Kowdiar, Thiruvananthapuram, Kerala 695003"
+    },
+    {
+        "business_name": "Mani Mess",
+        "category": "South Indian restaurant",
+        "website": null,
+        "google_rating": 4.5,
+        "review_count": null,
+        "phone": "094477 05775",
+        "address": "TC 40, 540, 3rd Puthen St, near mani fashion jewellwers, Muttathara, Thiruvananthapuram, Kerala 695009"
+    },
+    {
+        "business_name": "Aryaas Vegetarian Restaurant",
+        "category": "Vegetarian restaurant",
+        "website": null,
+        "google_rating": 3.9,
+        "review_count": null,
+        "phone": null,
+        "address": "Medical College, opposite to police station, Murinjapalam, Thiruvananthapuram, Kerala 695011"
+    },
+    {
+        "business_name": "Salkkaram Edavazhi",
+        "category": "Restaurant",
+        "website": "/url?q=https://instagram.com/salkaram458%3Figshid%3DMzMyNGUyNmU2YQ%3D%3D&opi=79508299&sa=U&ved=0ahUKEwijy6HL4LyUAxWNS2wGHR0fF80Q61gIGigQ&usg=AOvVaw0xIB-WyyU7ulxPgkVoCU4A",
+        "google_rating": 4.7,
+        "review_count": null,
+        "phone": "070124 13245",
+        "address": "Koder Ln, Palayam, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "Taste of Kerala",
+        "category": "Kerala restaurant",
+        "website": null,
+        "google_rating": 4.0,
+        "review_count": null,
+        "phone": "094477 05775",
+        "address": "TC 40, 540, 3rd Puthen St, near mani fashion jewellwers, Muttathara, Thiruvananthapuram, Kerala 695009"
+    },
+    {
+        "business_name": "Burj Al Mandi Restaurant",
+        "category": "Middle Eastern restaurant",
+        "website": null,
+        "google_rating": 4.2,
+        "review_count": null,
+        "phone": "0471 405 8444",
+        "address": "Opposite Fort Police Station, Attakulangara, Thiruvananthapuram, Kerala 695009"
+    },
+    {
+        "business_name": "Neerali Restaurant",
+        "category": "Indian restaurant",
+        "website": null,
+        "google_rating": 4.1,
+        "review_count": null,
+        "phone": "090613 31999",
+        "address": "Pazhaya Rd, Murinjapalam, Thiruvananthapuram, Kerala 695011"
+    },
+    {
+        "business_name": "The Chef's Studio",
+        "category": "Restaurant",
+        "website": null,
+        "google_rating": 4.8,
+        "review_count": null,
+        "phone": "092880 01155",
+        "address": "Vellar, Vazhamuttom, Thiruvananthapuram, Kerala 695527"
+    },
+    {
+        "business_name": "Azad Star at Vazhuthacaud",
+        "category": "Kerala restaurant",
+        "website": "/url?q=https://www.azadazad.com/&opi=79508299&sa=U&ved=0ahUKEwjGnL7l4LyUAxWAQ2cHHX5KFSkQ61gIHSgS&usg=AOvVaw35gfmmSqBVomppORnBXeqF",
+        "google_rating": 4.0,
+        "review_count": null,
+        "phone": "097458 97452",
+        "address": "CV Raman Pillai Rd, opposite Bharat Petrol Pump, Bakery, Vazhuthacaud, Thiruvananthapuram, Kerala 695014"
+    },
+    {
+        "business_name": "Pai's kitchen",
+        "category": "South Indian restaurant",
+        "website": null,
+        "google_rating": 4.0,
+        "review_count": null,
+        "phone": null,
+        "address": "Archana Building, General Hospital Rd, Palayam, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "Huddles Cafe",
+        "category": "Cafe",
+        "website": "/url?q=https://huddlescafe.com/&opi=79508299&sa=U&ved=0ahUKEwiula_A4byUAxU23TgGHcO-C2gQ61gIHSgS&usg=AOvVaw1y9-G6zxIl73ivZuWAtYw5",
+        "google_rating": 4.4,
+        "review_count": null,
+        "phone": "081291 21007",
+        "address": "First floor, Capitol building, TC25, 2850/3-4, Nalanda Ln, Nanthancodu, Thiruvananthapuram, Kerala 695003"
+    },
+    {
+        "business_name": "Kerala Hotel",
+        "category": "Kerala restaurant",
+        "website": null,
+        "google_rating": 3.5,
+        "review_count": null,
+        "phone": "099952 76467",
+        "address": "GW72+R9, Oruvathilkotta, Aakkulam, Thiruvananthapuram, Kerala 695029"
+    },
+    {
+        "business_name": "Open House Restaurant",
+        "category": "Family restaurant",
+        "website": null,
+        "google_rating": 4.0,
+        "review_count": null,
+        "phone": "0471 246 7695",
+        "address": "Kunnumpuram Rd, opp. sbi, Kunnumpuram, Pulimoodu, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "Sri Aiswariya Vegetarian Restaurant",
+        "category": "Vegetarian restaurant",
+        "website": null,
+        "google_rating": 3.8,
+        "review_count": null,
+        "phone": "094476 56655",
+        "address": "Building No. 15, Lavender Designer Boutique Near, 963, CV Raman Pillai Rd, Vazhuthacaud, Thiruvananthapuram, Kerala 695014"
+    },
+    {
+        "business_name": "RASOI by RUCHI",
+        "category": "Restaurant",
+        "website": "/url?q=http://www.ruchifoods.org/&opi=79508299&sa=U&ved=0ahUKEwiArNHd4byUAxWOd2wGHWUYBREQ61gIGygS&usg=AOvVaw1qS5Wy_WUp1swRmLdalc-C",
+        "google_rating": 4.3,
+        "review_count": null,
+        "phone": "062829 17722",
+        "address": "Adrak Hotel Building, Medical College Kumarapuram Rd, Kumarapuram, Thiruvananthapuram, Kerala 695011"
+    },
+    {
+        "business_name": "Malabar Cafe",
+        "category": "Family restaurant",
+        "website": "/url?q=http://hyattregencytrivandrum.com/&opi=79508299&sa=U&ved=0ahUKEwjUkIvz37yUAxXEcGwGHWkIKN4Q61gIFygS&usg=AOvVaw0aw77gMcU88AADzsQqTmLS",
+        "google_rating": 4.2,
+        "review_count": null,
+        "phone": "062386 00446",
+        "address": "Hyatt Regency, CV Raman Pillai Rd, Thycaud, Thiruvananthapuram, Kerala 695014"
+    },
+    {
+        "business_name": "Cafe Hive",
+        "category": "South Indian restaurant",
+        "website": null,
+        "google_rating": 4.3,
+        "review_count": null,
+        "phone": "092077 22256",
+        "address": "Hotel Dimora, Railway Station Road, opp. Central, Overbridge, Thampanoor, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "Dindigul Thalappakatti Restaurant",
+        "category": "Indian restaurant",
+        "website": "/url?q=https://thalappakatti.com/&opi=79508299&sa=U&ved=0ahUKEwjWzpPW4byUAxXifGwGHegEN1wQ61gIGygQ&usg=AOvVaw0rwGBwywigwa9CzasQJFMa",
+        "google_rating": 4.2,
+        "review_count": null,
+        "phone": "078239 00012",
+        "address": "No.1556/1,& 157/8, ground Floor, 1st and 2nd floor, Pattom, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "The Tides",
+        "category": "Restaurant",
+        "website": "/url?q=https://www.theleela.com/the-leela-kovalam-a-raviz-hotel/restaurants/the-tides%3Futm_source%3DGMBlisting%26utm_medium%3Dorganic%26utm_campaign%3Dgbp-leela-kovalam-a-raviz-hotel-kovalam-the-tides%26utm_content%3Drestaurant-website-click&opi=79508299&sa=U&ved=0ahUKEwipxqLy4ryUAxXk-jgGHSDtBh0Q61gIGSgQ&usg=AOvVaw0XUsZFIMpz_Ky_pXP87CPm",
+        "google_rating": 4.3,
+        "review_count": null,
+        "phone": "0471 669 1111",
+        "address": "The Leela Kovalam, A Raviz Hotel, Kovalam, Beach Road, beach, Kovalam, Thiruvananthapuram, Kerala 695527"
+    },
+    {
+        "business_name": "PARAGON RESTAURANT LULU TRIVANDRUM",
+        "category": "Kerala restaurant",
+        "website": "/url?q=https://www.paragonrestaurant.in/&opi=79508299&sa=U&ved=0ahUKEwiAj4LO37yUAxViRmcHHT-JObMQ61gIHSgS&usg=AOvVaw0Vn_fymNxPzeI6Chna0pYj",
+        "google_rating": 4.3,
+        "review_count": null,
+        "phone": "0471 222 0060",
+        "address": "2nd Floor, Lulu International Shopping Mall, Kochuveli, Thiruvananthapuram, Kerala 695029"
+    },
+    {
+        "business_name": "Le Lumiere Restaurant",
+        "category": "Arab restaurant",
+        "website": "/url?q=https://lelumieregroup.com/&opi=79508299&sa=U&ved=0ahUKEwibq-Lq4LyUAxV-bWwGHSfcM6IQ61gIHSgS&usg=AOvVaw0j8lVfDVX5dcPoRtKtR9cD",
+        "google_rating": 4.0,
+        "review_count": null,
+        "phone": "086067 20000",
+        "address": "Law College Campus Rd, opp. Govt, Barton Hill, Barton Hill Colony, PMG, Thiruvananthapuram, Kerala 695035"
+    },
+    {
+        "business_name": "Poorna Family Restaurant",
+        "category": "Family restaurant",
+        "website": null,
+        "google_rating": 4.1,
+        "review_count": null,
+        "phone": "0471 233 0648",
+        "address": "FWWX+6MW, Purna Lane, Statue, Palayam, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "Poomaram Ram's Kitchen",
+        "category": "Kerala restaurant",
+        "website": "/url?q=http://www.youtube.com/c/PoomaramRamsKitchen&opi=79508299&sa=U&ved=0ahUKEwiL4oOL5LyUAxUd3jgGHTiqJ-EQ61gIHCgS&usg=AOvVaw3vpz8psmIsEBxxLYooTlbv",
+        "google_rating": 3.4,
+        "review_count": null,
+        "phone": "097471 15660",
+        "address": "Kazhakootam - Kovalam Bypass Road, Anayara Rd, near Lulu, Ambara Suits, Venpalavattom, Thiruvananthapuram, Kerala 695029"
+    },
+    {
+        "business_name": "Narayana Bhavan NB",
+        "category": "South Indian restaurant",
+        "website": null,
+        "google_rating": 3.6,
+        "review_count": null,
+        "phone": "094472 48923",
+        "address": "TC 26, 1822, General Hospital Rd, Statue, Palayam, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "Nikunjam Restaurant",
+        "category": "South Indian restaurant",
+        "website": "/url?q=https://qbuypanda.com/restaurants-qbuypanda/NIKUNJAM_QBUYPANDA&opi=79508299&sa=U&ved=0ahUKEwjJz7WY5LyUAxX6oWMGHcB_J5AQ61gIGigQ&usg=AOvVaw2EmeBqA5D5vMlsj1hU7D5z",
+        "google_rating": 4.0,
+        "review_count": null,
+        "phone": "075920 90807",
+        "address": "Opposite Tagore Theatre, Vazhuthacaud, Thycaud, Thiruvananthapuram, Kerala 695010"
+    },
+    {
+        "business_name": "SK Restaurant",
+        "category": "Kerala restaurant",
+        "website": null,
+        "google_rating": 4.3,
+        "review_count": null,
+        "phone": "099614 69990",
+        "address": "746, Kuravankonam Ambalamukku Rd, near Binoy Marbles, Ambalamukku, Thiruvananthapuram, Kerala 695003"
+    },
+    {
+        "business_name": "Good Morning Hotel",
+        "category": "Non Vegetarian Restaurant",
+        "website": null,
+        "google_rating": 4.5,
+        "review_count": null,
+        "phone": "094961 04021",
+        "address": "next to State Bank of India P O, Karamana, Thiruvananthapuram, Kerala 695002"
+    },
+    {
+        "business_name": "Malabar BitEs Restaurant",
+        "category": "Restaurant",
+        "website": null,
+        "google_rating": 4.1,
+        "review_count": null,
+        "phone": "095671 94354",
+        "address": "GWCH+6PV Medical College Junction, Chalakkuzhi, Thiruvananthapuram, Kerala 695033"
+    },
+    {
+        "business_name": "Hotel Aruna (Pure veg)",
+        "category": "Vegetarian restaurant",
+        "website": null,
+        "google_rating": 4.0,
+        "review_count": null,
+        "phone": "0471 247 5893",
+        "address": "T.C.14/2345 MG Road Near VJT Hall, University of Kerala Senate House Campus, Palayam, Thiruvananthapuram, Kerala 695034"
+    },
+    {
+        "business_name": "Oriental Spice",
+        "category": "Chinese restaurant",
+        "website": null,
+        "google_rating": 4.1,
+        "review_count": null,
+        "phone": "0471 272 9922",
+        "address": "Musaliar Buildings, Pattom - Kowdiar Rd, Near Federal Bank, Kuravankonam, Thiruvananthapuram, Kerala 695003"
+    },
+    {
+        "business_name": "MANDI MANZIL",
+        "category": "Restaurant",
+        "website": "/url?q=https://instagram.com/mandimanzil%3Futm_medium%3Dcopy_link&opi=79508299&sa=U&ved=0ahUKEwi28uL75byUAxVMTGwGHYVfOlsQ61gIFygO&usg=AOvVaw2KwE57_7szJIWvWoWiNZhL",
+        "google_rating": 4.3,
+        "review_count": null,
+        "phone": "095440 22055",
+        "address": "Mettukada, juction, Thiruvananthapuram, Kerala 695014"
+    },
+    {
+        "business_name": "Hotel Dimora Thiruvananthapuram",
+        "category": null,
+        "website": "/url?q=https://www.thedimorahotels.com/dimora-thiruvananthapuram/&opi=79508299&sa=U&ved=0ahUKEwisiO2C5ryUAxWaR2wGHcrdE3EQ61gIFSgQ&usg=AOvVaw1DBhOUwzPRX9lCJYpQMhTY",
+        "google_rating": 4.4,
+        "review_count": null,
+        "phone": "0471 666 5333",
+        "address": "Opp. Central Railway Station, Thampanoor, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "O by Tamara Trivandrum",
+        "category": null,
+        "website": "/url?q=https://www.obytamara.com/hotel-trivandrum/&opi=79508299&sa=U&ved=0ahUKEwjYzb3c57yUAxVuUGwGHazmDPQQ61gIEygO&usg=AOvVaw2a2DXn6UVsHGliBcttdtlG",
+        "google_rating": 4.5,
+        "review_count": null,
+        "phone": "080 6555 1111",
+        "address": "Oruvathilkotta, Aakkulam, Thiruvananthapuram, Kerala 695029"
+    },
+    {
+        "business_name": "Paradise Family Restaurant",
+        "category": "Biryani restaurant",
+        "website": null,
+        "google_rating": 4.6,
+        "review_count": null,
+        "phone": "089214 08112",
+        "address": "Ulloor Pump, Ulloor Junction, P T Chacko Nagar, Ulloor, Thiruvananthapuram, Kerala 695011"
+    },
+    {
+        "business_name": "Ummees Seafood Restaurant",
+        "category": "Restaurant",
+        "website": null,
+        "google_rating": 4.0,
+        "review_count": null,
+        "phone": null,
+        "address": "GX44+Q9X, Nandavanam, Palayam, Thiruvananthapuram, Kerala 695033"
+    },
+    {
+        "business_name": "Irani kuzhimandi restaurant",
+        "category": "South Indian restaurant",
+        "website": null,
+        "google_rating": 3.9,
+        "review_count": null,
+        "phone": "099462 24020",
+        "address": "opp. rbi cottege, Nanthancodu, Thiruvananthapuram, Kerala 695003"
+    },
+    {
+        "business_name": "The Central Residency",
+        "category": null,
+        "website": "/url?q=http://www.thecentralresidency.com/&opi=79508299&sa=U&ved=0ahUKEwigi6_-57yUAxXicmwGHYfzL_YQ61gIFygS&usg=AOvVaw2WIis2AWhuv5MmoNGy7G88",
+        "google_rating": 4.3,
+        "review_count": null,
+        "phone": "073564 44300",
+        "address": "opposite Malayalam Manorama, Manorama Rd, Aristo, Thampanoor, Thiruvananthapuram, Kerala 695014"
+    },
+    {
+        "business_name": "Porotta Hut",
+        "category": "Indian restaurant",
+        "website": "/url?q=https://www.porottahut.com/&opi=79508299&sa=U&ved=0ahUKEwjQpeir5LyUAxWpRmcHHXq7A74Q61gIxwQoDw&usg=AOvVaw22T8LzJELkM-Aaqq7pwOcH",
+        "google_rating": 3.9,
+        "review_count": null,
+        "phone": "098958 89757",
+        "address": "Kuranganoor Road, Pattom, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "Azad Restaurant at Medical College",
+        "category": "South Indian restaurant",
+        "website": "/url?q=https://m.facebook.com/pages/Azad/200671273298067&opi=79508299&sa=U&ved=0ahUKEwivm-SU6LyUAxVre2wGHU4cNRsQ61gIHCgS&usg=AOvVaw0Ds3b0zxPBoqaA8iVMp0lZ",
+        "google_rating": 4.0,
+        "review_count": null,
+        "phone": "097458 97454",
+        "address": "Medical Collge, P.O, Medical College Ulloor Rd, near Sree Narayana Guru Mandir, Ulloor, Thiruvananthapuram, Kerala 695011"
+    },
+    {
+        "business_name": "Jasmine Bay Restaurant",
+        "category": "Fine dining restaurant",
+        "website": "/url?q=https://www.tajhotels.com/en-in/hotels/taj-green-cove/restaurants/jasmine-bay%3Futm_source%3Dgoogle%26utm_medium%3Dlocal%26utm_campaign%3Dtaj-green-cove-jasmine-bay&opi=79508299&sa=U&ved=0ahUKEwiToJnf4byUAxW41jgGHUXuHlgQ61gI8AUoDw&usg=AOvVaw0zT98-u4i3eSTdy6Gp9z3V",
+        "google_rating": 4.1,
+        "review_count": null,
+        "phone": "0471 661 3000",
+        "address": "Taj Green Cove Resort & Spa, GV Raja Rd, Kovalam, Thiruvananthapuram, Kerala 695527"
+    },
+    {
+        "business_name": "Ariya Jyothi Vegetarian Restaurant",
+        "category": "South Indian restaurant",
+        "website": null,
+        "google_rating": 3.6,
+        "review_count": null,
+        "phone": "0471 254 5645",
+        "address": "Pattom Square, Near One, Lekshmi Nagar, Pattom, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "Palace Restaurant",
+        "category": "Fast food restaurant",
+        "website": null,
+        "google_rating": 4.2,
+        "review_count": null,
+        "phone": "099951 95681",
+        "address": "716, Prasanth Nagar Rd, Prasanth Nagar, Ulloor, Thiruvananthapuram, Kerala 695011"
+    },
+    {
+        "business_name": "Mynt",
+        "category": "Restaurant",
+        "website": "/url?q=https://www.porottahut.com/&opi=79508299&sa=U&ved=0ahUKEwiw05iM6LyUAxWdT2wGHdvtOhwQ61gIGSgQ&usg=AOvVaw2e5Ox3rQhAIq_DeSoThmAY",
+        "google_rating": 3.9,
+        "review_count": null,
+        "phone": "098958 89757",
+        "address": "Kuranganoor Road, Pattom, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "Ambadi Kannan Restaurant",
+        "category": "Restaurant",
+        "website": null,
+        "google_rating": 3.9,
+        "review_count": null,
+        "phone": null,
+        "address": "TC 14/3657, National Highway 47, Opp Smart Bazar Kesavadasapuram, Pattom, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "Park Rajadhani",
+        "category": null,
+        "website": "/url?q=https://www.rajadhanihotels.com/&opi=79508299&sa=U&ved=0ahUKEwiXm8yZ6ryUAxXwUGwGHaVyEV4Q61gIFygS&usg=AOvVaw0vDzP3nQuU0W_eTSjHznVp",
+        "google_rating": 3.6,
+        "review_count": null,
+        "phone": "0471 244 2627",
+        "address": "Ulloor Gardens Rd, near Village Office, Ulloor, Ulloor Garden, Ulloor, Thiruvananthapuram, Kerala 695011"
+    },
+    {
+        "business_name": "Kuttanadan Puncha Family Restaurant",
+        "category": "Restaurant",
+        "website": "/url?q=https://www.instagram.com/kuttanadanpuncha%3Figsh%3DMXd5cGEzdGI0NzJ1Ng%3D%3D&opi=79508299&sa=U&ved=0ahUKEwighoef6ryUAxWjcmwGHRiaKH4Q61gIGygS&usg=AOvVaw0pw26cVBlq6yA2DYiRz_gN",
+        "google_rating": 4.0,
+        "review_count": null,
+        "phone": "085920 83648",
+        "address": "Mahatma Gandhi College - Main Block, opposite M G College Road, opp. Thiruvananthapuram, Chempakassery Nagar, Kesavadasapuram, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "Ambalapatt Restaurant",
+        "category": "South Indian restaurant",
+        "website": null,
+        "google_rating": 3.7,
+        "review_count": null,
+        "phone": "094470 66647",
+        "address": "GWCR+X8F, Opposite Life Insurance Corporation of India, Pattom, Pattom, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "Al Taza - Trivandrum",
+        "category": "Shawarma restaurant",
+        "website": "/url?q=http://www.al-taza.com/&opi=79508299&sa=U&ved=0ahUKEwj7nJX557yUAxViRmcHHepTCy0Q61gIFygO&usg=AOvVaw0_g256AiRKhzxEQfbXPHht",
+        "google_rating": 4.4,
+        "review_count": null,
+        "phone": "075111 73333",
+        "address": "Kuravankonam, Thiruvananthapuram, Kerala 695003"
+    },
+    {
+        "business_name": "Sri Ananthapuri Vegetarian Restaurant",
+        "category": "South Indian restaurant",
+        "website": null,
+        "google_rating": 3.9,
+        "review_count": null,
+        "phone": "094461 09083",
+        "address": "GWHQ+QFG, National Highway 47, NSP Nagar, Kesavadasapuram, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "Le Capital Seafood & Grills",
+        "category": "Seafood restaurant",
+        "website": null,
+        "google_rating": 3.8,
+        "review_count": null,
+        "phone": "080890 44494",
+        "address": "Ground Floor, Chandrasekharan Nair Stadium, Palayam, Thiruvananthapuram, Kerala 695034"
+    },
+    {
+        "business_name": "Meenamma's Kitchen",
+        "category": "Restaurant",
+        "website": null,
+        "google_rating": 4.6,
+        "review_count": null,
+        "phone": "099956 48186",
+        "address": "Kumarapuram Rd, Near GG Hospital, Murinjapalam, Thiruvananthapuram, Kerala 695011"
+    },
+    {
+        "business_name": "Konkan Café Vivanta Thiruvananthapuram",
+        "category": "Restaurant",
+        "website": "/url?q=https://www.vivantahotels.com/en-in/hotels/vivanta-thiruvananthapuram/restaurants/konkan-cafe-thiruvananthapuram%3Futm_source%3Dgoogle%26utm_medium%3Dlocal%26utm_campaign%3Dkonkan-cafe-thiruvananthapuram-cla%26utm_content%3Dkonkan-cafe-thiruvananthapuram-cla-gmb&opi=79508299&sa=U&ved=0ahUKEwiH3NyL7byUAxXQSGwGHbGOAv8Q61gIGygS&usg=AOvVaw1MY2LXrHtc10edi1vHTnG5",
+        "google_rating": 4.7,
+        "review_count": null,
+        "phone": "0471 402 2100",
+        "address": "Vivanta Thiruvananthapuram, Extra Police Rd, Nandavanam, Palayam, Thiruvananthapuram, Kerala 695033"
+    },
+    {
+        "business_name": "Park Malabar Restaurant Trivandrum",
+        "category": "Restaurant",
+        "website": null,
+        "google_rating": 4.6,
+        "review_count": null,
+        "phone": "079091 23366",
+        "address": "Chalakuzhy Rd, Pottakkuzhi, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "T & Company (T & Co)",
+        "category": "Biryani restaurant",
+        "website": null,
+        "google_rating": 3.7,
+        "review_count": null,
+        "phone": null,
+        "address": "Mahatma Gandhi Rd, opposite Kalyan Silks, University of Kerala Senate House Campus, Palayam, Thiruvananthapuram, Kerala 695034"
+    },
+    {
+        "business_name": "Krishna Hotel",
+        "category": "Kerala restaurant",
+        "website": null,
+        "google_rating": 4.3,
+        "review_count": null,
+        "phone": "096563 94313",
+        "address": "C24F+8GG, Mangalattukonam Road, behind Coconut Reasearch Centre, Kattachalkuzhi, Venganoor, Kerala 695501"
+    },
+    {
+        "business_name": "Garam Masala Restaurant",
+        "category": "Fast food restaurant",
+        "website": null,
+        "google_rating": 3.6,
+        "review_count": null,
+        "phone": "0471 401 2333",
+        "address": "Kesavadasapuram Rd, Opposite LG Electronics, Lekshmi Nagar, Pattom, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "Akshayam Pure Vegetarian Restaurant",
+        "category": "Vegetarian restaurant",
+        "website": null,
+        "google_rating": 3.7,
+        "review_count": null,
+        "phone": null,
+        "address": "GXF3+F77, Kuravankonam, Thiruvananthapuram, Kerala 695003"
+    },
+    {
+        "business_name": "Sri Gavuri Nivas",
+        "category": null,
+        "website": null,
+        "google_rating": 3.8,
+        "review_count": null,
+        "phone": "0471 255 5567",
+        "address": "Medical College, Opp, Medical College Ulloor Rd, Chalakkuzhi, Thiruvananthapuram, Kerala 695011"
+    },
+    {
+        "business_name": "Food in style",
+        "category": "Indian restaurant",
+        "website": null,
+        "google_rating": 3.5,
+        "review_count": null,
+        "phone": "099473 22280",
+        "address": "NGO Quarters Junction, Museum - Nanthencode Rd, Nandavanam, Palayam, Thiruvananthapuram, Kerala 695033"
+    },
+    {
+        "business_name": "MANDI MANZIL ULLOOR",
+        "category": "Arab restaurant",
+        "website": "/url?q=https://www.instagram.com/mandimanzil%3Futm_source%3Dqr%26igsh%3DaWlsc24waHdpM3Fk&opi=79508299&sa=U&ved=0ahUKEwiqtZ6F77yUAxV4cGwGHaZjJXUQ61gIGSgQ&usg=AOvVaw2kibSfBWUe5C_135zmupAE",
+        "google_rating": 4.3,
+        "review_count": null,
+        "phone": "085890 22055",
+        "address": "Medical College Ulloor Rd, P T Chacko Nagar, Ulloor, Thiruvananthapuram, Kerala 695011"
+    },
+    {
+        "business_name": "Indian Coffee House",
+        "category": "Restaurant",
+        "website": "/url?q=https://www.indiancoffeehouse.com/&opi=79508299&sa=U&ved=0ahUKEwjYtv6S77yUAxVwd2wGHQcqHgYQ61gIGSgQ&usg=AOvVaw0dJqfscpaM7oJjNGJaSthA",
+        "google_rating": 4.1,
+        "review_count": null,
+        "phone": "0487 233 5275",
+        "address": "J B Arcade, Vanross Junction, Statue, Palayam, Thiruvananthapuram, Kerala 695001"
+    },
+    {
+        "business_name": "Thakazhi Pedika - Restaurant",
+        "category": "Restaurant",
+        "website": "/url?q=http://www.instagram.com/thakazhi.pedika&opi=79508299&sa=U&ved=0ahUKEwi9tc-t7byUAxW8UGwGHX3jCtUQ61gIGygS&usg=AOvVaw3LR7KqZ32fvGjSKfY3Zuq0",
+        "google_rating": 4.1,
+        "review_count": null,
+        "phone": "080890 85700",
+        "address": "Kalpaka Nagar, Marappalam, Pattom - Kowdiar Rd, Pattom, Thiruvananthapuram, Kerala 695004"
+    },
+    {
+        "business_name": "New Pantry Restaurant",
+        "category": "Restaurant",
+        "website": null,
+        "google_rating": 3.8,
+        "review_count": null,
+        "phone": "095440 34646",
+        "address": "GWFH+5XQ, Road, Chalakkuzhi, Thiruvananthapuram, Kerala 695011"
+    }
+]

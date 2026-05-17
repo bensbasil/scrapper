@@ -1,0 +1,29 @@
+[
+    {
+        "business_name": "Style PLUS",
+        "category": "Department store",
+        "website": "/url?q=https://www.styleplus.co.in/index.php&opi=79508299&sa=U&ved=0ahUKEwjF15b7_byUAxUfzTgGHZ3vFEIQ61gIFygS&usg=AOvVaw0EG1hNypOqoBO26bk0kjUo",
+        "google_rating": 4.2,
+        "review_count": null,
+        "phone": "094951 10400",
+        "address": "Keston road, Near, Devaswom Board Jct, Kowdiar, Thiruvananthapuram, Kerala 695003"
+    },
+    {
+        "business_name": "Ramachandran Textiles",
+        "category": "Clothing store",
+        "website": "/url?q=http://www.ramachandrantextiles.com/pazhavangadi/&opi=79508299&sa=U&ved=0ahUKEwilt8f8_byUAxWjTGwGHbb7LDkQ61gIFSgQ&usg=AOvVaw3MdCjvHuV3kqX91jRQPaCR",
+        "google_rating": 4.0,
+        "review_count": null,
+        "phone": "088930 99999",
+        "address": "Pazhavangadi St, East Fort, Padma Nagar, Pazhavangadi, Thiruvananthapuram, Kerala 695023"
+    },
+    {
+        "business_name": "Variety Mall",
+        "category": "Jewelry store",
+        "website": "/url?q=http://www.varietymall.in/&opi=79508299&sa=U&ved=0ahUKEwic2Ij__byUAxXKR2wGHbb9KdsQ61gIFSgQ&usg=AOvVaw1HopqQ8AwixxQZPyI2Fnm3",
+        "google_rating": 4.1,
+        "review_count": null,
+        "phone": "0471 247 6896",
+        "address": "General Hospital Rd, Palayam, Thiruvananthapuram, Kerala 695001"
+    }
+]

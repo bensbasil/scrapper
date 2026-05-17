@@ -1,0 +1,29 @@
+[
+    {
+        "business_name": "AM Customer Service Point",
+        "category": "Government office",
+        "website": null,
+        "google_rating": 5.0,
+        "review_count": null,
+        "phone": "097464 43143",
+        "address": "Vanchiyoor, Vanjiyoor, Thiruvananthapuram, Kerala 695035"
+    },
+    {
+        "business_name": "My Secretary Services",
+        "category": "Professional organizer",
+        "website": "/url?q=https://www.mysecretary.services/&opi=79508299&sa=U&ved=0ahUKEwis-b2A3ryUAxWOaHADHaMdDUIQ61gIFSgQ&usg=AOvVaw2W2gGCwLKLHywwPBUbKKGm",
+        "google_rating": 5.0,
+        "review_count": null,
+        "phone": "092070 10500",
+        "address": "TC1/711(3, SRA 107, Thiruvananthapuram, Kerala 695582"
+    },
+    {
+        "business_name": "Trinity Solutions- Sony Authorized Service Center, Trivandrum",
+        "category": "Electronics repair shop",
+        "website": "/url?q=http://trinitytvm.in/&opi=79508299&sa=U&ved=0ahUKEwi41saB3ryUAxUdV2wGHe-UMfUQ61gIFygS&usg=AOvVaw2UgLrWRwsqu_HUP_s5fD0e",
+        "google_rating": 3.4,
+        "review_count": null,
+        "phone": "0471 401 7117",
+        "address": "TC-3/121-10, opp. M.G. COLLEGE, KESAVADASAPURAM, Pattom, Thiruvananthapuram, Kerala 695004"
+    }
+]

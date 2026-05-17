@@ -1,0 +1,20 @@
+[
+    {
+        "business_name": "SP Medifort Hospital",
+        "category": "Hospital",
+        "website": "/url?q=https://spmediforthospital.com/&opi=79508299&sa=U&ved=0ahUKEwiu1Lqz3LyUAxUcQ2cHHW8ZGRcQ61gIEygO&usg=AOvVaw3c3dcYRjdaqKxbh4UjgOo9",
+        "google_rating": 4.8,
+        "review_count": null,
+        "phone": "0471 310 0100",
+        "address": "Eanchakkal, Thiruvananthapuram, Kerala 695008"
+    },
+    {
+        "business_name": "Sree Uthradom Thirunal (SUT) Hospital",
+        "category": "Private hospital",
+        "website": "/url?q=https://sutpattom.com/&opi=79508299&sa=U&ved=0ahUKEwi418y03LyUAxUKa2wGHUksMxwQ61gIFSgQ&usg=AOvVaw16ZazGq9GJ9bXdHKH_28yv",
+        "google_rating": 4.8,
+        "review_count": null,
+        "phone": "0471 407 7777",
+        "address": "Near, Palace View Rd, Vrindavan Gardens, Pattom, Thiruvananthapuram, Kerala 695004"
+    }
+]
