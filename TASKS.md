@@ -17,27 +17,26 @@
 - [x] `pipeline_runner.py` — end-to-end orchestrator with argparse CLI
 - [x] Next.js dashboard — list/grid views, scrape trigger, business details
 - [x] Skeleton modules created for all new layers (enrichment, intent, monitoring, registries)
+- [x] `enrichment/tech_stack_detector.py` — implement `_scan_signatures()` HTML scanning
+- [x] `enrichment/email_extractor.py` — implement regex scan + mailto: href extraction
+- [x] `intent/review_trend_detector.py` — wire Phase 1 static scoring into `intent_engine`
+- [x] `intent/freshness_monitor.py` — implement copyright year extraction from footer
+- [x] `intent/intent_engine.py` — wire Phase 1 sub-module scores into composite score
+- [x] Update `pipeline_runner.py` to call enrichment modules and persist results
+- [x] Add `email_intelligence` and `tech_stacks` tables to `database/schema.sql`
 
 ---
 
-## 🔲 Phase 1 — Quick Wins (Implement Next)
+## 🔲 Phase 1 — Quick Wins (Completed)
 
-These modules have skeletons. Implement the TODOs.
-
-- [ ] `enrichment/tech_stack_detector.py` — implement `_scan_signatures()` HTML scanning
-- [ ] `enrichment/email_extractor.py` — implement regex scan + mailto: href extraction
-- [ ] `intent/review_trend_detector.py` — wire Phase 1 static scoring into `intent_engine`
-- [ ] `intent/freshness_monitor.py` — implement copyright year extraction from footer
-- [ ] `intent/intent_engine.py` — wire Phase 1 sub-module scores into composite score
-- [ ] Update `pipeline_runner.py` to call enrichment modules and persist results
-- [ ] Add `email_intelligence` and `tech_stacks` tables to `database/schema.sql`
+All Phase 1 quick wins are fully implemented, tested, and integrated end-to-end with the DB schema!
 
 ---
 
 ## 🔲 Phase 2 — Intent Intelligence
 
 - [ ] `intent/hiring_signal_detector.py` — implement `/careers` page parser
-- [ ] `intent/freshness_monitor.py` — add SSL certificate expiry check
+- [x] `intent/freshness_monitor.py` — add SSL certificate expiry check
 - [ ] `enrichment/social_analyzer.py` — implement HTTP HEAD reachability check per platform
 - [ ] Update `intent_engine.py` to consume all Phase 2 signals
 - [ ] Add `intent_profiles` table to `database/schema.sql`

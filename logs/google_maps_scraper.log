@@ -1338,3 +1338,18 @@
 2026-05-17 13:37:12,608 - INFO - [scraper.connectors.public_web.google_maps] - Extracted (1/1): DR AKHIL'S SMILE CONCEPTS DENTAL CARE & IMPLANT CENTRE
 2026-05-17 13:37:16,527 - INFO - [scraper.connectors.public_web.google_maps] - Saved 1 records to CSV: data/raw/gmaps_Dentist_in_Trivandrum_1779024973.csv
 2026-05-17 13:37:16,528 - INFO - [scraper.connectors.public_web.google_maps] - Scrape completed. Total records: 1
+2026-05-17 14:00:52,749 - INFO - [scraper.connectors.public_web.google_maps] - Starting scrape: 'Dentist in Trivandrum' (max: 1)
+2026-05-17 14:01:45,797 - INFO - [scraper.connectors.public_web.google_maps] - Search query 'Dentist in Trivandrum' submitted.
+2026-05-17 14:01:58,668 - INFO - [scraper.connectors.public_web.google_maps] - Extracted (1/1): DR AKHIL'S SMILE CONCEPTS DENTAL CARE & IMPLANT CENTRE
+2026-05-17 14:02:02,740 - INFO - [scraper.connectors.public_web.google_maps] - Saved 1 records to CSV: data/raw/gmaps_Dentist_in_Trivandrum_1779026452.csv
+2026-05-17 14:02:02,741 - INFO - [scraper.connectors.public_web.google_maps] - Scrape completed. Total records: 1
+2026-05-17 14:02:21,533 - INFO - [scraper.connectors.public_web.google_maps] - Starting scrape: 'Dentist in Trivandrum' (max: 1)
+2026-05-17 14:02:41,980 - INFO - [scraper.connectors.public_web.google_maps] - Search query 'Dentist in Trivandrum' submitted.
+2026-05-17 14:02:54,566 - INFO - [scraper.connectors.public_web.google_maps] - Extracted (1/1): DR AKHIL'S SMILE CONCEPTS DENTAL CARE & IMPLANT CENTRE
+2026-05-17 14:02:58,401 - INFO - [scraper.connectors.public_web.google_maps] - Saved 1 records to CSV: data/raw/gmaps_Dentist_in_Trivandrum_1779026541.csv
+2026-05-17 14:02:58,401 - INFO - [scraper.connectors.public_web.google_maps] - Scrape completed. Total records: 1
+2026-05-17 14:03:09,557 - INFO - [scraper.connectors.public_web.google_maps] - Starting scrape: 'Dentist in Trivandrum' (max: 1)
+2026-05-17 14:03:32,216 - INFO - [scraper.connectors.public_web.google_maps] - Search query 'Dentist in Trivandrum' submitted.
+2026-05-17 14:03:44,849 - INFO - [scraper.connectors.public_web.google_maps] - Extracted (1/1): DR AKHIL'S SMILE CONCEPTS DENTAL CARE & IMPLANT CENTRE
+2026-05-17 14:03:48,715 - INFO - [scraper.connectors.public_web.google_maps] - Saved 1 records to CSV: data/raw/gmaps_Dentist_in_Trivandrum_1779026589.csv
+2026-05-17 14:03:48,715 - INFO - [scraper.connectors.public_web.google_maps] - Scrape completed. Total records: 1

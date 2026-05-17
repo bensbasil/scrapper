@@ -81,9 +81,23 @@ class WebsiteAnalyzer:
         }
 
     def _normalize_url(self, url: str) -> str:
-        """Ensure URL has a scheme."""
+        """Ensure URL has a scheme and resolve Google Maps/Search redirect wrappers if present."""
+        from urllib.parse import urlparse, parse_qs
         url = url.strip()
+
+        # 1. Detect and parse Google Search/Maps redirection wrapper URL
+        if "url?q=" in url or "/url?q=" in url:
+            try:
+                parsed = urlparse(url)
+                params = parse_qs(parsed.query)
+                if "q" in params and params["q"]:
+                    url = params["q"][0]
+            except Exception as e:
+                logger.debug(f"Failed to parse redirect wrapper URL {url}: {e}")
+
+        # 2. Add scheme if missing and strip double/triple leading slashes
         if not url.startswith(('http://', 'https://')):
+            url = url.lstrip('/')
             return f"https://{url}"
         return url
 

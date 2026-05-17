@@ -118,6 +118,20 @@ class MVPPipeline:
             outreach_dict = asdict(outreach_obj)
             self.repo.insert_outreach_draft(business_id, outreach_dict)
 
+            # Step 6: Tech Stack Detection
+            if analysis_obj.website_url:
+                logger.info(f"[{b_name}] Scanning website tech stack for {analysis_obj.website_url}...")
+                tech_obj = self.tech_detector.detect(b_name, analysis_obj.website_url)
+                tech_dict = asdict(tech_obj)
+                self.repo.insert_tech_stack(business_id, tech_dict)
+
+            # Step 7: Email Extraction
+            if analysis_obj.website_url:
+                logger.info(f"[{b_name}] Crawling website for email addresses on {analysis_obj.website_url}...")
+                email_obj = self.email_extractor.extract(b_name, analysis_obj.website_url)
+                email_dict = asdict(email_obj)
+                self.repo.insert_email_intelligence(business_id, email_dict)
+
             logger.info(f"[{b_name}] Pipeline completed successfully. Opportunity Score: {score_dict['opportunity_score']}")
             return True
 
