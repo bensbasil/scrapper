@@ -106,38 +106,128 @@ class DecisionMakerFinder:
     def _parse_about_page(self, soup: BeautifulSoup) -> List[ContactCandidate]:
         """
         Look for names and roles on /about or /team pages.
-
-        TODO: Implement scraping logic:
-            - Find elements with common class patterns: .team-member, .staff, .person
-            - Pair adjacent <h3> (name) + <p> (role) sibling elements
-            - Filter by DECISION_ROLES list
         """
-        # TODO: Implement about page parsing
-        return []
+        import re
+        candidates = []
+        # Find elements with class names commonly used for team profiles
+        member_containers = soup.find_all(class_=re.compile(r"member|team|person|staff|card|profile|our-team", re.I))
+        
+        for container in member_containers:
+            # Try to find header (name) and adjacent paragraph/span (role)
+            name_el = container.find(["h1", "h2", "h3", "h4", "h5", "h6", "strong", "b"])
+            role_el = container.find(["p", "span", "div", "small"], class_=re.compile(r"role|title|position|job", re.I))
+            
+            if not role_el:
+                # Fallback: look for any paragraph or span containing a decision role
+                for p in container.find_all(["p", "span", "div"]):
+                    txt = p.get_text(strip=True).lower()
+                    if any(role in txt for role in self.DECISION_ROLES):
+                        role_el = p
+                        break
+                        
+            if name_el and role_el:
+                name = name_el.get_text(strip=True)
+                role = role_el.get_text(strip=True)
+                
+                # Clean up text
+                name = re.sub(r"\s+", " ", name).strip()
+                role = re.sub(r"\s+", " ", role).strip()
+                
+                if name and role and len(name) < 50 and len(role) < 100:
+                    role_lower = role.lower()
+                    matched_role = None
+                    for r in self.DECISION_ROLES:
+                        if r in role_lower:
+                            matched_role = r.title()
+                            break
+                    if matched_role:
+                        candidates.append(ContactCandidate(
+                            name=name,
+                            role=role,
+                            source="about_page",
+                            confidence=0.8
+                        ))
+                        
+        # Fallback text scan if no structured elements matched
+        if not candidates:
+            for p in soup.find_all(["p", "div", "h3", "h4"]):
+                txt = p.get_text(strip=True)
+                txt_lower = txt.lower()
+                if any(role in txt_lower for role in self.DECISION_ROLES):
+                    # Match pattern like "Name - Role" or "Role: Name" or "Name, Role"
+                    match = re.search(r"^([^,:-]+)(?:,|-|:)\s*([a-zA-Z\s\-]+(?:founder|owner|ceo|director|proprietor|president|head)[a-zA-Z\s\-]*)$", txt, re.I)
+                    if match:
+                        name = match.group(1).strip()
+                        role = match.group(2).strip()
+                        if len(name) < 50 and len(role) < 100 and not any(w in name.lower() for w in ["we", "our", "about", "the"]):
+                            candidates.append(ContactCandidate(
+                                name=name,
+                                role=role,
+                                source="about_page_text",
+                                confidence=0.6
+                            ))
+        return candidates
 
     def _parse_schema_org(self, soup: BeautifulSoup) -> List[ContactCandidate]:
         """
         Extract Person entities from schema.org JSON-LD <script> blocks.
-
-        TODO: Implement:
-            import json
-            scripts = soup.find_all("script", type="application/ld+json")
-            for script in scripts:
-                data = json.loads(script.string)
-                if data.get("@type") == "Person": ...
         """
-        # TODO: Implement schema.org JSON-LD extraction
-        return []
+        import json
+        candidates = []
+        scripts = soup.find_all("script", type="application/ld+json")
+        for script in scripts:
+            try:
+                if not script.string:
+                    continue
+                data = json.loads(script.string)
+                
+                entities = []
+                if isinstance(data, list):
+                    entities = data
+                elif isinstance(data, dict):
+                    if "@graph" in data:
+                        entities = data["@graph"]
+                    else:
+                        entities = [data]
+                        
+                for entity in entities:
+                    if entity.get("@type") == "Person":
+                        name = entity.get("name")
+                        job_title = entity.get("jobTitle")
+                        if name and job_title:
+                            role = str(job_title).strip()
+                            role_lower = role.lower()
+                            if any(r in role_lower for r in self.DECISION_ROLES):
+                                candidates.append(ContactCandidate(
+                                    name=str(name).strip(),
+                                    role=role,
+                                    source="schema_org",
+                                    confidence=0.9
+                                ))
+            except Exception as e:
+                logger.debug(f"Failed to parse schema.org script: {e}")
+        return candidates
 
     def _parse_footer(self, soup: BeautifulSoup) -> List[ContactCandidate]:
         """
         Scan footer text for copyright lines that often include an owner name.
-        e.g. "© 2024 John Smith. All rights reserved."
-
-        TODO: Implement regex matching on footer element text.
         """
-        # TODO: Implement footer copyright name extraction
-        return []
+        import re
+        candidates = []
+        footer = soup.find("footer")
+        text = footer.get_text(strip=True) if footer else soup.get_text(strip=True)
+        
+        matches = re.finditer(r"(?:©|copyright|copr\.)\s*(?:\d{4}(?:\s*-\s*\d{4})?)?\s+([A-Z][a-zA-Z\s\.]+?)(?:\.|\s+all|\s+rights|\s*$)", text, re.I)
+        for match in matches:
+            name = match.group(1).strip()
+            if name and len(name) < 40 and not any(w in name.lower() for w in ["all", "rights", "reserved", "inc", "ltd", "corp", "co", "theme", "website"]):
+                candidates.append(ContactCandidate(
+                    name=name,
+                    role="Owner (from Copyright)",
+                    source="footer",
+                    confidence=0.7
+                ))
+        return candidates
 
     def find(self, business_name: str, website_url: Optional[str]) -> DecisionMakerResult:
         """

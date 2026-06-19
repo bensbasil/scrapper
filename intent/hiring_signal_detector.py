@@ -113,27 +113,82 @@ class HiringSignalDetector:
     def _parse_job_listings(self, soup: BeautifulSoup, source_url: str) -> List[JobListing]:
         """
         Extract job listing titles from a careers/jobs page.
-
-        TODO: Implement:
-            - Look for <li>, <div class*="job">, <h3>, <h4> elements
-            - Filter by presence of TECHNICAL_ROLES keywords
-            - Return structured JobListing objects
         """
-        # TODO: Implement job listing parsing
-        return []
+        listings = []
+        seen_titles = set()
+        candidates = []
+        
+        # 1. Collect potential elements containing job titles
+        for h in soup.find_all(["h1", "h2", "h3", "h4", "h5", "h6"]):
+            candidates.append(h)
+            
+        for li in soup.find_all("li"):
+            candidates.append(li)
+            
+        job_classes = re.compile(r"job|career|position|vacancy|listing|role|title", re.I)
+        for el in soup.find_all(["div", "span", "p", "a"], class_=job_classes):
+            candidates.append(el)
+
+        for a in soup.find_all("a", href=re.compile(r"job|career|vacancy|position", re.I)):
+            candidates.append(a)
+
+        # 2. Filter and classify candidate text
+        for el in candidates:
+            title_text = el.get_text(strip=True)
+            title_text = re.sub(r"\s+", " ", title_text)
+            
+            if not title_text or len(title_text) < 4 or len(title_text) > 80:
+                continue
+                
+            title_lower = title_text.lower()
+            generic_phrases = [
+                "apply now", "view job", "read more", "search", "careers", "jobs", 
+                "join our team", "join us", "work with us", "contact us", "about us", 
+                "all rights reserved", "copyright", "send resume", "submit", "apply today",
+                "current openings", "open positions", "departments", "find a job"
+            ]
+            if any(p in title_lower for p in generic_phrases):
+                continue
+                
+            if title_text in seen_titles:
+                continue
+                
+            # Classify using a broad range of role keywords to catch non-technical roles
+            role_indicators = TECHNICAL_ROLES + [
+                "sales", "manager", "accountant", "receptionist", "representative", "hr",
+                "operations", "admin", "clerk", "associate", "consultant", "officer",
+                "executive", "support", "lead", "specialist", "engineer", "designer",
+                "developer", "writer", "marketing", "analyst", "assistant", "director",
+                "supervisor", "coordinator", "intern", "trainer"
+            ]
+            
+            is_job = any(role in title_lower for role in role_indicators)
+            if not is_job:
+                continue
+                
+            seen_titles.add(title_text)
+            is_tech = any(role in title_lower for role in TECHNICAL_ROLES)
+            
+            listings.append(JobListing(
+                title=title_text,
+                is_technical=is_tech,
+                source_url=source_url
+            ))
+            
+        return listings
 
     def _calculate_score(self, result: HiringSignalResult) -> float:
         """
         Score hiring intent from 0 to 100.
-
         Logic:
-            - Each technical role found adds 25 points (max 100)
+            - Each technical role adds 25 points (max 100)
             - Non-technical roles add 5 points (max 15)
-
-        TODO: Weight by role recency (date posted) when available
         """
-        # TODO: Implement weighted scoring
-        score = min(100.0, len(result.technical_roles_found) * 25.0)
+        tech_score = len(result.technical_roles_found) * 25.0
+        non_tech_roles = [r for r in result.all_roles_found if not r.is_technical]
+        non_tech_score = min(15.0, len(non_tech_roles) * 5.0)
+        
+        score = min(100.0, tech_score + non_tech_score)
         return round(score, 1)
 
     def detect(self, business_name: str, website_url: Optional[str]) -> HiringSignalResult:

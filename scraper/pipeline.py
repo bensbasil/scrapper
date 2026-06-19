@@ -41,6 +41,22 @@ class AcquisitionPipeline:
                 logger.error(f"Connector {connector_name} crashed unexpectedly: {e}")
                 aggregated_data["sources"][connector_name] = {"error": "Critical crash"}
 
+        # ---------- New: Conversion analysis ----------
+        try:
+            from analyzer.website_conversion_analyzer import WebsiteConversionAnalyzer
+            conversion_analyzer = WebsiteConversionAnalyzer()
+            conversion_metrics = {}
+            for src, data in aggregated_data["sources"].items():
+                html_content = data.get("html") or data.get("website_html")
+                website_url = data.get("website", "")
+                if html_content:
+                    metrics = conversion_analyzer.analyze(html_content, website_url)
+                    conversion_metrics[src] = metrics.__dict__
+            if conversion_metrics:
+                aggregated_data["conversion_metrics"] = conversion_metrics
+        except Exception as e:
+            logger.error(f"Conversion analysis failed: {e}")
+
         self._save_raw(target, aggregated_data)
         return aggregated_data
 

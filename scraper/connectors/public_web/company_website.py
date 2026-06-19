@@ -158,10 +158,17 @@ class WebsiteAnalyzer:
             # Check Socials
             social_domains = ['facebook.com', 'instagram.com', 'twitter.com', 'linkedin.com', 'tiktok.com']
             for link in soup.find_all('a', href=True):
-                href = link['href'].lower()
+                href = link['href'].strip()
+                href_lower = href.lower()
                 for domain in social_domains:
-                    if domain in href and domain not in result.social_links_found:
-                        result.social_links_found.append(domain)
+                    if domain in href_lower:
+                        if not href.startswith(('http://', 'https://')):
+                            if href.startswith('//'):
+                                href = 'https:' + href
+                            else:
+                                href = 'https://' + href
+                        if href not in result.social_links_found:
+                            result.social_links_found.append(href)
 
         except requests.exceptions.SSLError:
             logger.warning(f"SSL Error for {url}. Site likely lacks valid HTTPS.")

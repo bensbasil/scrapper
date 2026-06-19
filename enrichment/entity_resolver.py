@@ -99,17 +99,15 @@ class EntityResolver:
     def _fuzzy_name_similarity(self, a: str, b: str) -> float:
         """
         Compute name similarity ratio between two normalized strings.
-
-        TODO: Implement using rapidfuzz:
-            from rapidfuzz import fuzz
-            return fuzz.token_sort_ratio(a, b) / 100.0
-
-        Fallback for now — returns 1.0 only on exact match.
         """
-        # TODO: Replace with rapidfuzz implementation
         if not a or not b:
             return 0.0
-        return 1.0 if a == b else 0.0
+        try:
+            from rapidfuzz import fuzz
+            return fuzz.token_sort_ratio(a, b) / 100.0
+        except ImportError:
+            logger.warning("rapidfuzz not installed, falling back to exact match")
+            return 1.0 if a == b else 0.0
 
     def compare(
         self,
@@ -164,7 +162,15 @@ class EntityResolver:
             confidence += 0.3
             reasons.append("domain_match")
 
-        # TODO: Implement address partial match (same district/pin code)
+        # Address partial match (extract and check matching pincodes)
+        address_a = record_a.get("address", "")
+        address_b = record_b.get("address", "")
+        if address_a and address_b:
+            pincodes_a = re.findall(r"\b\d{5,6}\b", address_a)
+            pincodes_b = re.findall(r"\b\d{5,6}\b", address_b)
+            if pincodes_a and pincodes_b and set(pincodes_a) & set(pincodes_b):
+                confidence += 0.2
+                reasons.append("address_pincode_match")
 
         confidence = round(min(1.0, confidence), 2)
         is_match = confidence >= self.MATCH_THRESHOLD
@@ -198,16 +204,18 @@ class EntityResolver:
         """
         Merge two business records. Primary record wins on conflicts.
         Secondary fills in missing fields from primary.
-
-        TODO: Implement full merge logic:
-            - Combine source_platform lists
-            - Preserve all non-null fields from secondary
-            - Log merge event with both source record IDs
         """
-        # TODO: Implement full merge logic
         merged = {**secondary, **{k: v for k, v in primary.items() if v is not None}}
+        
+        # Combine source_platform lists
+        sp_a = primary.get("source_platform", [])
+        sp_b = secondary.get("source_platform", [])
+        if isinstance(sp_a, str): sp_a = [sp_a]
+        if isinstance(sp_b, str): sp_b = [sp_b]
+        merged["source_platform"] = list(set(sp_a + sp_b))
+        
         logger.info(
-            f"Merged '{primary.get('business_name')}' ← '{secondary.get('business_name')}'"
+            f"Merged canonical record: '{primary.get('business_name')}' ← '{secondary.get('business_name')}'"
         )
         return merged
 

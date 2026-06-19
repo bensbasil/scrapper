@@ -1,0 +1,26 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+
+# Environment variables (contains database passwords, API keys)
+.env
+
+# Application logs
+logs/
+*.log
+
+# Scraped raw data
+data/raw/
+data/processed/
+*.csv
+*.json
+
+# IDE local configuration
+.vscode/

@@ -81,14 +81,15 @@ class OutreachGenerator:
         summary = "Critical digital weaknesses detected: "
         return summary + ", ".join(pain_points[:3]) + "."
 
-    def _generate_cold_email(self, business_name: str, category: str, primary_pain: str, service: str) -> str:
+    def _generate_cold_email(self, business_name: str, category: str, primary_pain: str, service: str, contact_name: str = None) -> str:
         """Generates a human-sounding, low-friction cold email draft."""
         cat_text = category if category else "local businesses"
+        salutation = f"Hi {contact_name}," if contact_name else "Hi team,"
         
         if "website" in primary_pain.lower() or "No website" in primary_pain:
             return f"""Subject: Question about {business_name}'s digital presence
 
-Hi team,
+{salutation}
 
 I was looking for {cat_text} in the area and noticed {business_name} doesn't seem to have a dedicated website yet. 
 
@@ -101,7 +102,7 @@ Best,
 
         return f"""Subject: Quick thought regarding {business_name}'s website
 
-Hi team,
+{salutation}
 
 I was browsing {business_name}'s site today while looking at {cat_text} in the area. I noticed a technical issue: {primary_pain.lower()}. 
 
@@ -112,15 +113,17 @@ Would you be opposed to me sending over a brief 2-minute video showing exactly h
 Best,
 [Your Name]"""
 
-    def _generate_whatsapp(self, business_name: str, primary_pain: str) -> str:
+    def _generate_whatsapp(self, business_name: str, primary_pain: str, contact_name: str = None) -> str:
         """Generates an ultra-short WhatsApp or LinkedIn DM draft."""
+        salutation = f"Hi {contact_name}!" if contact_name else f"Hi {business_name} team!"
         if "website" in primary_pain.lower() or "No website" in primary_pain:
-            return f"Hi {business_name} team! I'm a local developer. I noticed you don't have a website set up yet. Would you be open to me sending over a quick, free mockup of what a simple landing page could look like for you?"
+            return f"{salutation} I'm a local developer. I noticed you don't have a website set up yet. Would you be open to me sending over a quick, free mockup of what a simple landing page could look like for you?"
             
-        return f"Hi {business_name} team! I was just looking at your website and noticed an issue with {primary_pain.lower()}. It might be costing you some traffic. Mind if I send a quick screenshot of how to fix it?"
+        return f"{salutation} I was just looking at your website and noticed an issue with {primary_pain.lower()}. It might be costing you some traffic. Mind if I send a quick screenshot of how to fix it?"
 
-    def _generate_ai_prompt(self, b_name: str, score: float, pain_points: List[str], services: List[str]) -> str:
+    def _generate_ai_prompt(self, b_name: str, score: float, pain_points: List[str], services: List[str], contact_name: str = None) -> str:
         """Generates the structured prompt that can be sent to OpenAI/Anthropic later."""
+        contact_line = f"- Contact Decision-Maker: {contact_name}" if contact_name else "- Contact Decision-Maker: Not found (use generic salutation)"
         return f"""You are an expert, consultative B2B sales copywriter. 
 Write a highly personalized, non-spammy cold email to '{b_name}'.
 
@@ -128,6 +131,7 @@ Context:
 - Overall Opportunity Score: {score}/100 (Higher means they need more help)
 - Key Pain Points Detected: {', '.join(pain_points)}
 - Suggested Services to Pitch: {', '.join(services)}
+{contact_line}
 
 Rules:
 1. Do not use fake statistics or hyperbolic claims.
@@ -149,6 +153,9 @@ Rules:
         primary_pain = pain_points[0] if pain_points else "technical optimization opportunities"
         primary_service = services[0] if services else "digital consulting"
 
+        # Extract decision maker name from score_data or analysis_data
+        contact_name = analysis_data.get("decision_maker_name") or score_data.get("decision_maker_name")
+
         # 1. Strategy & Positioning
         positioning = self._generate_pain_point_positioning(pain_points, services)
         audit_summary = self._generate_audit_summary(pain_points, opp_score)
@@ -162,11 +169,11 @@ Rules:
             angles.append("The 'Trust & Security' angle: Focus on technical errors making the business look unprofessional.")
 
         # 2. Actionable Drafts
-        email_draft = self._generate_cold_email(b_name, category, primary_pain, primary_service)
-        wa_draft = self._generate_whatsapp(b_name, primary_pain)
+        email_draft = self._generate_cold_email(b_name, category, primary_pain, primary_service, contact_name)
+        wa_draft = self._generate_whatsapp(b_name, primary_pain, contact_name)
         
         # 3. AI Readiness
-        ai_prompt = self._generate_ai_prompt(b_name, opp_score, pain_points, services)
+        ai_prompt = self._generate_ai_prompt(b_name, opp_score, pain_points, services, contact_name)
 
         logger.info(f"Generated outreach materials for {b_name}.")
 

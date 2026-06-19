@@ -2,3 +2,6 @@ playwright==1.42.0
 beautifulsoup4==4.12.3
 requests==2.31.0
 psycopg2-binary==2.9.9
+dnspython==2.6.1
+rapidfuzz==3.6.2
+

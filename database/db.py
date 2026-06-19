@@ -281,6 +281,85 @@ class ScraperRepository:
             logger.error(f"Error inserting tech stack for business {business_id}: {e}")
             return False
 
+    def insert_social_profile(self, business_id: int, data: Dict[str, Any]) -> bool:
+        """Inserts the results of the social_analyzer.py module."""
+        query = """
+            INSERT INTO social_profiles 
+            (business_id, profiles, social_activity_score, total_platforms_found, total_platforms_active, error_message)
+            VALUES (%s, %s, %s, %s, %s, %s);
+        """
+        try:
+            profiles_raw = data.get('profiles', [])
+            profiles_list = []
+            for p in profiles_raw:
+                if hasattr(p, '__dataclass_fields__'):
+                    from dataclasses import asdict
+                    profiles_list.append(asdict(p))
+                else:
+                    profiles_list.append(p)
+
+            with self.db.get_connection() as conn:
+                with conn.cursor() as cur:
+                    cur.execute(query, (
+                        business_id,
+                        json.dumps(profiles_list),
+                        data.get('social_activity_score', 0.0),
+                        data.get('total_platforms_found', 0),
+                        data.get('total_platforms_active', 0),
+                        data.get('error')
+                    ))
+            return True
+        except Exception as e:
+            logger.error(f"Error inserting social profiles for business {business_id}: {e}")
+            return False
+
+    def insert_intent_profile(self, business_id: int, data: Dict[str, Any]) -> bool:
+        """Inserts the results of the intent_engine.py module."""
+        query = """
+            INSERT INTO intent_profiles 
+            (business_id, intent_score, hiring_signal_score, review_trend_score, 
+             freshness_score, opportunity_score, top_intent_signals, outreach_urgency)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
+        """
+        try:
+            with self.db.get_connection() as conn:
+                with conn.cursor() as cur:
+                    cur.execute(query, (
+                        business_id,
+                        data.get('intent_score', 0.0),
+                        data.get('hiring_signal_score', 0.0),
+                        data.get('review_trend_score', 0.0),
+                        data.get('freshness_score', 0.0),
+                        data.get('opportunity_score', 0.0),
+                        json.dumps(data.get('top_intent_signals', [])),
+                        data.get('outreach_urgency', 'normal')
+                    ))
+            return True
+        except Exception as e:
+            logger.error(f"Error inserting intent profile for business {business_id}: {e}")
+            return False
+
+    def insert_decision_makers(self, business_id: int, data: Dict[str, Any]) -> bool:
+        """Inserts the results of the decision_maker_finder.py module."""
+        query = """
+            INSERT INTO decision_makers (business_id, name, role, source, confidence)
+            VALUES (%s, %s, %s, %s, %s);
+        """
+        try:
+            candidates = data.get('candidates', [])
+            with self.db.get_connection() as conn:
+                with conn.cursor() as cur:
+                    for c in candidates:
+                        name = c.name if hasattr(c, 'name') else c.get('name')
+                        role = c.role if hasattr(c, 'role') else c.get('role')
+                        source = c.source if hasattr(c, 'source') else c.get('source')
+                        confidence = c.confidence if hasattr(c, 'confidence') else c.get('confidence', 0.5)
+                        cur.execute(query, (business_id, name, role, source, confidence))
+            return True
+        except Exception as e:
+            logger.error(f"Error inserting decision makers for business {business_id}: {e}")
+            return False
+
     # ---------------------------------------------------------
     # Helper Query Methods for Analytics/Outreach
     # ---------------------------------------------------------

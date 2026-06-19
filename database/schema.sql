@@ -92,6 +92,40 @@ CREATE TABLE IF NOT EXISTS tech_stacks (
     detected_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS social_profiles (
+    id SERIAL PRIMARY KEY,
+    business_id INTEGER NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+    profiles JSONB DEFAULT '[]'::jsonb,
+    social_activity_score NUMERIC(5, 2) NOT NULL,
+    total_platforms_found INTEGER DEFAULT 0,
+    total_platforms_active INTEGER DEFAULT 0,
+    error_message TEXT,
+    analyzed_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS intent_profiles (
+    id SERIAL PRIMARY KEY,
+    business_id INTEGER NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+    intent_score NUMERIC(5, 2) NOT NULL,
+    hiring_signal_score NUMERIC(5, 2) NOT NULL,
+    review_trend_score NUMERIC(5, 2) NOT NULL,
+    freshness_score NUMERIC(5, 2) NOT NULL,
+    opportunity_score NUMERIC(5, 2) NOT NULL,
+    top_intent_signals JSONB DEFAULT '[]'::jsonb,
+    outreach_urgency VARCHAR(50) DEFAULT 'normal',
+    evaluated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS decision_makers (
+    id SERIAL PRIMARY KEY,
+    business_id INTEGER NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    role VARCHAR(150),
+    source VARCHAR(100),
+    confidence NUMERIC(3, 2),
+    discovered_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Indexes for future analytics compatibility and fast querying
 CREATE INDEX IF NOT EXISTS idx_businesses_name ON businesses(business_name);
 CREATE INDEX IF NOT EXISTS idx_scoring_opportunity ON scoring_results(opportunity_score DESC);
@@ -101,4 +135,8 @@ CREATE INDEX IF NOT EXISTS idx_reports_business_id ON business_reports(business_
 CREATE INDEX IF NOT EXISTS idx_outreach_business_id ON outreach_drafts(business_id);
 CREATE INDEX IF NOT EXISTS idx_emails_business_id ON email_intelligence(business_id);
 CREATE INDEX IF NOT EXISTS idx_tech_business_id ON tech_stacks(business_id);
+CREATE INDEX IF NOT EXISTS idx_social_profiles_business_id ON social_profiles(business_id);
+CREATE INDEX IF NOT EXISTS idx_intent_profiles_business_id ON intent_profiles(business_id);
+CREATE INDEX IF NOT EXISTS idx_intent_profiles_intent_score ON intent_profiles(intent_score DESC);
+CREATE INDEX IF NOT EXISTS idx_decision_makers_business_id ON decision_makers(business_id);
 

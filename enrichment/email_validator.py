@@ -79,15 +79,14 @@ class EmailValidator:
     def _check_mx_record(self, domain: str) -> bool:
         """
         Check if the domain has an MX (mail exchange) DNS record.
-
-        TODO: Implement using dnspython:
+        """
+        try:
             import dns.resolver
             records = dns.resolver.resolve(domain, 'MX')
             return len(records) > 0
-        """
-        # TODO: Replace with real MX lookup
-        logger.debug(f"MX check not yet implemented for {domain}")
-        return False
+        except Exception as e:
+            logger.warning(f"MX record lookup failed for {domain}: {e}")
+            return False
 
     def _check_disposable(self, domain: str) -> bool:
         """Check if domain is a known disposable email provider."""

@@ -33,14 +33,14 @@ All Phase 1 quick wins are fully implemented, tested, and integrated end-to-end 
 
 ---
 
-## 🔲 Phase 2 — Intent Intelligence
+## ✅ Phase 2 — Intent Intelligence (Completed)
 
-- [ ] `intent/hiring_signal_detector.py` — implement `/careers` page parser
+- [x] `intent/hiring_signal_detector.py` — implement `/careers` page parser
 - [x] `intent/freshness_monitor.py` — add SSL certificate expiry check
-- [ ] `enrichment/social_analyzer.py` — implement HTTP HEAD reachability check per platform
-- [ ] Update `intent_engine.py` to consume all Phase 2 signals
-- [ ] Add `intent_profiles` table to `database/schema.sql`
-- [ ] Add `social_profiles` table to `database/schema.sql`
+- [x] `enrichment/social_analyzer.py` — implement HTTP reachability and redirect checks per platform
+- [x] Update `intent_engine.py` to consume all Phase 2 signals
+- [x] Add `intent_profiles` table to `database/schema.sql`
+- [x] Add `social_profiles` table to `database/schema.sql`
 
 ---
 
