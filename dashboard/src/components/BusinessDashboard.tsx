@@ -8,6 +8,8 @@ export default function BusinessDashboard({ initialBusinesses }: { initialBusine
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [limit, setLimit] = useState<number | "all">(10);
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [sourceFilter, setSourceFilter] = useState<string>("all");
   
   // Scraper Form State
   const [isScraping, setIsScraping] = useState(false);
@@ -40,11 +42,18 @@ export default function BusinessDashboard({ initialBusinesses }: { initialBusine
     }
   };
 
-  // Filter by search query
-  const filtered = initialBusinesses.filter(b => 
-    b.business_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (b.website_url || "").toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filter by search query, status, and source platform
+  const filtered = initialBusinesses.filter(b => {
+    const matchesSearch = b.business_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (b.website_url || "").toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesStatus = statusFilter === "all" || (b.outreach_status || "new") === statusFilter;
+    
+    const matchesSource = sourceFilter === "all" || 
+      (b.source_platforms && b.source_platforms.includes(sourceFilter));
+      
+    return matchesSearch && matchesStatus && matchesSource;
+  });
 
   const displayedBusinesses = limit === "all" ? filtered : filtered.slice(0, limit);
 
@@ -66,11 +75,28 @@ export default function BusinessDashboard({ initialBusinesses }: { initialBusine
   };
 
   const exportToCSV = () => {
-    const headers = ["Business Name", "Website", "Opportunity Score", "Pain Points"];
+    const headers = [
+      "Business Name", 
+      "Website", 
+      "Opportunity Score", 
+      "Outreach Status",
+      "Extracted Emails", 
+      "Tech Stack (CMS)", 
+      "Tech Stack (Frontend)",
+      "Tech Stack (Analytics)",
+      "Decision Makers",
+      "Pain Points"
+    ];
     const rows = displayedBusinesses.map(b => [
       `"${b.business_name.replace(/"/g, '""')}"`,
       b.website_url || "N/A",
       b.opportunity_score,
+      b.outreach_status || "new",
+      `"${(b.extracted_emails || []).join(" | ").replace(/"/g, '""')}"`,
+      b.cms || "None",
+      b.frontend_framework || "None",
+      `"${(b.analytics_tools || []).join(" | ").replace(/"/g, '""')}"`,
+      `"${(b.decision_makers || []).map(dm => `${dm.name} (${dm.role})`).join(" | ").replace(/"/g, '""')}"`,
       `"${(b.detected_pain_points || []).join(" | ").replace(/"/g, '""')}"`
     ]);
     
@@ -178,6 +204,37 @@ export default function BusinessDashboard({ initialBusinesses }: { initialBusine
             />
           </div>
 
+          {/* Status Filter */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Status:</span>
+            <select 
+              value={statusFilter} 
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="bg-slate-900 border border-slate-700 text-white text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+            >
+              <option value="all">All Statuses</option>
+              <option value="new">New</option>
+              <option value="contacted">Contacted</option>
+              <option value="followed_up">Followed Up</option>
+              <option value="closed">Closed</option>
+            </select>
+          </div>
+
+          {/* Source Filter */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Source:</span>
+            <select 
+              value={sourceFilter} 
+              onChange={(e) => setSourceFilter(e.target.value)}
+              className="bg-slate-900 border border-slate-700 text-white text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+            >
+              <option value="all">All Sources</option>
+              <option value="google_maps">Google Maps</option>
+              <option value="justdial">JustDial</option>
+              <option value="indiamart">IndiaMart</option>
+            </select>
+          </div>
+
           <div className="flex bg-slate-900 rounded-lg p-1 border border-slate-700">
             <button 
               onClick={() => setViewMode("grid")}
@@ -256,6 +313,30 @@ export default function BusinessDashboard({ initialBusinesses }: { initialBusine
                 <tr key={biz.id} className="hover:bg-white/5 transition-colors cursor-pointer group">
                   <td className="p-4">
                     <div className="font-bold text-white group-hover:text-blue-400 transition-colors">{biz.business_name}</div>
+                    {biz.source_platforms && biz.source_platforms.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {biz.source_platforms.map(source => {
+                          const colors: Record<string, string> = {
+                            google_maps: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+                            justdial: "bg-orange-500/10 text-orange-400 border-orange-500/20",
+                            indiamart: "bg-teal-500/10 text-teal-400 border-teal-500/20"
+                          };
+                          const label: Record<string, string> = {
+                            google_maps: "Google Maps",
+                            justdial: "JustDial",
+                            indiamart: "IndiaMart"
+                          };
+                          return (
+                            <span 
+                              key={source} 
+                              className={`text-[8px] px-1.5 py-0.2 rounded border font-semibold uppercase tracking-wider ${colors[source] || "bg-slate-500/10 text-slate-400 border-slate-500/20"}`}
+                            >
+                              {label[source] || source}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    )}
                   </td>
                   <td className="p-4">
                     <span className="text-slate-400 text-sm">{biz.website_url || "None"}</span>

@@ -32,60 +32,60 @@ Build a modular, AI-powered Lead Intelligence Platform that:
 
 ---
 
-## Phase 2 — Enrichment 🔄 IN PROGRESS
+## Phase 2 — Enrichment ✅ COMPLETE
 
 **Goal:** Go beyond scraped data. Extract emails, detect tech stack, identify decision-makers.
 
 | Deliverable | Status |
 | :---------- | :----- |
 | Skeleton modules created | ✅ Done |
-| `tech_stack_detector` — CMS/analytics detection | 🔲 Next |
-| `email_extractor` — email discovery from website | 🔲 Next |
-| `email_validator` — MX + syntax validation | 🔲 Next |
-| `decision_maker_finder` — owner/founder discovery | 🔲 Next |
-| `social_analyzer` — social account audit | 🔲 Next |
-| `entity_resolver` — cross-source deduplication | 🔲 Next |
-| New DB tables for enrichment data | 🔲 Next |
+| `tech_stack_detector` — CMS/analytics detection | ✅ Done |
+| `email_extractor` — email discovery from website | ✅ Done |
+| `email_validator` — MX + syntax validation | ✅ Done |
+| `decision_maker_finder` — owner/founder discovery | ✅ Done |
+| `social_analyzer` — social account audit | ✅ Done |
+| `entity_resolver` — cross-source deduplication | ✅ Done |
+| New DB tables for enrichment data | ✅ Done |
 
 ---
 
-## Phase 3 — Intent Intelligence 🔲 PLANNED
+## Phase 3 — Intent Intelligence ✅ COMPLETE
 
 **Goal:** Surface which businesses are most receptive to outreach **right now**.
 
 | Deliverable | Status |
 | :---------- | :----- |
-| `review_trend_detector` — rating decline signals | 🔲 Planned |
-| `freshness_monitor` — stale website detection | 🔲 Planned |
-| `hiring_signal_detector` — technical job listing signals | 🔲 Planned |
-| `intent_engine` — composite intent scoring | 🔲 Planned |
-| Intent score exposed on dashboard | 🔲 Planned |
+| `review_trend_detector` — rating decline signals | ✅ Done |
+| `freshness_monitor` — stale website detection | ✅ Done |
+| `hiring_signal_detector` — technical job listing signals | ✅ Done |
+| `intent_engine` — composite intent scoring | ✅ Done |
+| Intent score exposed on dashboard | ✅ Done |
 
 ---
 
-## Phase 4 — New Data Sources 🔲 PLANNED
+## Phase 4 — New Data Sources ✅ COMPLETE
 
 **Goal:** Expand coverage beyond Google Maps with India-specific sources.
 
 | Deliverable | Status |
 | :---------- | :----- |
-| `justdial.py` connector | 🔲 Planned |
-| `indiamart.py` connector | 🔲 Planned |
-| `opencorporates.py` API connector | 🔲 Planned |
-| Cross-source deduplication via `entity_resolver` | 🔲 Planned |
+| `opencorporates.py` API connector | ✅ Done |
+| `justdial.py` connector | ✅ Done |
+| `indiamart.py` connector | ✅ Done |
+| Cross-source deduplication via `entity_resolver` | ✅ Done |
 
 ---
 
-## Phase 5 — Monitoring & Recrawl 🔲 PLANNED
+## Phase 5 — Monitoring & Recrawl ✅ COMPLETE
 
 **Goal:** Keep the intelligence platform fresh over time without manual re-runs.
 
 | Deliverable | Status |
 | :---------- | :----- |
-| `recrawl_scheduler` — tier-based re-scraping policy | 🔲 Planned |
-| `change_detector` — detect website changes between crawls | 🔲 Planned |
-| `pipeline_monitor` — run health metrics and summaries | 🔲 Planned |
-| Run history visible in dashboard | 🔲 Planned |
+| `recrawl_scheduler` — tier-based re-scraping policy | ✅ Done |
+| `change_detector` — detect website changes between crawls | ✅ Done |
+| `pipeline_monitor` — run health metrics and summaries | ✅ Done |
+| Run history visible in dashboard | ✅ Done |
 
 ---
 

@@ -44,13 +44,13 @@ All Phase 1 quick wins are fully implemented, tested, and integrated end-to-end 
 
 ---
 
-## 🔲 Phase 3 — Deep Enrichment
+## ✅ Phase 3 — Deep Enrichment (Completed)
 
-- [ ] `enrichment/email_validator.py` — implement MX DNS lookup (`pip install dnspython`)
-- [ ] `enrichment/decision_maker_finder.py` — implement about/team page parser
-- [ ] `enrichment/entity_resolver.py` — implement fuzzy matching (`pip install rapidfuzz`)
-- [ ] Add `decision_makers` table to `database/schema.sql`
-- [ ] Integrate `decision_maker_finder` name into `outreach_generator` templates
+- [x] `enrichment/email_validator.py` — implement MX DNS lookup (`pip install dnspython`)
+- [x] `enrichment/decision_maker_finder.py` — implement about/team page parser
+- [x] `enrichment/entity_resolver.py` — implement fuzzy matching (`pip install rapidfuzz`)
+- [x] Add `decision_makers` table to `database/schema.sql`
+- [x] Integrate `decision_maker_finder` name into `outreach_generator` templates
 
 ---
 
@@ -67,13 +67,13 @@ All Phase 1 quick wins are fully implemented, tested, and integrated end-to-end 
 
 ---
 
-## 🔲 Phase 5 — Monitoring Layer
+## ✅ Phase 5 — Monitoring Layer (Completed)
 
-- [ ] `monitoring/pipeline_monitor.py` — implement full stage-level recording
-- [ ] `monitoring/change_detector.py` — implement field-level diff comparison
-- [ ] `monitoring/recrawl_scheduler.py` — implement DB query for overdue businesses
-- [ ] Add `change_events` and `pipeline_runs` tables to `database/schema.sql`
-- [ ] Wire `recrawl_scheduler` into `pipeline_runner.py` as an optional mode
+- [x] `monitoring/pipeline_monitor.py` — implement full stage-level recording
+- [x] `monitoring/change_detector.py` — implement field-level diff comparison
+- [x] `monitoring/recrawl_scheduler.py` — implement DB query for overdue businesses
+- [x] Add `change_events` and `pipeline_runs` tables to `database/schema.sql`
+- [x] Wire `recrawl_scheduler` into `pipeline_runner.py` as an optional mode
 
 ---
 

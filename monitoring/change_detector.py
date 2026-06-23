@@ -119,17 +119,27 @@ class ChangeDetector:
     ) -> List[FieldChange]:
         """
         Compare previous and current snapshot for changes in monitored fields.
-
-        TODO: Implement full field-by-field comparison:
-            for field in MONITORED_FIELDS:
-                prev_val = previous.get(field)
-                curr_val = current.get(field)
-                if prev_val != curr_val:
-                    change_type = determine_change_type(prev_val, curr_val)
-                    changes.append(FieldChange(...))
         """
-        # TODO: Implement field diff comparison
         changes: List[FieldChange] = []
+        for field in MONITORED_FIELDS:
+            prev_val = previous.get(field)
+            curr_val = current.get(field)
+            
+            if prev_val != curr_val:
+                # Determine change type
+                if (prev_val is None or prev_val is False or prev_val == "") and (curr_val is not None and curr_val is not False and curr_val != ""):
+                    change_type = "added"
+                elif (prev_val is not None and prev_val is not False and prev_val != "") and (curr_val is None or curr_val is False or curr_val == ""):
+                    change_type = "removed"
+                else:
+                    change_type = "modified"
+                
+                changes.append(FieldChange(
+                    field=field,
+                    before=prev_val,
+                    after=curr_val,
+                    change_type=change_type
+                ))
         return changes
 
     def _build_summary(self, changes: List[FieldChange]) -> str:
@@ -171,6 +181,10 @@ class ChangeDetector:
             previous_snapshot_at=previous_at,
             current_snapshot_at=current_at,
         )
+
+        if not previous:
+            logger.info(f"[{business_name}] No previous snapshot to compare.")
+            return report
 
         # Quick check via hash
         prev_hash = self._generate_page_hash(previous)

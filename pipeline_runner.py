@@ -1,7 +1,10 @@
 import sys
 import logging
+import time
+from datetime import datetime
 from pathlib import Path
 from dataclasses import asdict
+from typing import Optional, List, Dict, Any
 
 # ---------------------------------------------------------
 # 1. Structured Logging
@@ -54,6 +57,16 @@ try:
     from enrichment.email_validator import EmailValidator
     from enrichment.decision_maker_finder import DecisionMakerFinder
     from enrichment.entity_resolver import EntityResolver
+
+    # Phase 4 registry connectors
+    from scraper.connectors.registries.opencorporates import OpenCorporatesScraper
+    from scraper.connectors.registries.justdial import JustDialScraper
+    from scraper.connectors.registries.indiamart import IndiaMartScraper
+
+    # Phase 5 monitoring & scheduling
+    from monitoring.change_detector import ChangeDetector
+    from monitoring.pipeline_monitor import PipelineMonitor, StageResult
+    from monitoring.recrawl_scheduler import RecrawlScheduler
 except ImportError as e:
     logger.error(f"Failed to import modules. Ensure you run this script from the project root. Error: {e}")
     sys.exit(1)
@@ -99,43 +112,160 @@ class MVPPipeline:
         self.email_validator = EmailValidator()
         self.decision_finder = DecisionMakerFinder()
         self.entity_resolver = EntityResolver()
+
+        # Phase 4 registry connectors
+        self.opencorporates_scraper = OpenCorporatesScraper()
+        self.justdial_scraper = JustDialScraper()
+        self.indiamart_scraper = IndiaMartScraper()
+
+        # Phase 5 monitoring & scheduling
+        self.change_detector = ChangeDetector()
+        self.pipeline_monitor = PipelineMonitor(db_manager=self.db_manager)
+        self.recrawl_scheduler = RecrawlScheduler(db_manager=self.db_manager)
         
         # Ensure database tables exist before we start processing
         logger.info("Verifying database schema...")
         self.db_manager.execute_schema()
 
-    def process_business(self, business_obj) -> bool:
+    def process_business(self, business_obj, source: str = "gmaps", scrape_duration_ms: Optional[float] = None) -> bool:
         """
         Executes the analysis, scoring, and reporting pipeline for a single business.
         """
-        b_dict = asdict(business_obj)
+        if hasattr(business_obj, "__dataclass_fields__"):
+            b_dict = asdict(business_obj)
+        else:
+            b_dict = dict(business_obj)
+
         b_name = b_dict.get("business_name", "Unknown")
         website = b_dict.get("website")
         
+        stages_results = []
+        stages_results.append(StageResult(
+            stage="scrape",
+            success=True,
+            duration_ms=scrape_duration_ms
+        ))
+
         try:
-            # Step 1: Store Base Business (Upsert)
-            # If the business exists, the repo simply returns the existing ID.
-            business_id = self.repo.insert_business(b_dict)
+            # Step 1: Store Base Business (Upsert / Merge with Entity Resolution)
+            business_id = None
+            if source == "justdial":
+                logger.info(f"[{b_name}] Running cross-source entity resolution...")
+                existing_businesses = self.repo.get_all_businesses()
+                matched_id = None
+                highest_conf = 0.0
+                
+                for existing in existing_businesses:
+                    match_result = self.entity_resolver.compare(existing, b_dict)
+                    if match_result.is_match and match_result.confidence > highest_conf:
+                        matched_id = existing["id"]
+                        highest_conf = match_result.confidence
+                        
+                if matched_id:
+                    logger.info(f"[{b_name}] Match found with existing business (ID: {matched_id}, confidence: {highest_conf}). Merging profiles...")
+                    b_dict["source_platform"] = "justdial"
+                    self.repo.update_business_sources(matched_id, b_dict)
+                    business_id = matched_id
+                else:
+                    logger.info(f"[{b_name}] No match found. Ingesting as new business from JustDial...")
+                    b_dict["source_platforms"] = ["justdial"]
+                    business_id = self.repo.insert_business(b_dict)
+            elif source == "indiamart":
+                logger.info(f"[{b_name}] Running cross-source entity resolution...")
+                existing_businesses = self.repo.get_all_businesses()
+                matched_id = None
+                highest_conf = 0.0
+                
+                for existing in existing_businesses:
+                    match_result = self.entity_resolver.compare(existing, b_dict)
+                    if match_result.is_match and match_result.confidence > highest_conf:
+                        matched_id = existing["id"]
+                        highest_conf = match_result.confidence
+                        
+                if matched_id:
+                    logger.info(f"[{b_name}] Match found with existing business (ID: {matched_id}, confidence: {highest_conf}). Merging profiles...")
+                    b_dict["source_platform"] = "indiamart"
+                    self.repo.update_business_sources(matched_id, b_dict)
+                    business_id = matched_id
+                else:
+                    logger.info(f"[{b_name}] No match found. Ingesting as new business from IndiaMart...")
+                    b_dict["source_platforms"] = ["indiamart"]
+                    business_id = self.repo.insert_business(b_dict)
+            elif source == "recrawl":
+                business_id = b_dict.get("id")
+                if not business_id:
+                    business_id = self.repo.insert_business(b_dict)
+            else:
+                # Default: Google Maps ingestion
+                business_id = self.repo.insert_business(b_dict)
+                
             if not business_id:
                 logger.error(f"[{b_name}] Failed to save business to database. Skipping downstream pipeline.")
                 return False
                 
             logger.info(f"[{b_name}] Stored. DB ID: {business_id}. Commencing analysis...")
 
+            # Fetch previous website analysis snapshot to perform change detection
+            previous_analysis = self.repo.get_latest_website_analysis(business_id)
+
             # Step 2: Analyze Website
+            start_t = time.time()
             analysis_obj = self.analyzer.analyze_url(b_name, website)
             analysis_dict = asdict(analysis_obj)
             self.repo.insert_website_analysis(business_id, analysis_dict)
+            
+            analyze_success = not analysis_obj.error
+            stages_results.append(StageResult(
+                stage="analyze",
+                success=analyze_success,
+                duration_ms=(time.time() - start_t) * 1000.0,
+                error_message=analysis_obj.error
+            ))
+
+            # Run change detection if a previous website analysis is found
+            if previous_analysis:
+                try:
+                    logger.info(f"[{b_name}] Running ChangeDetector against previous crawl...")
+                    change_report = self.change_detector.compare(
+                        business_id=business_id,
+                        business_name=b_name,
+                        previous=previous_analysis,
+                        current=analysis_dict,
+                        previous_at=previous_analysis.get("analyzed_at").isoformat() if hasattr(previous_analysis.get("analyzed_at"), "isoformat") else str(previous_analysis.get("analyzed_at")),
+                        current_at=datetime.utcnow().isoformat()
+                    )
+                    if change_report.changes_detected:
+                        self.repo.insert_change_event(
+                            business_id=business_id,
+                            previous_snapshot_at=change_report.previous_snapshot_at,
+                            current_snapshot_at=change_report.current_snapshot_at,
+                            change_summary=change_report.change_summary,
+                            changes=[asdict(c) for c in change_report.changes]
+                        )
+                except Exception as ex:
+                    logger.error(f"[{b_name}] Failed to run ChangeDetector: {ex}")
 
             # Step 3: Generate Scores
+            start_t = time.time()
             score_obj = self.scorer.calculate_scores(analysis_dict)
             score_dict = asdict(score_obj)
             self.repo.insert_scoring_result(business_id, score_dict)
+            stages_results.append(StageResult(
+                stage="score",
+                success=True,
+                duration_ms=(time.time() - start_t) * 1000.0
+            ))
 
             # Step 4: Generate Human-Readable Report
+            start_t = time.time()
             report_obj = self.report_generator.generate_report(analysis_dict, score_dict)
             report_dict = asdict(report_obj)
             self.repo.insert_business_report(business_id, report_dict)
+            stages_results.append(StageResult(
+                stage="report",
+                success=True,
+                duration_ms=(time.time() - start_t) * 1000.0
+            ))
             
             # Step 6: Tech Stack Detection
             if analysis_obj.website_url:
@@ -174,10 +304,22 @@ class MVPPipeline:
 
             # Step 5: Generate Outreach Drafts (moved to run after decision-maker discovery to support custom personalization)
             # Inject found decision-maker name into analysis context for personalization
+            start_t = time.time()
             analysis_dict["decision_maker_name"] = decision_maker_name
             outreach_obj = self.outreach_generator.generate_outreach(score_dict, analysis_dict)
             outreach_dict = asdict(outreach_obj)
             self.repo.insert_outreach_draft(business_id, outreach_dict)
+            stages_results.append(StageResult(
+                stage="outreach",
+                success=True,
+                duration_ms=(time.time() - start_t) * 1000.0
+            ))
+
+            # Step 7c: OpenCorporates Enrichment
+            logger.info(f"[{b_name}] Querying OpenCorporates for company registration details...")
+            oc_obj = self.opencorporates_scraper.enrich(b_name, jurisdiction="in")
+            oc_dict = asdict(oc_obj)
+            self.repo.insert_company_registry(business_id, oc_dict)
 
             # Step 8: Social Analysis
             social_activity_score = 0.0
@@ -228,43 +370,105 @@ class MVPPipeline:
             intent_dict = asdict(intent_obj)
             self.repo.insert_intent_profile(business_id, intent_dict)
 
+            # Update recrawl tier and last checked timestamp in businesses table
+            opp_score = float(score_dict.get("opportunity_score", 0.0))
+            recrawl_tier = self.recrawl_scheduler._classify_tier(opp_score)
+            self.repo.update_business_recrawl_status(business_id, recrawl_tier)
+
+            # Record business metrics in run summary
+            if hasattr(self, "current_run") and self.current_run:
+                self.pipeline_monitor.record_business(
+                    run=self.current_run,
+                    business_name=b_name,
+                    business_id=business_id,
+                    stages=stages_results,
+                    opportunity_score=opp_score
+                )
+
             logger.info(f"[{b_name}] Pipeline completed successfully. Opportunity Score: {score_dict['opportunity_score']} | Intent Score: {intent_dict['intent_score']}")
             return True
 
         except Exception as e:
             # Graceful Failure: Catches unexpected crashes (e.g. database disconnect mid-run)
             logger.error(f"[{b_name}] Pipeline failed unexpectedly during processing: {e}")
+            if hasattr(self, "current_run") and self.current_run:
+                self.pipeline_monitor.record_business(
+                    run=self.current_run,
+                    business_name=b_name,
+                    business_id=business_id if 'business_id' in locals() else None,
+                    stages=stages_results
+                )
             return False
 
-    def run(self, search_query: str, max_results: int = 10):
+    def run(self, search_query: str, max_results: int = 10, source: str = "gmaps"):
         """
         Main execution loop.
         """
-        logger.info(f"========== PIPELINE STARTED: '{search_query}' ==========")
+        logger.info(f"========== PIPELINE STARTED (Source: {source}): '{search_query}' ==========")
+        self.current_run = self.pipeline_monitor.start_run(search_query)
         
         try:
             # Phase 1: Ingestion
-            logger.info("Phase 1: Scraping Google Maps...")
-            businesses = self.scraper.scrape(search_query, max_results=max_results)
+            if source == "recrawl":
+                logger.info("Phase 1: Fetching overdue businesses from scheduler...")
+                tasks = self.recrawl_scheduler.get_overdue_businesses(limit=max_results)
+                
+                if not tasks:
+                    logger.warning("No overdue businesses found to recrawl. Pipeline halting.")
+                    self.pipeline_monitor.finish_run(self.current_run)
+                    self.pipeline_monitor.save_run_summary(self.current_run)
+                    return
+                
+                businesses = []
+                for t in tasks:
+                    biz_data = self.repo.get_business_by_id(t.business_id)
+                    if biz_data:
+                        businesses.append(biz_data)
+                
+                scrape_duration_ms = 0.0
+                logger.info(f"Loaded {len(businesses)} overdue businesses for recrawl processing.")
+            else:
+                start_scrape_t = time.time()
+                if source == "justdial":
+                    logger.info("Phase 1: Scraping JustDial...")
+                    businesses = self.justdial_scraper.scrape(search_query, max_results=max_results)
+                elif source == "indiamart":
+                    logger.info("Phase 1: Scraping IndiaMart...")
+                    businesses = self.indiamart_scraper.scrape(search_query, max_results=max_results)
+                else:
+                    logger.info("Phase 1: Scraping Google Maps...")
+                    businesses = self.scraper.scrape(search_query, max_results=max_results)
+                
+                scrape_duration_ms = (time.time() - start_scrape_t) * 1000.0
             
             if not businesses:
-                logger.warning("No businesses scraped. Pipeline halting.")
+                logger.warning("No businesses found/scraped. Pipeline halting.")
+                self.pipeline_monitor.finish_run(self.current_run)
+                self.pipeline_monitor.save_run_summary(self.current_run)
                 return
                 
-            logger.info(f"Scraped {len(businesses)} businesses. Moving to processing phase.")
+            logger.info(f"Loaded {len(businesses)} businesses. Moving to processing phase.")
+
+            per_business_scrape_ms = scrape_duration_ms / len(businesses) if businesses else 0.0
 
             # Phase 2: Processing Loop
             success_count = 0
             for i, business in enumerate(businesses, start=1):
-                logger.info(f"--- Processing {i}/{len(businesses)}: {business.business_name} ---")
+                name = business.get("business_name") if isinstance(business, dict) else getattr(business, "business_name", "Unknown")
+                logger.info(f"--- Processing {i}/{len(businesses)}: {name} ---")
                 
-                is_success = self.process_business(business)
+                is_success = self.process_business(business, source=source, scrape_duration_ms=per_business_scrape_ms)
                 if is_success:
                     success_count += 1
                     
             # Phase 3: Analytics Output
             logger.info(f"========== PIPELINE FINISHED ==========")
             logger.info(f"Successfully processed {success_count}/{len(businesses)} businesses end-to-end.")
+            
+            # Finalize pipeline monitoring and save run report
+            self.pipeline_monitor.finish_run(self.current_run)
+            self.pipeline_monitor.print_run_report(self.current_run)
+            self.pipeline_monitor.save_run_summary(self.current_run)
             
             # Print a quick summary of the best leads found
             best_leads = self.repo.get_high_opportunity_businesses(min_score=60.0, limit=3)
@@ -277,6 +481,9 @@ class MVPPipeline:
 
         except Exception as e:
             logger.critical(f"Critical pipeline failure: {e}")
+            if hasattr(self, "current_run") and self.current_run:
+                self.pipeline_monitor.finish_run(self.current_run)
+                self.pipeline_monitor.save_run_summary(self.current_run)
 
 if __name__ == "__main__":
     import argparse
@@ -288,9 +495,18 @@ if __name__ == "__main__":
     parser.add_argument("--state", help="Target state (e.g. 'Kerala')")
     parser.add_argument("--country", help="Target country (e.g. 'India')")
     parser.add_argument("--limit", type=int, default=3, help="Max results to process (default: 3)")
+    parser.add_argument("--source", default="gmaps", choices=["gmaps", "justdial", "indiamart"], help="Scraping source (default: gmaps)")
+    parser.add_argument("--recrawl", action="store_true", help="Run in recrawl mode to process overdue businesses")
     
     args = parser.parse_args()
     
+    # If in recrawl mode, run the pipeline over scheduler task list
+    if args.recrawl:
+        logger.info(f"Starting pipeline in Recrawl Mode. Limit: {args.limit}")
+        pipeline = MVPPipeline()
+        pipeline.run("Recrawl Mode", max_results=args.limit, source="recrawl")
+        sys.exit(0)
+        
     # Prepare the list of categories to search
     categories_to_search = []
     if args.query:
@@ -325,5 +541,5 @@ if __name__ == "__main__":
             else:
                 final_query = cat
                 
-        logger.info(f"Executing search for: '{final_query}'")
-        pipeline.run(final_query, max_results=actual_limit)
+        logger.info(f"Executing search for: '{final_query}' using source: '{args.source}'")
+        pipeline.run(final_query, max_results=actual_limit, source=args.source)

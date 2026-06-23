@@ -20,5 +20,20 @@ export interface ScoringResult {
   automation_need_score: number;
   likely_service_match: string[];
   detected_pain_points: string[];
+  source_platforms?: string[];
+  google_rating?: number;
+  review_count?: number;
+  jd_rating?: number;
+  jd_reviews_count?: number;
+  jd_verified?: boolean;
+  im_rating?: number;
+  im_verified?: boolean;
+  im_gst_verified?: boolean;
+  outreach_status?: string;
   report?: BusinessReport;
+  extracted_emails?: string[] | null;
+  cms?: string | null;
+  frontend_framework?: string | null;
+  analytics_tools?: string[] | null;
+  decision_makers?: { name: string; role: string; confidence: number }[] | null;
 }

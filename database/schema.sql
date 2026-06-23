@@ -10,6 +10,13 @@ CREATE TABLE IF NOT EXISTS businesses (
     review_count INTEGER,
     phone VARCHAR(50),
     address TEXT,
+    jd_rating NUMERIC(3, 2),
+    jd_reviews_count INTEGER,
+    jd_verified BOOLEAN DEFAULT FALSE,
+    im_rating NUMERIC(3, 2),
+    im_verified BOOLEAN DEFAULT FALSE,
+    im_gst_verified BOOLEAN DEFAULT FALSE,
+    source_platforms JSONB DEFAULT '[]'::jsonb,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(business_name, address) -- Prevent exact duplicates during multiple scrape runs
@@ -126,6 +133,22 @@ CREATE TABLE IF NOT EXISTS decision_makers (
     discovered_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS company_registry (
+    id SERIAL PRIMARY KEY,
+    business_id INTEGER NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+    company_number VARCHAR(100),
+    jurisdiction VARCHAR(50),
+    jurisdiction_label VARCHAR(150),
+    incorporation_date DATE,
+    company_status VARCHAR(100),
+    company_type VARCHAR(150),
+    registered_address TEXT,
+    opencorporates_url TEXT,
+    source_platform VARCHAR(100) DEFAULT 'opencorporates',
+    error_message TEXT,
+    enriched_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Indexes for future analytics compatibility and fast querying
 CREATE INDEX IF NOT EXISTS idx_businesses_name ON businesses(business_name);
 CREATE INDEX IF NOT EXISTS idx_scoring_opportunity ON scoring_results(opportunity_score DESC);
@@ -139,4 +162,53 @@ CREATE INDEX IF NOT EXISTS idx_social_profiles_business_id ON social_profiles(bu
 CREATE INDEX IF NOT EXISTS idx_intent_profiles_business_id ON intent_profiles(business_id);
 CREATE INDEX IF NOT EXISTS idx_intent_profiles_intent_score ON intent_profiles(intent_score DESC);
 CREATE INDEX IF NOT EXISTS idx_decision_makers_business_id ON decision_makers(business_id);
+CREATE INDEX IF NOT EXISTS idx_company_registry_business_id ON company_registry(business_id);
+
+-- Migrations to add columns to existing tables
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS jd_rating NUMERIC(3, 2);
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS jd_reviews_count INTEGER;
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS jd_verified BOOLEAN DEFAULT FALSE;
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS im_rating NUMERIC(3, 2);
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS im_verified BOOLEAN DEFAULT FALSE;
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS im_gst_verified BOOLEAN DEFAULT FALSE;
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS source_platforms JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS last_checked TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS recrawl_tier VARCHAR(50) DEFAULT 'tier3';
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS outreach_status VARCHAR(50) DEFAULT 'new';
+
+-- Indexes for the new fields
+CREATE INDEX IF NOT EXISTS idx_businesses_jd_rating ON businesses(jd_rating DESC);
+CREATE INDEX IF NOT EXISTS idx_businesses_im_rating ON businesses(im_rating DESC);
+CREATE INDEX IF NOT EXISTS idx_businesses_last_checked ON businesses(last_checked);
+
+-- Phase 5 Monitoring Tables
+CREATE TABLE IF NOT EXISTS pipeline_runs (
+    id SERIAL PRIMARY KEY,
+    run_id VARCHAR(100) UNIQUE NOT NULL,
+    search_query VARCHAR(255) NOT NULL,
+    started_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    finished_at TIMESTAMP WITH TIME ZONE,
+    total_businesses INTEGER DEFAULT 0,
+    successful_businesses INTEGER DEFAULT 0,
+    failed_businesses INTEGER DEFAULT 0,
+    success_rate NUMERIC(5, 2) DEFAULT 0.0,
+    high_opportunity_count INTEGER DEFAULT 0,
+    stage_failure_counts JSONB DEFAULT '{}'::jsonb,
+    business_records JSONB DEFAULT '[]'::jsonb,
+    notes JSONB DEFAULT '[]'::jsonb,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS change_events (
+    id SERIAL PRIMARY KEY,
+    business_id INTEGER NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+    changes JSONB DEFAULT '[]'::jsonb,
+    previous_snapshot_at TIMESTAMP WITH TIME ZONE,
+    current_snapshot_at TIMESTAMP WITH TIME ZONE,
+    change_summary TEXT,
+    detected_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_pipeline_runs_run_id ON pipeline_runs(run_id);
+CREATE INDEX IF NOT EXISTS idx_change_events_business_id ON change_events(business_id);
 

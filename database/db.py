@@ -100,12 +100,32 @@ class ScraperRepository:
         Inserts a business. Uses ON CONFLICT to avoid duplicates, 
         returning the ID regardless of whether it's new or updated.
         """
+        sources = data.get('source_platforms')
+        if not sources:
+            sources = [data.get('source_platform', 'google_maps')]
+            
         query = """
             INSERT INTO businesses 
-            (business_name, category, website, google_rating, review_count, phone, address)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            (business_name, category, website, google_rating, review_count, phone, address,
+             jd_rating, jd_reviews_count, jd_verified, im_rating, im_verified, im_gst_verified, source_platforms)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (business_name, address) 
-            DO UPDATE SET updated_at = CURRENT_TIMESTAMP
+            DO UPDATE SET 
+                updated_at = CURRENT_TIMESTAMP,
+                source_platforms = (
+                    SELECT jsonb_agg(distinct val) 
+                    FROM jsonb_array_elements(COALESCE(businesses.source_platforms, '[]'::jsonb) || EXCLUDED.source_platforms) as val
+                ),
+                website = COALESCE(EXCLUDED.website, businesses.website),
+                phone = COALESCE(EXCLUDED.phone, businesses.phone),
+                google_rating = COALESCE(EXCLUDED.google_rating, businesses.google_rating),
+                review_count = COALESCE(EXCLUDED.review_count, businesses.review_count),
+                jd_rating = COALESCE(EXCLUDED.jd_rating, businesses.jd_rating),
+                jd_reviews_count = COALESCE(EXCLUDED.jd_reviews_count, businesses.jd_reviews_count),
+                jd_verified = COALESCE(EXCLUDED.jd_verified, businesses.jd_verified),
+                im_rating = COALESCE(EXCLUDED.im_rating, businesses.im_rating),
+                im_verified = COALESCE(EXCLUDED.im_verified, businesses.im_verified),
+                im_gst_verified = COALESCE(EXCLUDED.im_gst_verified, businesses.im_gst_verified)
             RETURNING id;
         """
         try:
@@ -118,7 +138,14 @@ class ScraperRepository:
                         data.get('google_rating'),
                         data.get('review_count'),
                         data.get('phone'),
-                        data.get('address')
+                        data.get('address'),
+                        data.get('jd_rating'),
+                        data.get('jd_reviews_count'),
+                        data.get('jd_verified', False),
+                        data.get('im_rating'),
+                        data.get('im_verified', False),
+                        data.get('im_gst_verified', False),
+                        json.dumps(sources)
                     ))
                     result = cur.fetchone()
                     return result[0] if result else None
@@ -359,6 +386,238 @@ class ScraperRepository:
         except Exception as e:
             logger.error(f"Error inserting decision makers for business {business_id}: {e}")
             return False
+
+    def insert_company_registry(self, business_id: int, data: Dict[str, Any]) -> bool:
+        """Inserts the results of the OpenCorporates (registries/opencorporates.py) module."""
+        query = """
+            INSERT INTO company_registry 
+            (business_id, company_number, jurisdiction, jurisdiction_label, incorporation_date, 
+             company_status, company_type, registered_address, opencorporates_url, source_platform, error_message)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+        """
+        try:
+            with self.db.get_connection() as conn:
+                with conn.cursor() as cur:
+                    cur.execute(query, (
+                        business_id,
+                        data.get('company_number'),
+                        data.get('jurisdiction'),
+                        data.get('jurisdiction_label'),
+                        data.get('incorporation_date'),
+                        data.get('company_status'),
+                        data.get('company_type'),
+                        data.get('registered_address'),
+                        data.get('opencorporates_url'),
+                        data.get('source_platform', 'opencorporates'),
+                        data.get('error')
+                    ))
+            return True
+        except Exception as e:
+            logger.error(f"Error inserting company registry details for business {business_id}: {e}")
+            return False
+
+    def update_business_sources(self, business_id: int, source_data: Dict[str, Any]) -> bool:
+        """
+        Updates an existing business's metadata (like JustDial or IndiaMart scores)
+        and appends the new source platform to the source_platforms JSONB array.
+        """
+        platform = source_data.get('source_platform', 'justdial')
+        query = """
+            UPDATE businesses 
+            SET 
+                jd_rating = COALESCE(%s, jd_rating),
+                jd_reviews_count = COALESCE(%s, jd_reviews_count),
+                jd_verified = COALESCE(%s, jd_verified),
+                im_rating = COALESCE(%s, im_rating),
+                im_verified = COALESCE(%s, im_verified),
+                im_gst_verified = COALESCE(%s, im_gst_verified),
+                phone = COALESCE(%s, phone),
+                website = COALESCE(%s, website),
+                source_platforms = (
+                    SELECT jsonb_agg(distinct val)
+                    FROM jsonb_array_elements(COALESCE(source_platforms, '[]'::jsonb) || %s::jsonb) as val
+                ),
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = %s;
+        """
+        try:
+            with self.db.get_connection() as conn:
+                with conn.cursor() as cur:
+                    cur.execute(query, (
+                        source_data.get('jd_rating'),
+                        source_data.get('jd_reviews_count'),
+                        source_data.get('jd_verified'),
+                        source_data.get('im_rating'),
+                        source_data.get('im_verified'),
+                        source_data.get('im_gst_verified'),
+                        source_data.get('phone'),
+                        source_data.get('website'),
+                        json.dumps([platform]),
+                        business_id
+                    ))
+            return True
+        except Exception as e:
+            logger.error(f"Error updating sources for business {business_id}: {e}")
+            return False
+
+    def insert_pipeline_run(self, data: Dict[str, Any]) -> bool:
+        """Inserts a completed pipeline run metrics report."""
+        query = """
+            INSERT INTO pipeline_runs 
+            (run_id, search_query, started_at, finished_at, total_businesses, 
+             successful_businesses, failed_businesses, success_rate, 
+             high_opportunity_count, stage_failure_counts, business_records, notes)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+        """
+        try:
+            with self.db.get_connection() as conn:
+                with conn.cursor() as cur:
+                    cur.execute(query, (
+                        data.get('run_id'),
+                        data.get('search_query'),
+                        data.get('started_at'),
+                        data.get('finished_at'),
+                        data.get('total_businesses', 0),
+                        data.get('successful_businesses', 0),
+                        data.get('failed_businesses', 0),
+                        data.get('success_rate', 0.0),
+                        data.get('high_opportunity_count', 0),
+                        json.dumps(data.get('stage_failure_counts', {})),
+                        json.dumps(data.get('business_records', [])),
+                        json.dumps(data.get('notes', []))
+                    ))
+            return True
+        except Exception as e:
+            logger.error(f"Error inserting pipeline run {data.get('run_id')}: {e}")
+            return False
+
+    def insert_change_event(
+        self, 
+        business_id: int, 
+        previous_snapshot_at: Optional[str], 
+        current_snapshot_at: Optional[str], 
+        change_summary: str, 
+        changes: List[Dict[str, Any]]
+    ) -> bool:
+        """Inserts a detected website change event."""
+        query = """
+            INSERT INTO change_events 
+            (business_id, previous_snapshot_at, current_snapshot_at, change_summary, changes)
+            VALUES (%s, %s, %s, %s, %s);
+        """
+        try:
+            with self.db.get_connection() as conn:
+                with conn.cursor() as cur:
+                    cur.execute(query, (
+                        business_id,
+                        previous_snapshot_at,
+                        current_snapshot_at,
+                        change_summary,
+                        json.dumps(changes)
+                    ))
+            return True
+        except Exception as e:
+            logger.error(f"Error inserting change event for business {business_id}: {e}")
+            return False
+
+    def get_latest_website_analysis(self, business_id: int) -> Optional[Dict[str, Any]]:
+        """Retrieves the most recent website analysis for a business."""
+        query = """
+            SELECT website_exists, ssl_enabled, mobile_friendly, meta_title_exists, 
+                   meta_title, meta_description_exists, contact_form_exists, 
+                   whatsapp_integration, social_links_found, h1_exists, error_message, analyzed_at
+            FROM website_analyses
+            WHERE business_id = %s
+            ORDER BY analyzed_at DESC
+            LIMIT 1;
+        """
+        try:
+            with self.db.get_connection() as conn:
+                with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                    cur.execute(query, (business_id,))
+                    row = cur.fetchone()
+                    if row:
+                        if 'social_links_found' in row and isinstance(row['social_links_found'], str):
+                            row['social_links_found'] = json.loads(row['social_links_found'])
+                        return dict(row)
+                    return None
+        except Exception as e:
+            logger.error(f"Error retrieving latest website analysis for business {business_id}: {e}")
+            return None
+
+    def get_business_by_id(self, business_id: int) -> Optional[Dict[str, Any]]:
+        """Retrieves a single business by its ID."""
+        query = """
+            SELECT id, business_name, category, website, google_rating, review_count, 
+                   phone, address, jd_rating, jd_reviews_count, jd_verified,
+                   im_rating, im_verified, im_gst_verified, source_platforms, outreach_status
+            FROM businesses
+            WHERE id = %s;
+        """
+        try:
+            with self.db.get_connection() as conn:
+                with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                    cur.execute(query, (business_id,))
+                    row = cur.fetchone()
+                    if row:
+                        if 'source_platforms' in row and isinstance(row['source_platforms'], str):
+                            row['source_platforms'] = json.loads(row['source_platforms'])
+                        return dict(row)
+                    return None
+        except Exception as e:
+            logger.error(f"Error retrieving business by ID {business_id}: {e}")
+            return None
+
+    def update_business_recrawl_status(self, business_id: int, recrawl_tier: str) -> bool:
+        """Updates last_checked timestamp and recrawl tier for a business."""
+        query = """
+            UPDATE businesses 
+            SET last_checked = CURRENT_TIMESTAMP,
+                recrawl_tier = %s
+            WHERE id = %s;
+        """
+        try:
+            with self.db.get_connection() as conn:
+                with conn.cursor() as cur:
+                    cur.execute(query, (recrawl_tier, business_id))
+            return True
+        except Exception as e:
+            logger.error(f"Error updating recrawl status for business {business_id}: {e}")
+            return False
+
+    def update_business_outreach_status(self, business_id: int, status: str) -> bool:
+        """Updates the outreach status of a business."""
+        query = """
+            UPDATE businesses 
+            SET outreach_status = %s,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = %s;
+        """
+        try:
+            with self.db.get_connection() as conn:
+                with conn.cursor() as cur:
+                    cur.execute(query, (status, business_id))
+            return True
+        except Exception as e:
+            logger.error(f"Error updating outreach status for business {business_id}: {e}")
+            return False
+
+    def get_all_businesses(self) -> List[Dict[str, Any]]:
+        """Retrieves all businesses for cross-source entity resolution."""
+        query = """
+            SELECT id, business_name, category, website, google_rating, review_count, 
+                   phone, address, jd_rating, jd_reviews_count, jd_verified,
+                   im_rating, im_verified, im_gst_verified, source_platforms, outreach_status
+            FROM businesses;
+        """
+        try:
+            with self.db.get_connection() as conn:
+                with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                    cur.execute(query)
+                    return cur.fetchall()
+        except Exception as e:
+            logger.error(f"Error retrieving all businesses: {e}")
+            return []
 
     # ---------------------------------------------------------
     # Helper Query Methods for Analytics/Outreach

@@ -88,10 +88,19 @@ class EntityResolver:
         return re.sub(r"\D", "", phone)
 
     def _normalize_domain(self, url: Optional[str]) -> str:
-        """Extract and normalize domain from a URL."""
+        """Extract and normalize domain from a URL, handling Google redirects."""
         if not url:
             return ""
-        url = url.lower().strip()
+        url = url.strip()
+        
+        # Extract target q parameter if it is a Google redirect URL
+        if "/url?q=" in url or "/url?url=" in url:
+            match = re.search(r"[?&](?:q|url)=([^&]+)", url)
+            if match:
+                import urllib.parse
+                url = urllib.parse.unquote(match.group(1))
+                
+        url = url.lower()
         url = re.sub(r"^https?://", "", url)
         url = re.sub(r"^www\.", "", url)
         return url.split("/")[0]

@@ -122,23 +122,62 @@ class RecrawlScheduler:
 
         Returns:
             List of RecrawlTask objects, sorted by days_overdue descending.
-
-        TODO: Implement database query:
-            SELECT b.id, b.business_name, b.last_checked, s.opportunity_score
-            FROM businesses b
-            JOIN scoring_results s ON b.id = s.business_id
-            WHERE b.last_checked < NOW() - INTERVAL '7 days'
-               OR b.last_checked IS NULL
-            ORDER BY b.last_checked ASC NULLS FIRST
-            LIMIT %s;
         """
-        # TODO: Implement actual DB query using self.db.get_connection()
         logger.info(f"RecrawlScheduler: querying overdue businesses (limit={limit})")
         tasks: List[RecrawlTask] = []
 
-        # Placeholder: return empty list until DB query is implemented
-        # TODO: Remove placeholder and implement real query
-        return tasks
+        if not self.db:
+            logger.warning("RecrawlScheduler: No database manager provided. Returning empty task list.")
+            return tasks
+
+        query = """
+            SELECT b.id, b.business_name, b.last_checked, s.opportunity_score, b.recrawl_tier
+            FROM businesses b
+            JOIN scoring_results s ON b.id = s.business_id
+            WHERE b.last_checked IS NULL
+               OR (
+                   b.recrawl_tier = 'tier1' AND b.last_checked < CURRENT_TIMESTAMP - INTERVAL '7 days'
+               ) OR (
+                   b.recrawl_tier = 'tier2' AND b.last_checked < CURRENT_TIMESTAMP - INTERVAL '30 days'
+               ) OR (
+                   b.recrawl_tier = 'tier3' AND b.last_checked < CURRENT_TIMESTAMP - INTERVAL '90 days'
+               )
+            ORDER BY b.last_checked ASC NULLS FIRST
+            LIMIT %s;
+        """
+
+        try:
+            from psycopg2.extras import RealDictCursor
+            with self.db.get_connection() as conn:
+                with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                    cur.execute(query, (limit,))
+                    rows = cur.fetchall()
+
+            for row in rows:
+                last_checked_dt = row.get("last_checked")
+                opportunity_score = float(row.get("opportunity_score") or 0.0)
+                recrawl_tier = row.get("recrawl_tier") or self._classify_tier(opportunity_score)
+                
+                is_overdue, days_overdue = self._is_overdue(last_checked_dt, recrawl_tier)
+                
+                if is_overdue:
+                    tasks.append(RecrawlTask(
+                        business_id=row["id"],
+                        business_name=row["business_name"],
+                        opportunity_score=opportunity_score,
+                        last_checked=last_checked_dt.isoformat() if last_checked_dt else None,
+                        days_overdue=days_overdue,
+                        recrawl_tier=recrawl_tier
+                    ))
+
+            # Sort by days_overdue descending
+            tasks.sort(key=lambda t: t.days_overdue, reverse=True)
+            logger.info(f"RecrawlScheduler: Found {len(tasks)} overdue businesses to recrawl.")
+            return tasks
+
+        except Exception as e:
+            logger.error(f"Error querying overdue businesses in RecrawlScheduler: {e}")
+            return []
 
     def get_schedule_summary(self) -> Dict[str, Any]:
         """

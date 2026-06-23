@@ -104,9 +104,10 @@ class PipelineMonitor:
         monitor.save_run_summary(run)
     """
 
-    def __init__(self, output_dir: str = "data/cache"):
+    def __init__(self, output_dir: str = "data/cache", db_manager=None):
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
+        self.db = db_manager
 
     def _generate_run_id(self) -> str:
         """Generate a unique run ID using timestamp."""
@@ -147,19 +148,18 @@ class PipelineMonitor:
             business_id:      Database ID of the business.
             stages:           List of StageResult for each pipeline stage.
             opportunity_score: The final opportunity score (for quality tracking).
-
-        TODO: Implement full recording logic:
-            - Compute overall_success from stage results
-            - Accumulate stage_failure_counts
-            - Track high_opportunity_count
         """
-        # TODO: Implement full recording logic
         record = BusinessRunRecord(
             business_name=business_name,
             business_id=business_id,
             stages=stages,
             overall_success=all(s.success for s in stages)
         )
+        
+        # Calculate total duration for this business
+        durations = [s.duration_ms for s in stages if s.duration_ms is not None]
+        record.total_duration_ms = sum(durations) if durations else None
+        
         run.business_records.append(record)
         run.total_businesses += 1
         if record.overall_success:
@@ -167,8 +167,14 @@ class PipelineMonitor:
         else:
             run.failed_businesses += 1
 
-        # TODO: Track stage_failure_counts per stage name
-        # TODO: Track high_opportunity_count if opportunity_score >= 70
+        # Track stage_failure_counts per stage name
+        for stage in stages:
+            if not stage.success:
+                run.stage_failure_counts[stage.stage] = run.stage_failure_counts.get(stage.stage, 0) + 1
+        
+        # Track high_opportunity_count if opportunity_score >= 70
+        if opportunity_score is not None and opportunity_score >= 70:
+            run.high_opportunity_count += 1
 
     def finish_run(self, run: PipelineRunSummary) -> None:
         """
@@ -192,23 +198,50 @@ class PipelineMonitor:
     def save_run_summary(self, run: PipelineRunSummary) -> None:
         """
         Persist the run summary to the data/cache directory as JSON.
-
-        TODO: Also append a compact summary line to logs/pipeline_runs.log
-        TODO: Optional: Store full summary in a `pipeline_runs` PostgreSQL table
+        Also appends a compact summary line to logs/pipeline_runs.log.
+        Stores full summary in the pipeline_runs PostgreSQL table if self.db is present.
         """
         filepath = self.output_dir / f"{run.run_id}.json"
+        run_dict = asdict(run)
         try:
             with open(filepath, "w", encoding="utf-8") as f:
-                json.dump(asdict(run), f, indent=4)
+                json.dump(run_dict, f, indent=4)
             logger.info(f"Run summary saved to {filepath}")
         except Exception as e:
             logger.error(f"Failed to save run summary: {e}")
 
+        # Append compact summary line to logs/pipeline_runs.log
+        log_filepath = Path("logs/pipeline_runs.log")
+        log_filepath.parent.mkdir(exist_ok=True)
+        try:
+            with open(log_filepath, "a", encoding="utf-8") as lf:
+                summary_line = (
+                    f"{run.finished_at or datetime.utcnow().isoformat()} - {run.run_id} - "
+                    f"Query: '{run.search_query}' - "
+                    f"Success: {run.successful_businesses}/{run.total_businesses} "
+                    f"({run.success_rate}%) - "
+                    f"High Opp: {run.high_opportunity_count}\n"
+                )
+                lf.write(summary_line)
+        except Exception as e:
+            logger.error(f"Failed to append to pipeline_runs.log: {e}")
+
+        # Save to database if db is available
+        if self.db:
+            try:
+                from database.db import ScraperRepository
+                repo = ScraperRepository(self.db)
+                db_success = repo.insert_pipeline_run(run_dict)
+                if db_success:
+                    logger.info(f"Pipeline run {run.run_id} persisted in database.")
+                else:
+                    logger.error(f"Failed to insert pipeline run record in database.")
+            except Exception as e:
+                logger.error(f"Database insertion of pipeline run failed: {e}")
+
     def print_run_report(self, run: PipelineRunSummary) -> None:
         """
         Print a concise CLI-friendly summary of the completed run.
-
-        TODO: Expand to include top leads found, most common failure modes, etc.
         """
         print(f"\n{'=' * 50}")
         print(f"Run ID:         {run.run_id}")
@@ -217,6 +250,20 @@ class PipelineMonitor:
         print(f"Success Rate:   {run.success_rate}%")
         print(f"High Opp Leads: {run.high_opportunity_count}")
         print(f"Duration:       {run.started_at} → {run.finished_at}")
+        if run.stage_failure_counts:
+            print(f"Stage Failures: {dict(run.stage_failure_counts)}")
+        
+        # Display top leads found
+        top_leads = [
+            r for r in run.business_records 
+            if r.overall_success
+        ]
+        if top_leads:
+            print("-" * 50)
+            print("Successfully Processed Leads in this batch:")
+            for lead in top_leads[:5]:
+                print(f" - {lead.business_name} (ID: {lead.business_id or 'N/A'})")
+                
         print(f"{'=' * 50}\n")
 
 
