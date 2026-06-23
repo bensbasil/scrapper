@@ -647,6 +647,99 @@ class ScraperRepository:
             logger.error(f"Error querying high opportunity businesses: {e}")
             return []
 
+    def insert_customer_pain_signals(self, business_id: int, data: Dict[str, Any]) -> bool:
+        """Inserts Phase 4 customer pain insights."""
+        query = """
+            INSERT INTO customer_pain_signals 
+            (business_id, recurring_complaints, recurring_praise, common_themes, bottlenecks, pain_summary)
+            VALUES (%s, %s, %s, %s, %s, %s);
+        """
+        try:
+            with self.db.get_connection() as conn:
+                with conn.cursor() as cur:
+                    cur.execute(query, (
+                        business_id,
+                        json.dumps(data.get('recurring_complaints', [])),
+                        json.dumps(data.get('recurring_praise', [])),
+                        json.dumps(data.get('common_themes', [])),
+                        json.dumps(data.get('bottlenecks', [])),
+                        data.get('pain_summary')
+                    ))
+            return True
+        except Exception as e:
+            logger.error(f"Error inserting customer pain signals for business {business_id}: {e}")
+            return False
+
+    def insert_competitor_analysis(self, business_id: int, data: Dict[str, Any]) -> bool:
+        """Inserts Phase 4 competitor analysis."""
+        query = """
+            INSERT INTO competitor_analysis 
+            (business_id, competitors, competitor_gap_summary)
+            VALUES (%s, %s, %s);
+        """
+        try:
+            with self.db.get_connection() as conn:
+                with conn.cursor() as cur:
+                    cur.execute(query, (
+                        business_id,
+                        json.dumps(data.get('competitors', [])),
+                        data.get('competitor_gap_summary')
+                    ))
+            return True
+        except Exception as e:
+            logger.error(f"Error inserting competitor analysis for business {business_id}: {e}")
+            return False
+
+    def insert_business_health_profile(self, business_id: int, data: Dict[str, Any]) -> bool:
+        """Inserts Phase 4 aggregated business health score profile."""
+        query = """
+            INSERT INTO business_health_profiles 
+            (business_id, overall_health_score, website_health_score, review_health_score, 
+             trust_health_score, conversion_health_score, conversion_friction_score, 
+             conversion_issues, trust_signals, service_recommendations, opportunity_reasoning)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+        """
+        try:
+            with self.db.get_connection() as conn:
+                with conn.cursor() as cur:
+                    cur.execute(query, (
+                        business_id,
+                        data.get('overall_health_score', 0.0),
+                        data.get('website_health_score', 0.0),
+                        data.get('review_health_score', 0.0),
+                        data.get('trust_health_score', 0.0),
+                        data.get('conversion_health_score', 0.0),
+                        data.get('conversion_friction_score', 0.0),
+                        json.dumps(data.get('conversion_issues', [])),
+                        json.dumps(data.get('trust_signals', [])),
+                        json.dumps(data.get('service_recommendations', [])),
+                        data.get('opportunity_reasoning')
+                    ))
+            return True
+        except Exception as e:
+            logger.error(f"Error inserting business health profile for business {business_id}: {e}")
+            return False
+
+    def get_local_competitors(self, city: str, category: str, exclude_id: int) -> List[Dict[str, Any]]:
+        """Queries for local competitors in the same city and category."""
+        query = """
+            SELECT b.id, b.business_name, b.website, b.google_rating, b.review_count, s.opportunity_score
+            FROM businesses b
+            JOIN scoring_results s ON b.id = s.business_id
+            WHERE LOWER(b.category) = LOWER(%s)
+              AND (LOWER(b.address) LIKE LOWER('%%' || %s || '%%') OR LOWER(b.business_name) LIKE LOWER('%%' || %s || '%%'))
+              AND b.id != %s
+            ORDER BY s.opportunity_score ASC; -- low opportunity = strong digital competitors
+        """
+        try:
+            with self.db.get_connection() as conn:
+                with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                    cur.execute(query, (category, city, city, exclude_id))
+                    return cur.fetchall()
+        except Exception as e:
+            logger.error(f"Error fetching local competitors for category={category}, city={city}: {e}")
+            return []
+
 if __name__ == "__main__":
     # Test DB Setup Execution Context
     logger.info("Database module loaded. To initialize tables, run db.execute_schema()")

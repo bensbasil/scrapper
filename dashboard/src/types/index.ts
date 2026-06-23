@@ -36,4 +36,21 @@ export interface ScoringResult {
   frontend_framework?: string | null;
   analytics_tools?: string[] | null;
   decision_makers?: { name: string; role: string; confidence: number }[] | null;
+  overall_health_score?: number;
+  website_health_score?: number;
+  review_health_score?: number;
+  trust_health_score?: number;
+  conversion_health_score?: number;
+  conversion_friction_score?: number;
+  conversion_issues?: string[] | null;
+  trust_signals?: string[] | null;
+  service_recommendations?: { service_name: string; impact_explanation: string }[] | null;
+  opportunity_reasoning?: string;
+  competitors?: any[] | null;
+  competitor_gap_summary?: string;
+  recurring_complaints?: string[] | null;
+  recurring_praise?: string[] | null;
+  common_themes?: string[] | null;
+  bottlenecks?: string[] | null;
+  pain_summary?: string;
 }

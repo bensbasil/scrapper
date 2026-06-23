@@ -81,17 +81,19 @@ class OutreachGenerator:
         summary = "Critical digital weaknesses detected: "
         return summary + ", ".join(pain_points[:3]) + "."
 
-    def _generate_cold_email(self, business_name: str, category: str, primary_pain: str, service: str, contact_name: str = None) -> str:
+    def _generate_cold_email(self, business_name: str, category: str, primary_paint: str, service: str, contact_name: str = None, opp_reasoning: str = None) -> str:
         """Generates a human-sounding, low-friction cold email draft."""
         cat_text = category if category else "local businesses"
         salutation = f"Hi {contact_name}," if contact_name else "Hi team,"
         
-        if "website" in primary_pain.lower() or "No website" in primary_pain:
+        reasoning_text = f"\n\n{opp_reasoning}" if opp_reasoning else ""
+
+        if "website" in primary_paint.lower() or "No website" in primary_paint:
             return f"""Subject: Question about {business_name}'s digital presence
 
 {salutation}
 
-I was looking for {cat_text} in the area and noticed {business_name} doesn't seem to have a dedicated website yet. 
+I was looking for {cat_text} in the area and noticed {business_name} doesn't seem to have a dedicated website yet.{reasoning_text}
 
 A lot of local searches are happening right now, and without a simple landing page, you might be losing those customers to competitors. I build clean, fast, 1-page websites specifically for {cat_text} to fix exactly this.
 
@@ -104,7 +106,7 @@ Best,
 
 {salutation}
 
-I was browsing {business_name}'s site today while looking at {cat_text} in the area. I noticed a technical issue: {primary_pain.lower()}. 
+I was browsing {business_name}'s site today while looking at {cat_text} in the area. I noticed a technical issue: {primary_paint.lower()}.{reasoning_text}
 
 Usually, when this happens, it can directly impact how easily new customers can find or contact you. We specialize in fixing these exact types of bottlenecks through {service.lower() if service else 'targeted optimization'}.
 
@@ -121,9 +123,10 @@ Best,
             
         return f"{salutation} I was just looking at your website and noticed an issue with {primary_pain.lower()}. It might be costing you some traffic. Mind if I send a quick screenshot of how to fix it?"
 
-    def _generate_ai_prompt(self, b_name: str, score: float, pain_points: List[str], services: List[str], contact_name: str = None) -> str:
+    def _generate_ai_prompt(self, b_name: str, score: float, pain_points: List[str], services: List[str], contact_name: str = None, opp_reasoning: str = None) -> str:
         """Generates the structured prompt that can be sent to OpenAI/Anthropic later."""
         contact_line = f"- Contact Decision-Maker: {contact_name}" if contact_name else "- Contact Decision-Maker: Not found (use generic salutation)"
+        reasoning_line = f"- Opportunity Reasoning: {opp_reasoning}" if opp_reasoning else ""
         return f"""You are an expert, consultative B2B sales copywriter. 
 Write a highly personalized, non-spammy cold email to '{b_name}'.
 
@@ -132,6 +135,7 @@ Context:
 - Key Pain Points Detected: {', '.join(pain_points)}
 - Suggested Services to Pitch: {', '.join(services)}
 {contact_line}
+{reasoning_line}
 
 Rules:
 1. Do not use fake statistics or hyperbolic claims.
@@ -155,6 +159,7 @@ Rules:
 
         # Extract decision maker name from score_data or analysis_data
         contact_name = analysis_data.get("decision_maker_name") or score_data.get("decision_maker_name")
+        opp_reasoning = analysis_data.get("opportunity_reasoning")
 
         # 1. Strategy & Positioning
         positioning = self._generate_pain_point_positioning(pain_points, services)
@@ -169,11 +174,11 @@ Rules:
             angles.append("The 'Trust & Security' angle: Focus on technical errors making the business look unprofessional.")
 
         # 2. Actionable Drafts
-        email_draft = self._generate_cold_email(b_name, category, primary_pain, primary_service, contact_name)
+        email_draft = self._generate_cold_email(b_name, category, primary_pain, primary_service, contact_name, opp_reasoning)
         wa_draft = self._generate_whatsapp(b_name, primary_pain, contact_name)
         
         # 3. AI Readiness
-        ai_prompt = self._generate_ai_prompt(b_name, opp_score, pain_points, services, contact_name)
+        ai_prompt = self._generate_ai_prompt(b_name, opp_score, pain_points, services, contact_name, opp_reasoning)
 
         logger.info(f"Generated outreach materials for {b_name}.")
 

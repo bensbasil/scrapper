@@ -67,6 +67,15 @@ try:
     from monitoring.change_detector import ChangeDetector
     from monitoring.pipeline_monitor import PipelineMonitor, StageResult
     from monitoring.recrawl_scheduler import RecrawlScheduler
+
+    # Phase 4 Business Intelligence sub-modules
+    from business_intelligence.conversion_analyzer import ConversionAnalyzer
+    from business_intelligence.review_miner import ReviewMiner
+    from business_intelligence.customer_pain_extractor import CustomerPainExtractor
+    from business_intelligence.competitor_analyzer import CompetitorAnalyzer
+    from business_intelligence.trust_signal_detector import TrustSignalDetector
+    from business_intelligence.opportunity_mapper import OpportunityMapper
+    from business_intelligence.business_health_score import BusinessHealthScore
 except ImportError as e:
     logger.error(f"Failed to import modules. Ensure you run this script from the project root. Error: {e}")
     sys.exit(1)
@@ -122,6 +131,15 @@ class MVPPipeline:
         self.change_detector = ChangeDetector()
         self.pipeline_monitor = PipelineMonitor(db_manager=self.db_manager)
         self.recrawl_scheduler = RecrawlScheduler(db_manager=self.db_manager)
+        
+        # Phase 4 Business Intelligence sub-modules
+        self.conversion_analyzer = ConversionAnalyzer()
+        self.review_miner = ReviewMiner()
+        self.customer_pain_extractor = CustomerPainExtractor()
+        self.competitor_analyzer = CompetitorAnalyzer(repo=self.repo)
+        self.trust_signal_detector = TrustSignalDetector()
+        self.opportunity_mapper = OpportunityMapper()
+        self.business_health_score = BusinessHealthScore()
         
         # Ensure database tables exist before we start processing
         logger.info("Verifying database schema...")
@@ -302,19 +320,6 @@ class MVPPipeline:
                     decision_maker_name = highest_candidate.name
                     logger.info(f"[{b_name}] Found decision-maker: {decision_maker_name} (confidence: {highest_candidate.confidence})")
 
-            # Step 5: Generate Outreach Drafts (moved to run after decision-maker discovery to support custom personalization)
-            # Inject found decision-maker name into analysis context for personalization
-            start_t = time.time()
-            analysis_dict["decision_maker_name"] = decision_maker_name
-            outreach_obj = self.outreach_generator.generate_outreach(score_dict, analysis_dict)
-            outreach_dict = asdict(outreach_obj)
-            self.repo.insert_outreach_draft(business_id, outreach_dict)
-            stages_results.append(StageResult(
-                stage="outreach",
-                success=True,
-                duration_ms=(time.time() - start_t) * 1000.0
-            ))
-
             # Step 7c: OpenCorporates Enrichment
             logger.info(f"[{b_name}] Querying OpenCorporates for company registration details...")
             oc_obj = self.opencorporates_scraper.enrich(b_name, jurisdiction="in")
@@ -360,15 +365,98 @@ class MVPPipeline:
 
             # Step 12: Intent Evaluation
             logger.info(f"[{b_name}] Evaluating composite buying intent...")
+            opp_score = float(score_dict.get("opportunity_score", 0.0))
             intent_signals = {
                 "hiring_signal_score": hiring_signal_score,
                 "review_trend_score": review_trend_score,
                 "freshness_score": freshness_score,
-                "opportunity_score": float(score_dict.get("opportunity_score", 0.0))
+                "opportunity_score": opp_score
             }
             intent_obj = self.intent_engine.evaluate(business_id, b_name, intent_signals)
             intent_dict = asdict(intent_obj)
             self.repo.insert_intent_profile(business_id, intent_dict)
+
+            # Step 13: Business Intelligence Layer (Phase 4)
+            logger.info(f"[{b_name}] Executing Business Intelligence analysis...")
+            # 1. Conversion friction analysis
+            conversion_obj = self.conversion_analyzer.analyze(b_name, website)
+            conversion_dict = asdict(conversion_obj)
+            
+            # 2. Review mining & customer pain signals
+            review_mine_obj = self.review_miner.mine_reviews(
+                business_name=b_name, 
+                category=b_dict.get("category"), 
+                rating=float(b_dict.get("google_rating")) if b_dict.get("google_rating") is not None else None,
+                review_count=b_dict.get("review_count")
+            )
+            
+            # 3. Customer pain extraction
+            pain_obj = self.customer_pain_extractor.extract_pains(b_name, review_mine_obj.recurring_complaints)
+            pain_dict = asdict(pain_obj)
+            pain_dict["recurring_complaints"] = review_mine_obj.recurring_complaints
+            pain_dict["recurring_praise"] = review_mine_obj.recurring_praise
+            pain_dict["common_themes"] = review_mine_obj.common_themes
+            pain_dict["pain_summary"] = review_mine_obj.pain_summary
+            self.repo.insert_customer_pain_signals(business_id, pain_dict)
+
+            # 4. Competitor analysis
+            comp_obj = self.competitor_analyzer.analyze(
+                business_id=business_id,
+                business_name=b_name,
+                category=b_dict.get("category"),
+                address=b_dict.get("address"),
+                opportunity_score=opp_score
+            )
+            comp_dict = asdict(comp_obj)
+            self.repo.insert_competitor_analysis(business_id, comp_dict)
+
+            # 5. Trust signal detection
+            trust_obj = self.trust_signal_detector.detect(b_name, website)
+            trust_dict = asdict(trust_obj)
+
+            # 6. Business health profile scoring
+            health_obj = self.business_health_score.calculate_health(
+                business_name=b_name,
+                website_quality_score=float(score_dict.get("website_quality_score", 0.0)),
+                seo_score=float(score_dict.get("seo_score", 0.0)),
+                review_health_score=float(review_mine_obj.review_health_score),
+                trust_health_score=float(trust_obj.trust_health_score),
+                conversion_health_score=float(conversion_obj.conversion_health_score),
+                conversion_friction_score=float(conversion_obj.conversion_friction_score)
+            )
+            health_dict = asdict(health_obj)
+            
+            # 7. Opportunity mapping to recommended services & reasoning
+            opt_map_obj = self.opportunity_mapper.map_opportunities(
+                business_name=b_name,
+                web_score=float(score_dict.get("website_quality_score", 0.0)),
+                seo_score=float(score_dict.get("seo_score", 0.0)),
+                conversion_friction_score=float(conversion_obj.conversion_friction_score),
+                trust_health_score=float(trust_obj.trust_health_score),
+                conversion_issues=conversion_obj.conversion_issues,
+                competitors_gap=comp_obj.competitor_gap_summary
+            )
+            
+            # Save health profile in database
+            health_dict["conversion_issues"] = conversion_obj.conversion_issues
+            health_dict["trust_signals"] = trust_obj.trust_signals
+            health_dict["service_recommendations"] = opt_map_obj.service_recommendations
+            health_dict["opportunity_reasoning"] = opt_map_obj.opportunity_reasoning
+            self.repo.insert_business_health_profile(business_id, health_dict)
+
+            # Step 5: Generate Outreach Drafts (moved to run after Business Intelligence Opportunity Mapping)
+            # Inject found decision-maker name & opportunity reasoning into analysis context for personalization
+            start_t = time.time()
+            analysis_dict["decision_maker_name"] = decision_maker_name
+            analysis_dict["opportunity_reasoning"] = opt_map_obj.opportunity_reasoning
+            outreach_obj = self.outreach_generator.generate_outreach(score_dict, analysis_dict)
+            outreach_dict = asdict(outreach_obj)
+            self.repo.insert_outreach_draft(business_id, outreach_dict)
+            stages_results.append(StageResult(
+                stage="outreach",
+                success=True,
+                duration_ms=(time.time() - start_t) * 1000.0
+            ))
 
             # Update recrawl tier and last checked timestamp in businesses table
             opp_score = float(score_dict.get("opportunity_score", 0.0))

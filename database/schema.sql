@@ -212,3 +212,44 @@ CREATE TABLE IF NOT EXISTS change_events (
 CREATE INDEX IF NOT EXISTS idx_pipeline_runs_run_id ON pipeline_runs(run_id);
 CREATE INDEX IF NOT EXISTS idx_change_events_business_id ON change_events(business_id);
 
+-- Phase 4 Business Intelligence Tables
+CREATE TABLE IF NOT EXISTS customer_pain_signals (
+    id SERIAL PRIMARY KEY,
+    business_id INTEGER NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+    recurring_complaints JSONB DEFAULT '[]'::jsonb,
+    recurring_praise JSONB DEFAULT '[]'::jsonb,
+    common_themes JSONB DEFAULT '[]'::jsonb,
+    bottlenecks JSONB DEFAULT '[]'::jsonb,
+    pain_summary TEXT,
+    analyzed_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS competitor_analysis (
+    id SERIAL PRIMARY KEY,
+    business_id INTEGER NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+    competitors JSONB DEFAULT '[]'::jsonb, -- list of local competitors: name, website, rating, score gap
+    competitor_gap_summary TEXT,
+    analyzed_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS business_health_profiles (
+    id SERIAL PRIMARY KEY,
+    business_id INTEGER NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+    overall_health_score NUMERIC(5, 2) NOT NULL,
+    website_health_score NUMERIC(5, 2) NOT NULL,
+    review_health_score NUMERIC(5, 2) NOT NULL,
+    trust_health_score NUMERIC(5, 2) NOT NULL,
+    conversion_health_score NUMERIC(5, 2) NOT NULL,
+    conversion_friction_score NUMERIC(5, 2) NOT NULL,
+    conversion_issues JSONB DEFAULT '[]'::jsonb,
+    trust_signals JSONB DEFAULT '[]'::jsonb,
+    service_recommendations JSONB DEFAULT '[]'::jsonb,
+    opportunity_reasoning TEXT,
+    evaluated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_customer_pains_business ON customer_pain_signals(business_id);
+CREATE INDEX IF NOT EXISTS idx_competitor_analysis_business ON competitor_analysis(business_id);
+CREATE INDEX IF NOT EXISTS idx_business_health_business ON business_health_profiles(business_id);
+
+

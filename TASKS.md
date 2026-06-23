@@ -53,21 +53,102 @@ All Phase 1 quick wins are fully implemented, tested, and integrated end-to-end 
 - [x] Integrate `decision_maker_finder` name into `outreach_generator` templates
 
 ---
+## ✅ Phase 4 — Business Intelligence Layer
 
-## 🔲 Phase 4 — New Data Source Connectors
+### Revenue Friction Analysis
 
-- [ ] `scraper/connectors/registries/opencorporates.py` — implement REST API calls
+* [x] `business_intelligence/conversion_analyzer.py`
+
+  * [x] detect missing booking flows
+  * [x] detect weak call-to-actions
+  * [x] detect lead capture forms
+  * [x] detect contact friction
+  * [x] detect WhatsApp availability
+  * [x] generate conversion friction score
+
+### Customer Pain Mining
+
+* [x] `business_intelligence/review_miner.py`
+
+  * [x] collect review text
+  * [x] identify recurring complaints
+  * [x] identify recurring praise
+  * [x] classify common themes
+
+* [x] `business_intelligence/customer_pain_extractor.py`
+
+  * [x] aggregate review insights
+  * [x] identify service bottlenecks
+  * [x] identify communication issues
+  * [x] identify booking-related complaints
+  * [x] identify trust-related complaints
+
+### Competitor Intelligence
+
+* [x] `business_intelligence/competitor_analyzer.py`
+
+  * [x] identify nearby competitors
+  * [x] compare website quality
+  * [x] compare SEO signals
+  * [x] compare conversion features
+  * [x] generate competitor gap analysis
+
+### Trust & Credibility Analysis
+
+* [x] `business_intelligence/trust_signal_detector.py`
+
+  * [x] testimonials
+  * [x] certifications
+  * [x] review widgets
+  * [x] awards
+  * [x] trust badges
+  * [x] social proof indicators
+
+### Opportunity Mapping
+
+* [x] `business_intelligence/opportunity_mapper.py`
+
+  * [x] map detected issues to services
+  * [x] generate business impact explanations
+  * [x] generate service recommendations
+  * [x] generate opportunity reasoning
+
+### Business Health Scoring
+
+* [x] `business_intelligence/business_health_score.py`
+
+  * [x] combine website quality
+  * [x] combine review signals
+  * [x] combine trust indicators
+  * [x] combine conversion indicators
+  * [x] generate overall business health score
+
+### Database
+
+* [x] Add `business_health_profiles` table
+* [x] Add `competitor_analysis` table
+* [x] Add `customer_pain_signals` table
+
+### Integration
+
+* [x] Wire business intelligence modules into `pipeline_runner.py`
+* [x] Surface intelligence summaries inside dashboard
+* [x] Include opportunity reasoning in outreach generation
+
+## ✅ Phase 5— New Data Source Connectors
+
+- [x] `scraper/connectors/registries/opencorporates.py` — implement REST API calls
   - Register for API key, store as `OC_API_KEY` in `.env`
-- [ ] `scraper/connectors/registries/justdial.py` — implement Playwright automation
+- [x] `scraper/connectors/registries/justdial.py` — implement Playwright automation
   - Document CSS selectors in `AI_MEMORY/selector_changes.md`
-- [ ] `scraper/connectors/registries/indiamart.py` — implement Playwright + phone reveal click
+- [x] `scraper/connectors/registries/indiamart.py` — implement Playwright + phone reveal click
   - Document CSS selectors in `AI_MEMORY/selector_changes.md`
-- [ ] Add `company_registry` table to `database/schema.sql`
-- [ ] Run `entity_resolver.compare()` after each JustDial/IndiaMart scrape
+- [x] Add `company_registry` table to `database/schema.sql`
+- [x] Run `entity_resolver.compare()` after each JustDial/IndiaMart scrape
 
 ---
 
-## ✅ Phase 5 — Monitoring Layer (Completed)
+## ✅ Phase 6— Monitoring Layer (Completed)
 
 - [x] `monitoring/pipeline_monitor.py` — implement full stage-level recording
 - [x] `monitoring/change_detector.py` — implement field-level diff comparison
@@ -77,14 +158,14 @@ All Phase 1 quick wins are fully implemented, tested, and integrated end-to-end 
 
 ---
 
-## 🔲 Phase 6 — Dashboard Enhancements
+## ✅ Phase 7— Dashboard Enhancements
 
-- [ ] Add outreach status tracking to dashboard (New → Contacted → Followed-up → Closed)
-- [ ] Add intent score column and urgency badge to lead list view
-- [ ] Add tech stack badges to business detail view
-- [ ] Add email + decision maker fields to business detail panel
-- [ ] Add pipeline run history view (from `pipeline_monitor` summaries)
-- [ ] Add CSV bulk export with all enrichment fields
+- [x] Add outreach status tracking to dashboard (New → Contacted → Followed-up → Closed)
+- [x] Add intent score column and urgency badge to lead list view
+- [x] Add tech stack badges to business detail view
+- [x] Add email + decision maker fields to business detail panel
+- [x] Add pipeline run history view (from `pipeline_monitor` summaries)
+- [x] Add CSV bulk export with all enrichment fields
 
 ---
 
