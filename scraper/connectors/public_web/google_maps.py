@@ -143,7 +143,21 @@ class GoogleMapsScraper:
         if not data.address:  # Fallback
             data.address = self._safe_extract(page, "button[data-item-id='address']")
             
-        data.website = self._safe_extract(page, "a[data-item-id='authority']", attribute="href")
+        raw_website = self._safe_extract(page, "a[data-item-id='authority']", attribute="href")
+        if raw_website:
+            raw_website = raw_website.strip()
+            if "url?q=" in raw_website or "/url?q=" in raw_website:
+                try:
+                    from urllib.parse import urlparse, parse_qs
+                    parsed = urlparse(raw_website)
+                    params = parse_qs(parsed.query)
+                    if "q" in params and params["q"]:
+                        raw_website = params["q"][0]
+                except Exception as e:
+                    logger.debug(f"Failed to parse redirect wrapper URL {raw_website}: {e}")
+            data.website = raw_website
+        else:
+            data.website = None
         
         data.phone = self._safe_extract(page, "button[data-item-id^='phone:tel:'] div[class*='fontBodyMedium']")
         if not data.phone:  # Fallback

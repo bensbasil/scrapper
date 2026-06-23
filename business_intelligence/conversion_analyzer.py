@@ -54,6 +54,17 @@ class ConversionAnalyzer:
                 conversion_issues=["No website exists to convert leads"]
             )
 
+        # Clean redirect wrappers if present
+        if url and ("url?q=" in url or "/url?q=" in url):
+            try:
+                from urllib.parse import urlparse, parse_qs
+                parsed = urlparse(url)
+                params = parse_qs(parsed.query)
+                if "q" in params and params["q"]:
+                    url = params["q"][0]
+            except Exception as e:
+                logger.debug(f"Failed to parse redirect wrapper URL {url}: {e}")
+
         try:
             response = requests.get(url, headers=self.headers, timeout=self.timeout, verify=False)
             response.raise_for_status()

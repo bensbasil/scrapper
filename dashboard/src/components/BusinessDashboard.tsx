@@ -168,13 +168,38 @@ export default function BusinessDashboard({ initialBusinesses }: { initialBusine
           </div>
           <div className="space-y-1">
             <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Max Results</label>
-            <input 
-              type="number"
-              placeholder="All"
-              value={formData.limit === 0 ? "" : formData.limit}
-              onChange={(e) => setFormData({...formData, limit: parseInt(e.target.value) || 0})}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:ring-2 focus:ring-blue-500/50 outline-none transition-all"
-            />
+            <div className="flex gap-2">
+              <select
+                value={[0, 1, 3, 5, 10].includes(formData.limit) ? formData.limit : "custom"}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === "custom") {
+                    setFormData({...formData, limit: 15}); // Default custom scraping limit
+                  } else {
+                    setFormData({...formData, limit: Number(val)});
+                  }
+                }}
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:ring-2 focus:ring-blue-500/50 outline-none transition-all"
+              >
+                <option value={1}>1 Result</option>
+                <option value={3}>3 Results</option>
+                <option value={5}>5 Results</option>
+                <option value={10}>10 Results</option>
+                <option value={0}>All Results</option>
+                <option value="custom">Custom...</option>
+              </select>
+              
+              {![0, 1, 3, 5, 10].includes(formData.limit) && (
+                <input 
+                  type="number"
+                  min={1}
+                  placeholder="Num"
+                  value={formData.limit}
+                  onChange={(e) => setFormData({...formData, limit: Math.max(1, parseInt(e.target.value) || 1)})}
+                  className="w-20 bg-slate-950 border border-slate-800 rounded-xl px-2 py-2 text-sm text-white focus:ring-2 focus:ring-blue-500/50 outline-none transition-all"
+                />
+              )}
+            </div>
           </div>
           <div className="flex items-end">
             <button 
@@ -253,8 +278,15 @@ export default function BusinessDashboard({ initialBusinesses }: { initialBusine
           <div className="flex items-center gap-2">
             <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Show:</span>
             <select 
-              value={limit} 
-              onChange={(e) => setLimit(e.target.value === "all" ? "all" : Number(e.target.value))}
+              value={["all", 3, 10, 25, 50, 100].includes(limit) ? limit : "custom"} 
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === "custom") {
+                  setLimit(5); // Default custom value
+                } else {
+                  setLimit(val === "all" ? "all" : Number(val));
+                }
+              }}
               className="bg-slate-900 border border-slate-700 text-white text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value={3}>3</option>
@@ -263,7 +295,19 @@ export default function BusinessDashboard({ initialBusinesses }: { initialBusine
               <option value={50}>50</option>
               <option value={100}>100</option>
               <option value="all">All</option>
+              <option value="custom">Custom...</option>
             </select>
+            
+            {!["all", 3, 10, 25, 50, 100].includes(limit) && (
+              <input
+                type="number"
+                min={1}
+                value={limit}
+                onChange={(e) => setLimit(Math.max(1, parseInt(e.target.value) || 1))}
+                className="w-16 bg-slate-900 border border-slate-700 text-white text-xs rounded-lg px-2.5 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Limit"
+              />
+            )}
           </div>
         </div>
 

@@ -15,8 +15,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${inter.className} bg-slate-950 text-slate-100 min-h-screen selection:bg-blue-500/30`}>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${inter.className} bg-slate-950 text-slate-100 min-h-screen selection:bg-blue-500/30`} suppressHydrationWarning>
         <nav className="border-b border-white/10 bg-slate-950/50 backdrop-blur-md sticky top-0 z-50">
           <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
             <div className="flex items-center gap-3">
