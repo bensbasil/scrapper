@@ -166,62 +166,63 @@ class MVPPipeline:
 
         try:
             # Step 1: Store Base Business (Upsert / Merge with Entity Resolution)
-            business_id = None
-            if source == "justdial":
-                logger.info(f"[{b_name}] Running cross-source entity resolution...")
-                existing_businesses = self.repo.get_all_businesses()
-                matched_id = None
-                highest_conf = 0.0
-                
-                for existing in existing_businesses:
-                    match_result = self.entity_resolver.compare(existing, b_dict)
-                    if match_result.is_match and match_result.confidence > highest_conf:
-                        matched_id = existing["id"]
-                        highest_conf = match_result.confidence
-                        
-                if matched_id:
-                    logger.info(f"[{b_name}] Match found with existing business (ID: {matched_id}, confidence: {highest_conf}). Merging profiles...")
-                    b_dict["source_platform"] = "justdial"
-                    self.repo.update_business_sources(matched_id, b_dict)
-                    business_id = matched_id
+            business_id = b_dict.get("id")
+            if not business_id:
+                if source == "justdial":
+                    logger.info(f"[{b_name}] Running cross-source entity resolution...")
+                    existing_businesses = self.repo.get_all_businesses()
+                    matched_id = None
+                    highest_conf = 0.0
+                    
+                    for existing in existing_businesses:
+                        match_result = self.entity_resolver.compare(existing, b_dict)
+                        if match_result.is_match and match_result.confidence > highest_conf:
+                            matched_id = existing["id"]
+                            highest_conf = match_result.confidence
+                            
+                    if matched_id:
+                        logger.info(f"[{b_name}] Match found with existing business (ID: {matched_id}, confidence: {highest_conf}). Merging profiles...")
+                        b_dict["source_platform"] = "justdial"
+                        self.repo.update_business_sources(matched_id, b_dict)
+                        business_id = matched_id
+                    else:
+                        logger.info(f"[{b_name}] No match found. Ingesting as new business from JustDial...")
+                        b_dict["source_platforms"] = ["justdial"]
+                        business_id = self.repo.insert_business(b_dict)
+                elif source == "indiamart":
+                    logger.info(f"[{b_name}] Running cross-source entity resolution...")
+                    existing_businesses = self.repo.get_all_businesses()
+                    matched_id = None
+                    highest_conf = 0.0
+                    
+                    for existing in existing_businesses:
+                        match_result = self.entity_resolver.compare(existing, b_dict)
+                        if match_result.is_match and match_result.confidence > highest_conf:
+                            matched_id = existing["id"]
+                            highest_conf = match_result.confidence
+                            
+                    if matched_id:
+                        logger.info(f"[{b_name}] Match found with existing business (ID: {matched_id}, confidence: {highest_conf}). Merging profiles...")
+                        b_dict["source_platform"] = "indiamart"
+                        self.repo.update_business_sources(matched_id, b_dict)
+                        business_id = matched_id
+                    else:
+                        logger.info(f"[{b_name}] No match found. Ingesting as new business from IndiaMart...")
+                        b_dict["source_platforms"] = ["indiamart"]
+                        business_id = self.repo.insert_business(b_dict)
+                elif source == "recrawl":
+                    business_id = b_dict.get("id")
+                    if not business_id:
+                        business_id = self.repo.insert_business(b_dict)
                 else:
-                    logger.info(f"[{b_name}] No match found. Ingesting as new business from JustDial...")
-                    b_dict["source_platforms"] = ["justdial"]
+                    # Default: Google Maps ingestion
                     business_id = self.repo.insert_business(b_dict)
-            elif source == "indiamart":
-                logger.info(f"[{b_name}] Running cross-source entity resolution...")
-                existing_businesses = self.repo.get_all_businesses()
-                matched_id = None
-                highest_conf = 0.0
-                
-                for existing in existing_businesses:
-                    match_result = self.entity_resolver.compare(existing, b_dict)
-                    if match_result.is_match and match_result.confidence > highest_conf:
-                        matched_id = existing["id"]
-                        highest_conf = match_result.confidence
-                        
-                if matched_id:
-                    logger.info(f"[{b_name}] Match found with existing business (ID: {matched_id}, confidence: {highest_conf}). Merging profiles...")
-                    b_dict["source_platform"] = "indiamart"
-                    self.repo.update_business_sources(matched_id, b_dict)
-                    business_id = matched_id
-                else:
-                    logger.info(f"[{b_name}] No match found. Ingesting as new business from IndiaMart...")
-                    b_dict["source_platforms"] = ["indiamart"]
-                    business_id = self.repo.insert_business(b_dict)
-            elif source == "recrawl":
-                business_id = b_dict.get("id")
-                if not business_id:
-                    business_id = self.repo.insert_business(b_dict)
-            else:
-                # Default: Google Maps ingestion
-                business_id = self.repo.insert_business(b_dict)
                 
             if not business_id:
                 logger.error(f"[{b_name}] Failed to save business to database. Skipping downstream pipeline.")
                 return False
                 
-            logger.info(f"[{b_name}] Stored. DB ID: {business_id}. Commencing analysis...")
+            logger.info(f"[{b_name}] Database record ready. DB ID: {business_id}. Commencing analysis...")
 
             # Fetch previous website analysis snapshot to perform change detection
             previous_analysis = self.repo.get_latest_website_analysis(business_id)
@@ -537,12 +538,73 @@ class MVPPipeline:
                 
             logger.info(f"Loaded {len(businesses)} businesses. Moving to processing phase.")
 
+            # Pre-populate all scraped businesses in the database first so they show up on the dashboard in real-time
+            logger.info("Pre-populating scraped businesses in the database...")
+            pre_populated_businesses = []
+            for i, business in enumerate(businesses, start=1):
+                if hasattr(business, "__dataclass_fields__"):
+                    b_dict = asdict(business)
+                else:
+                    b_dict = dict(business)
+                b_name = b_dict.get("business_name", "Unknown")
+                
+                try:
+                    business_id = None
+                    if source == "justdial":
+                        existing_businesses = self.repo.get_all_businesses()
+                        matched_id = None
+                        highest_conf = 0.0
+                        for existing in existing_businesses:
+                            match_result = self.entity_resolver.compare(existing, b_dict)
+                            if match_result.is_match and match_result.confidence > highest_conf:
+                                matched_id = existing["id"]
+                                highest_conf = match_result.confidence
+                        if matched_id:
+                            b_dict["source_platform"] = "justdial"
+                            self.repo.update_business_sources(matched_id, b_dict)
+                            business_id = matched_id
+                        else:
+                            b_dict["source_platforms"] = ["justdial"]
+                            business_id = self.repo.insert_business(b_dict)
+                    elif source == "indiamart":
+                        existing_businesses = self.repo.get_all_businesses()
+                        matched_id = None
+                        highest_conf = 0.0
+                        for existing in existing_businesses:
+                            match_result = self.entity_resolver.compare(existing, b_dict)
+                            if match_result.is_match and match_result.confidence > highest_conf:
+                                matched_id = existing["id"]
+                                highest_conf = match_result.confidence
+                        if matched_id:
+                            b_dict["source_platform"] = "indiamart"
+                            self.repo.update_business_sources(matched_id, b_dict)
+                            business_id = matched_id
+                        else:
+                            b_dict["source_platforms"] = ["indiamart"]
+                            business_id = self.repo.insert_business(b_dict)
+                    elif source == "recrawl":
+                        business_id = b_dict.get("id")
+                        if not business_id:
+                            business_id = self.repo.insert_business(b_dict)
+                    else:
+                        # Default: Google Maps ingestion
+                        business_id = self.repo.insert_business(b_dict)
+                    
+                    if business_id:
+                        b_dict["id"] = business_id
+                    pre_populated_businesses.append(b_dict)
+                except Exception as pe:
+                    logger.error(f"[{b_name}] Failed to pre-populate: {pe}")
+                    pre_populated_businesses.append(b_dict)
+            
+            businesses = pre_populated_businesses
+
             per_business_scrape_ms = scrape_duration_ms / len(businesses) if businesses else 0.0
 
             # Phase 2: Processing Loop
             success_count = 0
             for i, business in enumerate(businesses, start=1):
-                name = business.get("business_name") if isinstance(business, dict) else getattr(business, "business_name", "Unknown")
+                name = business.get("business_name", "Unknown")
                 logger.info(f"--- Processing {i}/{len(businesses)}: {name} ---")
                 
                 is_success = self.process_business(business, source=source, scrape_duration_ms=per_business_scrape_ms)
@@ -590,9 +652,10 @@ if __name__ == "__main__":
     
     # If in recrawl mode, run the pipeline over scheduler task list
     if args.recrawl:
-        logger.info(f"Starting pipeline in Recrawl Mode. Limit: {args.limit}")
+        actual_limit = args.limit if args.limit > 0 else 9999
+        logger.info(f"Starting pipeline in Recrawl Mode. Limit: {actual_limit}")
         pipeline = MVPPipeline()
-        pipeline.run("Recrawl Mode", max_results=args.limit, source="recrawl")
+        pipeline.run("Recrawl Mode", max_results=actual_limit, source="recrawl")
         sys.exit(0)
         
     # Prepare the list of categories to search

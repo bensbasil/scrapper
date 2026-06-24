@@ -2,7 +2,8 @@
 import { ScoringResult } from "@/types";
 import Link from "next/link";
 
-function getScoreColor(score: number) {
+function getScoreColor(score: number | undefined | null) {
+  if (score === undefined || score === null) return "bg-slate-800 text-slate-400 animate-pulse";
   if (score >= 70) return "bg-red-500 text-white"; // High opportunity (bad website)
   if (score >= 40) return "bg-yellow-400 text-slate-900"; // Moderate
   return "bg-green-500 text-white"; // Low opportunity (good website)
@@ -76,9 +77,13 @@ export default function BusinessCard({ business }: { business: ScoringResult }) 
               </div>
             )}
           </div>
-          <div className={`flex flex-col items-center justify-center w-16 h-16 rounded-xl ${getScoreColor(business.opportunity_score)} shadow-lg`}>
-            <span className="text-xs font-semibold opacity-80 uppercase tracking-wider">Opp</span>
-            <span className="text-2xl font-black">{business.opportunity_score}</span>
+          <div className={`flex flex-col items-center justify-center w-16 h-16 rounded-xl ${getScoreColor(business.opportunity_score)} shadow-lg text-center`}>
+            <span className="text-[10px] font-bold opacity-80 uppercase tracking-wider">
+              {business.opportunity_score === undefined || business.opportunity_score === null ? "Status" : "Opp"}
+            </span>
+            <span className="text-xs font-black px-1">
+              {business.opportunity_score === undefined || business.opportunity_score === null ? "PENDING" : business.opportunity_score}
+            </span>
           </div>
         </div>
 

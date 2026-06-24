@@ -1,8 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import BusinessCard from "./BusinessCard";
 import { ScoringResult } from "@/types";
+
+// Load categories JSON using require to avoid type issues
+const categories = require('../data/categories.json') as Record<string, string[]>;
+// Flatten all subcategory values for preset checking
+const allCategoryValues = Object.values(categories).flat();
 
 export default function BusinessDashboard({ initialBusinesses }: { initialBusinesses: ScoringResult[] }) {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -10,7 +15,13 @@ export default function BusinessDashboard({ initialBusinesses }: { initialBusine
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [sourceFilter, setSourceFilter] = useState<string>("all");
+  const [businesses, setBusinesses] = useState<ScoringResult[]>(initialBusinesses);
   
+  // Real-time Console Log State
+  const [showLogs, setShowLogs] = useState(false);
+  const [logLines, setLogLines] = useState<string[]>([]);
+  const consoleEndRef = useRef<HTMLDivElement>(null);
+
   // Scraper Form State
   const [isScraping, setIsScraping] = useState(false);
   const [formData, setFormData] = useState({
@@ -21,20 +32,84 @@ export default function BusinessDashboard({ initialBusinesses }: { initialBusine
     limit: 5
   });
 
+  const isPresetCategory = formData.category === "" || formData.category === "ALL" || allCategoryValues.includes(formData.category);
+
+  // Keep dashboard updated in real-time by polling every 5 seconds
+  useEffect(() => {
+    let active = true;
+    const fetchLatest = async () => {
+      try {
+        const res = await fetch("/api/businesses");
+        const data = await res.json();
+        if (data.success && data.businesses && active) {
+          setBusinesses(data.businesses);
+        }
+      } catch (err) {
+        console.error("Error polling businesses:", err);
+      }
+    };
+
+    const interval = setInterval(fetchLatest, 5000);
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, []);
+
+  // Listen to the scraper's live logs via Server-Sent Events (SSE)
+  useEffect(() => {
+    const eventSource = new EventSource("/api/logs");
+    
+    eventSource.onmessage = (event) => {
+      const line = event.data;
+      if (line) {
+        setLogLines((prev) => {
+          const next = [...prev, line];
+          // Limit to last 300 logs to prevent memory leak / performance degradation
+          if (next.length > 300) {
+            next.shift();
+          }
+          return next;
+        });
+      }
+    };
+
+    eventSource.onerror = (err) => {
+      console.warn("Logs SSE stream error (or reconnection attempt):", err);
+    };
+
+    return () => {
+      eventSource.close();
+    };
+  }, []);
+
+  // Automatically scroll live console to the bottom on new logs
+  useEffect(() => {
+    if (consoleEndRef.current) {
+      consoleEndRef.current.scrollTop = consoleEndRef.current.scrollHeight;
+    }
+  }, [logLines, showLogs]);
+
   const triggerScrape = async () => {
     setIsScraping(true);
+    setShowLogs(true);
+    setLogLines([]);
+    
+    const categoriesToScrape = formData.category === "ALL" ? allCategoryValues : [formData.category];
+    
     try {
-      const res = await fetch("/api/scrape", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData)
-      });
-      const data = await res.json();
-      if (data.success) {
-        alert("Scraper started! The dashboard will update automatically as results come in.");
-      } else {
-        alert("Failed to start scraper: " + data.error);
+      for (const cat of categoriesToScrape) {
+        const res = await fetch("/api/scrape", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...formData, category: cat })
+        });
+        const data = await res.json();
+        if (!data.success) {
+          console.error(`Failed to start scraper for ${cat}:`, data.error);
+        }
       }
+      alert("Scraper sequence started! The dashboard will update automatically as results come in.");
     } catch (err) {
       alert("Network error starting scraper.");
     } finally {
@@ -42,8 +117,16 @@ export default function BusinessDashboard({ initialBusinesses }: { initialBusine
     }
   };
 
+  // Stats calculation
+  const totalLeads = businesses.length;
+  const newLeads = businesses.filter(b => (b.outreach_status || 'new') === 'new').length;
+  const contactedLeads = businesses.filter(b => b.outreach_status === 'contacted' || b.outreach_status === 'followed_up').length;
+  const avgOppScore = totalLeads > 0 
+    ? (businesses.reduce((acc, b) => acc + b.opportunity_score, 0) / totalLeads).toFixed(1)
+    : "0.0";
+
   // Filter by search query, status, and source platform
-  const filtered = initialBusinesses.filter(b => {
+  const filtered = businesses.filter(b => {
     const matchesSearch = b.business_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (b.website_url || "").toLowerCase().includes(searchQuery.toLowerCase());
     
@@ -115,6 +198,26 @@ export default function BusinessDashboard({ initialBusinesses }: { initialBusine
   return (
     <div className="space-y-6">
       
+      {/* Stats row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700 rounded-xl p-5 shadow-lg">
+          <p className="text-sm text-slate-400 font-medium mb-1">Total Leads</p>
+          <p className="text-3xl font-bold text-blue-400">{totalLeads}</p>
+        </div>
+        <div className="bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700 rounded-xl p-5 shadow-lg">
+          <p className="text-sm text-slate-400 font-medium mb-1">New Leads</p>
+          <p className="text-3xl font-bold text-yellow-400">{newLeads}</p>
+        </div>
+        <div className="bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700 rounded-xl p-5 shadow-lg">
+          <p className="text-sm text-slate-400 font-medium mb-1">Contacted Leads</p>
+          <p className="text-3xl font-bold text-emerald-400">{contactedLeads}</p>
+        </div>
+        <div className="bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700 rounded-xl p-5 shadow-lg">
+          <p className="text-sm text-slate-400 font-medium mb-1">Average Opp Score</p>
+          <p className="text-3xl font-bold text-white">{avgOppScore}</p>
+        </div>
+      </div>
+
       {/* Scraper Control Panel */}
       <div className="bg-gradient-to-r from-blue-600/10 to-indigo-600/10 border border-blue-500/20 rounded-2xl p-6 backdrop-blur-xl shadow-2xl">
         <div className="flex items-center gap-3 mb-6">
@@ -131,13 +234,41 @@ export default function BusinessDashboard({ initialBusinesses }: { initialBusine
 
         <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
           <div className="space-y-1">
-            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Category (Optional)</label>
-            <input 
-              placeholder="e.g. Gyms" 
-              value={formData.category}
-              onChange={(e) => setFormData({...formData, category: e.target.value})}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:ring-2 focus:ring-blue-500/50 outline-none transition-all"
-            />
+            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Category</label>
+            <div className="flex flex-col gap-2">
+              <select
+                value={isPresetCategory ? formData.category : "custom"}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === "custom") {
+                    setFormData({ ...formData, category: "Custom Category" });
+                  } else {
+                    setFormData({ ...formData, category: val });
+                  }
+                }}
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:ring-2 focus:ring-blue-500/50 outline-none transition-all"
+              >
+                <option value="">Select Category...</option>
+                <option value="ALL">All Categories</option>
+                {Object.entries(categories).map(([group, subcats]) => (
+                  <optgroup key={group} label={group}>
+                    {subcats.map((sub) => (
+                      <option key={sub} value={sub}>{sub}</option>
+                    ))}
+                  </optgroup>
+                ))}
+                <option value="custom">Custom...</option>
+              </select>
+              
+              {!isPresetCategory && (
+                <input 
+                  placeholder="Enter custom category" 
+                  value={formData.category === "Custom Category" ? "" : formData.category}
+                  onChange={(e) => setFormData({...formData, category: e.target.value})}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:ring-2 focus:ring-blue-500/50 outline-none transition-all"
+                />
+              )}
+            </div>
           </div>
           <div className="space-y-1">
             <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">City</label>
@@ -201,17 +332,85 @@ export default function BusinessDashboard({ initialBusinesses }: { initialBusine
               )}
             </div>
           </div>
-          <div className="flex items-end">
+          <div className="flex gap-2 items-end">
             <button 
               onClick={triggerScrape}
               disabled={isScraping || (!formData.category && !formData.city && !formData.state && !formData.country)}
-              className={`w-full h-[42px] rounded-xl font-bold text-sm transition-all shadow-lg ${isScraping ? 'bg-slate-700 text-slate-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-500/20 active:scale-95'}`}
+              className={`flex-grow h-[42px] rounded-xl font-bold text-sm transition-all shadow-lg ${isScraping ? 'bg-slate-700 text-slate-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-500/20 active:scale-95'}`}
             >
               {isScraping ? "Scraping..." : "Start Scrape"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowLogs(!showLogs)}
+              className={`h-[42px] px-3.5 rounded-xl border transition-all flex items-center justify-center ${showLogs ? 'bg-blue-600/20 border-blue-500/50 text-blue-400' : 'bg-slate-950 border-slate-800 text-slate-400 hover:bg-slate-900 hover:text-white'}`}
+              title="Toggle Live Scraper Logs"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
             </button>
           </div>
         </div>
       </div>
+
+      {/* Real-time Terminal Log Viewer */}
+      {showLogs && (
+        <div className="bg-slate-950/95 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl font-mono text-xs mb-6 text-left">
+          <div className="flex justify-between items-center bg-slate-900/80 px-4 py-2.5 border-b border-slate-800">
+            <div className="flex items-center gap-2">
+              <span className={`w-2 h-2 rounded-full ${isScraping ? 'bg-green-500 animate-pulse' : 'bg-amber-500'}`} />
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Real-time Scraper Console Logs</span>
+            </div>
+            <div className="flex gap-4">
+              <button 
+                type="button"
+                onClick={() => setLogLines([])}
+                className="text-[10px] text-slate-500 hover:text-slate-300 font-bold uppercase tracking-wider transition-colors"
+              >
+                Clear
+              </button>
+              <button 
+                type="button"
+                onClick={() => setShowLogs(false)}
+                className="text-[10px] text-slate-500 hover:text-slate-300 font-bold uppercase tracking-wider transition-colors"
+              >
+                Hide
+              </button>
+            </div>
+          </div>
+          <div 
+            ref={consoleEndRef}
+            className="p-4 h-[250px] overflow-y-auto space-y-1.5 scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent"
+          >
+            {logLines.length === 0 ? (
+              <div className="text-slate-600 italic">No logs generated yet. Trigger a scrape to see real-time console logs.</div>
+            ) : (
+              logLines.map((line, idx) => {
+                let colorClass = "text-slate-300";
+                let text = line;
+                if (line.startsWith("[Scraper Output]")) {
+                  colorClass = "text-slate-400";
+                  text = line.substring("[Scraper Output]".length).trim();
+                } else if (line.startsWith("[Scraper WARNING]")) {
+                  colorClass = "text-amber-400 font-semibold";
+                  text = line.substring("[Scraper WARNING]".length).trim();
+                } else if (line.startsWith("[Scraper ERROR]")) {
+                  colorClass = "text-red-400 font-bold";
+                  text = line.substring("[Scraper ERROR]".length).trim();
+                } else if (line.startsWith("[System]")) {
+                  colorClass = "text-blue-400 font-bold";
+                }
+                return (
+                  <div key={idx} className={colorClass}>
+                    {text}
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
       {/* Control Bar */}
       <div className="flex flex-wrap items-center justify-between gap-4 bg-white/5 p-4 rounded-2xl border border-white/10 backdrop-blur-md">
         <div className="flex flex-wrap items-center gap-4 flex-1">
@@ -386,8 +585,8 @@ export default function BusinessDashboard({ initialBusinesses }: { initialBusine
                     <span className="text-slate-400 text-sm">{biz.website_url || "None"}</span>
                   </td>
                   <td className="p-4 text-center">
-                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-black ${biz.opportunity_score > 60 ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}>
-                      {biz.opportunity_score}
+                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-black ${biz.opportunity_score === undefined || biz.opportunity_score === null ? 'bg-slate-700/50 text-slate-400 animate-pulse' : biz.opportunity_score > 60 ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}>
+                      {biz.opportunity_score === undefined || biz.opportunity_score === null ? 'Analyzing...' : biz.opportunity_score}
                     </span>
                   </td>
                   <td className="p-4">

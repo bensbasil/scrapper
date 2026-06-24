@@ -1,5 +1,18 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { getBusinesses } from '@/lib/businesses';
+
+export const dynamic = 'force-dynamic';
+
+export async function GET() {
+  try {
+    const businesses = await getBusinesses();
+    return NextResponse.json({ success: true, businesses });
+  } catch (error: any) {
+    console.error('Fetch Error:', error);
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}
 
 export async function DELETE() {
   try {
