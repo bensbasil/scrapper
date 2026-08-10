@@ -249,7 +249,7 @@ class PipelineMonitor:
         print(f"Businesses:     {run.successful_businesses}/{run.total_businesses} successful")
         print(f"Success Rate:   {run.success_rate}%")
         print(f"High Opp Leads: {run.high_opportunity_count}")
-        print(f"Duration:       {run.started_at} → {run.finished_at}")
+        print(f"Duration:       {run.started_at} -> {run.finished_at}")
         if run.stage_failure_counts:
             print(f"Stage Failures: {dict(run.stage_failure_counts)}")
         

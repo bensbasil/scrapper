@@ -7,28 +7,9 @@ from typing import List, Dict, Any, Optional
 # ---------------------------------------------------------
 # 1. Structured Logging
 # ---------------------------------------------------------
-class StructuredLogger:
-    @staticmethod
-    def get_logger(name: str):
-        logger = logging.getLogger(name)
-        if not logger.handlers:
-            logger.setLevel(logging.INFO)
-            formatter = logging.Formatter('%(asctime)s - %(levelname)s - [%(name)s] - %(message)s')
-            
-            # Console handler
-            ch = logging.StreamHandler()
-            ch.setFormatter(formatter)
-            logger.addHandler(ch)
-            
-            # File handler
-            log_dir = Path("logs")
-            log_dir.mkdir(exist_ok=True)
-            fh = logging.FileHandler(log_dir / "scoring_engine.log")
-            fh.setFormatter(formatter)
-            logger.addHandler(fh)
-        return logger
+from scraper.utils.logger import get_scraper_logger
 
-logger = StructuredLogger.get_logger(__name__)
+logger = get_scraper_logger(__name__)
 
 # ---------------------------------------------------------
 # 2. Data Structure (Prepares for PostgreSQL)
@@ -70,24 +51,59 @@ class ScoringEngine:
             "no_whatsapp": 20.0
         }
 
-    def _calculate_seo_score(self, data: Dict[str, Any], pain_points: List[str]) -> float:
+    def _calculate_seo_score(self, data: Dict[str, Any], pain_points: List[str], seo_data: Optional[Dict[str, Any]] = None) -> float:
         """Calculate SEO weakness. 100 = terrible SEO, 0 = perfect SEO."""
         if not data.get("website_exists", False):
             return 100.0
             
         score = 0.0
+        
+        # 1. Base SEO checks (from static crawler)
         if not data.get("meta_title_exists", False):
             score += self.weights["missing_meta_title"]
             pain_points.append("Missing meta title")
+        elif seo_data and not seo_data.get("title_optimized", False):
+            score += 10.0
+            pain_points.append("Meta title is not optimized (length out of range)")
             
         if not data.get("meta_description_exists", False):
             score += self.weights["missing_meta_desc"]
             pain_points.append("Missing meta description")
+        elif seo_data and not seo_data.get("meta_description_optimized", False):
+            score += 10.0
+            pain_points.append("Meta description is not optimized (length out of range)")
             
         if not data.get("h1_exists", False):
             score += self.weights["missing_h1"]
             pain_points.append("Missing H1 tag")
+        elif seo_data and seo_data.get("h1_count", 0) > 1:
+            score += 10.0
+            pain_points.append("Multiple H1 tags detected (bad for SEO)")
+
+        # 2. Advanced SEO checks (from SEOChecker)
+        if seo_data:
+            if not seo_data.get("has_viewport_tag", False):
+                score += 15.0
+                pain_points.append("Missing mobile viewport configuration tag")
             
+            if not seo_data.get("has_robots_txt", False):
+                score += 10.0
+                pain_points.append("Missing robots.txt file")
+            if not seo_data.get("has_sitemap", False):
+                score += 15.0
+                pain_points.append("Missing sitemap.xml file")
+                
+            img_count = seo_data.get("images_count", 0)
+            missing_alt = seo_data.get("images_missing_alt", 0)
+            if img_count > 0 and (missing_alt / img_count) > 0.5:
+                score += 10.0
+                pain_points.append("More than 50% of website images are missing alt attributes")
+                
+            load_time = seo_data.get("load_time_ms")
+            if load_time and load_time > 3000:
+                score += 15.0
+                pain_points.append("Slow page response latency (> 3 seconds)")
+
         return min(100.0, score)
 
     def _calculate_website_quality_score(self, data: Dict[str, Any], pain_points: List[str]) -> float:
@@ -130,14 +146,14 @@ class ScoringEngine:
             
         return min(100.0, score)
 
-    def calculate_scores(self, analysis_data: Dict[str, Any]) -> ScoringResult:
+    def calculate_scores(self, analysis_data: Dict[str, Any], seo_data: Optional[Dict[str, Any]] = None) -> ScoringResult:
         """
         Process raw analysis data dictionary into a structured ScoringResult.
         """
         pain_points: List[str] = []
         
         # 1. Calculate component scores
-        seo_score = self._calculate_seo_score(analysis_data, pain_points)
+        seo_score = self._calculate_seo_score(analysis_data, pain_points, seo_data)
         web_score = self._calculate_website_quality_score(analysis_data, pain_points)
         auto_score = self._calculate_automation_need_score(analysis_data, pain_points)
         

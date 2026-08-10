@@ -1,6 +1,6 @@
 import csv
 import json
-import logging
+import functools
 import time
 from pathlib import Path
 from dataclasses import dataclass, asdict
@@ -8,31 +8,10 @@ from typing import List, Dict, Any, Optional, Callable
 
 from playwright.sync_api import sync_playwright, Page, TimeoutError as PlaywrightTimeoutError
 
-# ---------------------------------------------------------
-# 1. Structured Logging
-# ---------------------------------------------------------
-class StructuredLogger:
-    @staticmethod
-    def get_logger(name: str):
-        logger = logging.getLogger(name)
-        if not logger.handlers:
-            logger.setLevel(logging.INFO)
-            formatter = logging.Formatter('%(asctime)s - %(levelname)s - [%(name)s] - %(message)s')
-            
-            # Console handler
-            ch = logging.StreamHandler()
-            ch.setFormatter(formatter)
-            logger.addHandler(ch)
-            
-            # File handler
-            log_dir = Path("logs")
-            log_dir.mkdir(exist_ok=True)
-            fh = logging.FileHandler(log_dir / "google_maps_scraper.log")
-            fh.setFormatter(formatter)
-            logger.addHandler(fh)
-        return logger
+# Critical fix #3: use the shared logger utility instead of a copy-pasted StructuredLogger.
+from scraper.utils.logger import get_scraper_logger
 
-logger = StructuredLogger.get_logger(__name__)
+logger = get_scraper_logger(__name__)
 
 # ---------------------------------------------------------
 # 2. Data Structure (Prepares for PostgreSQL Integration)
@@ -54,6 +33,7 @@ class BusinessData:
 def retry(max_attempts: int = 3, delay: float = 2.0):
     """Decorator to retry flaky scraping actions."""
     def decorator(func: Callable):
+        @functools.wraps(func)  # Preserves __name__, __doc__ and signature for logging.
         def wrapper(*args, **kwargs):
             attempts = 0
             while attempts < max_attempts:
@@ -201,11 +181,9 @@ class GoogleMapsScraper:
             try:
                 # Force English and specific region to avoid localization issues
                 page.goto("https://www.google.com/maps?hl=en", timeout=60000)
-                page.wait_for_load_state("networkidle")
-                page.screenshot(path="debug_maps_initial.png")
-                page.screenshot(path="debug_maps.png")
-                page.wait_for_load_state("networkidle")
-                page.wait_for_timeout(5000)
+                page.wait_for_load_state("domcontentloaded")
+                page.wait_for_timeout(2000)
+
                 # Accept cookies if presented (common in EU and other regions)
                 # Try multiple common labels for consent buttons
                 for label in ['Accept all', 'I agree', 'Agree', 'Accept', 'OK']:
@@ -249,18 +227,21 @@ class GoogleMapsScraper:
                 page.wait_for_timeout(5000)
                 page.screenshot(path="debug_maps_after_search.png")
                 
+                # Minor fix #17: Use resilient fallback selectors alongside a.hfpxzc in case Google Maps updates class names
+                listing_selector = "a.hfpxzc, a[href*='/maps/place/'], div[role='feed'] a[href*='/maps/place']"
                 try:
                     page.wait_for_timeout(5000)
-                    page.wait_for_selector("a.hfpxzc", timeout=60000)
+                    page.wait_for_selector(listing_selector, timeout=60000)
                 except PlaywrightTimeoutError:
                     logger.error("Timeout: Results feed did not load.")
+                    page.screenshot(path="debug_results_timeout.png")
                     return results
 
                 processed_names = set()
                 consecutive_scrolls_without_new = 0
                 
                 while len(results) < max_results and consecutive_scrolls_without_new < 5:
-                    listings = page.locator("a.hfpxzc").all()
+                    listings = page.locator(listing_selector).all()
                     found_new = False
                     
                     for i in range(len(listings)):

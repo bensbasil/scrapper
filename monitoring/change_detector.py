@@ -146,7 +146,7 @@ class ChangeDetector:
         """Build a human-readable one-line change summary."""
         if not changes:
             return "No changes detected"
-        parts = [f"{c.field}: {c.before} → {c.after}" for c in changes[:3]]
+        parts = [f"{c.field}: {c.before} -> {c.after}" for c in changes[:3]]
         summary = " | ".join(parts)
         if len(changes) > 3:
             summary += f" (+{len(changes) - 3} more)"

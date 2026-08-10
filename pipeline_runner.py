@@ -1,34 +1,20 @@
 import sys
-import logging
 import time
 from datetime import datetime
 from pathlib import Path
 from dataclasses import asdict
 from typing import Optional, List, Dict, Any
 
-# ---------------------------------------------------------
-# 1. Structured Logging
-# ---------------------------------------------------------
-class StructuredLogger:
-    @staticmethod
-    def get_logger(name: str):
-        logger = logging.getLogger(name)
-        if not logger.handlers:
-            logger.setLevel(logging.INFO)
-            formatter = logging.Formatter('%(asctime)s - %(levelname)s - [%(name)s] - %(message)s')
-            
-            ch = logging.StreamHandler()
-            ch.setFormatter(formatter)
-            logger.addHandler(ch)
-            
-            log_dir = Path("logs")
-            log_dir.mkdir(exist_ok=True)
-            fh = logging.FileHandler(log_dir / "pipeline.log")
-            fh.setFormatter(formatter)
-            logger.addHandler(fh)
-        return logger
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
+if hasattr(sys.stderr, 'reconfigure'):
+    sys.stderr.reconfigure(encoding='utf-8')
 
-logger = StructuredLogger.get_logger("MVP_Pipeline")
+
+# Critical fix #3: use the shared logger utility instead of a copy-pasted StructuredLogger.
+from scraper.utils.logger import get_scraper_logger
+
+logger = get_scraper_logger("MVP_Pipeline")
 
 # ---------------------------------------------------------
 # 2. Module Imports
@@ -38,6 +24,7 @@ try:
     from scraper.connectors.public_web.google_maps import GoogleMapsScraper
     from scraper.connectors.public_web.company_website import WebsiteAnalyzer
     from analyzer.scoring_engine import ScoringEngine
+    from analyzer.seo_checker import SEOChecker
     from analyzer.business_report_generator import ReportGenerator
     from analyzer.outreach_generator import OutreachGenerator
     from database.db import DatabaseManager, ScraperRepository
@@ -48,6 +35,7 @@ try:
     
     # Phase 2 enrichment & intent sub-modules
     from enrichment.social_analyzer import SocialAnalyzer
+    from scraper.connectors.social.social_scraper import SocialScraper
     from intent.hiring_signal_detector import HiringSignalDetector
     from intent.freshness_monitor import FreshnessMonitor
     from intent.review_trend_detector import ReviewTrendDetector
@@ -103,6 +91,7 @@ class MVPPipeline:
         self.scraper = GoogleMapsScraper(headless=True)
         self.analyzer = WebsiteAnalyzer()
         self.scorer = ScoringEngine()
+        self.seo_checker = SEOChecker()
         self.report_generator = ReportGenerator()
         self.outreach_generator = OutreachGenerator()
         
@@ -112,9 +101,10 @@ class MVPPipeline:
         
         # Phase 2 enrichment & intent sub-modules
         self.social_analyzer = SocialAnalyzer()
+        self.social_scraper = SocialScraper()     # Deep profile audit (followers, bio, handle)
         self.hiring_detector = HiringSignalDetector()
         self.freshness_monitor = FreshnessMonitor()
-        self.review_trend_detector = ReviewTrendDetector()
+        self.review_trend_detector = ReviewTrendDetector(repo=self.repo)
         self.intent_engine = IntentEngine()
 
         # Phase 3 enrichment sub-modules
@@ -145,7 +135,48 @@ class MVPPipeline:
         logger.info("Verifying database schema...")
         self.db_manager.execute_schema()
 
-    def process_business(self, business_obj, source: str = "gmaps", scrape_duration_ms: Optional[float] = None) -> bool:
+    def _resolve_and_save_business(self, b_dict: Dict[str, Any], source: str) -> Optional[int]:
+        """Performs targeted entity resolution using SQL candidate matching before inserting/updating."""
+        b_name = b_dict.get("business_name", "Unknown")
+        business_id = b_dict.get("id")
+
+        if business_id:
+            return business_id
+
+        if source in ("justdial", "indiamart"):
+            logger.info(f"[{b_name}] Running targeted cross-source entity resolution...")
+            candidates = self.repo.find_candidate_matches(b_dict)
+            matched_id = None
+            highest_conf = 0.0
+
+            for existing in candidates:
+                match_result = self.entity_resolver.compare(existing, b_dict)
+                if match_result.is_match and match_result.confidence > highest_conf:
+                    matched_id = existing["id"]
+                    highest_conf = match_result.confidence
+
+            if matched_id:
+                logger.info(f"[{b_name}] Match found with existing business (ID: {matched_id}, confidence: {highest_conf}). Merging profiles...")
+                b_dict["source_platform"] = source
+                self.repo.update_business_sources(matched_id, b_dict)
+                return matched_id
+            else:
+                logger.info(f"[{b_name}] No match found. Ingesting as new business from {source}...")
+                b_dict["source_platforms"] = [source]
+                return self.repo.insert_business(b_dict)
+        elif source == "recrawl":
+            return self.repo.insert_business(b_dict)
+        else:
+            # Default: Google Maps ingestion
+            return self.repo.insert_business(b_dict)
+
+    def process_business(
+        self,
+        business_obj,
+        source: str = "gmaps",
+        scrape_duration_ms: Optional[float] = None,
+        existing_businesses_snapshot: Optional[List[Dict[str, Any]]] = None,
+    ) -> bool:
         """
         Executes the analysis, scoring, and reporting pipeline for a single business.
         """
@@ -166,57 +197,7 @@ class MVPPipeline:
 
         try:
             # Step 1: Store Base Business (Upsert / Merge with Entity Resolution)
-            business_id = b_dict.get("id")
-            if not business_id:
-                if source == "justdial":
-                    logger.info(f"[{b_name}] Running cross-source entity resolution...")
-                    existing_businesses = self.repo.get_all_businesses()
-                    matched_id = None
-                    highest_conf = 0.0
-                    
-                    for existing in existing_businesses:
-                        match_result = self.entity_resolver.compare(existing, b_dict)
-                        if match_result.is_match and match_result.confidence > highest_conf:
-                            matched_id = existing["id"]
-                            highest_conf = match_result.confidence
-                            
-                    if matched_id:
-                        logger.info(f"[{b_name}] Match found with existing business (ID: {matched_id}, confidence: {highest_conf}). Merging profiles...")
-                        b_dict["source_platform"] = "justdial"
-                        self.repo.update_business_sources(matched_id, b_dict)
-                        business_id = matched_id
-                    else:
-                        logger.info(f"[{b_name}] No match found. Ingesting as new business from JustDial...")
-                        b_dict["source_platforms"] = ["justdial"]
-                        business_id = self.repo.insert_business(b_dict)
-                elif source == "indiamart":
-                    logger.info(f"[{b_name}] Running cross-source entity resolution...")
-                    existing_businesses = self.repo.get_all_businesses()
-                    matched_id = None
-                    highest_conf = 0.0
-                    
-                    for existing in existing_businesses:
-                        match_result = self.entity_resolver.compare(existing, b_dict)
-                        if match_result.is_match and match_result.confidence > highest_conf:
-                            matched_id = existing["id"]
-                            highest_conf = match_result.confidence
-                            
-                    if matched_id:
-                        logger.info(f"[{b_name}] Match found with existing business (ID: {matched_id}, confidence: {highest_conf}). Merging profiles...")
-                        b_dict["source_platform"] = "indiamart"
-                        self.repo.update_business_sources(matched_id, b_dict)
-                        business_id = matched_id
-                    else:
-                        logger.info(f"[{b_name}] No match found. Ingesting as new business from IndiaMart...")
-                        b_dict["source_platforms"] = ["indiamart"]
-                        business_id = self.repo.insert_business(b_dict)
-                elif source == "recrawl":
-                    business_id = b_dict.get("id")
-                    if not business_id:
-                        business_id = self.repo.insert_business(b_dict)
-                else:
-                    # Default: Google Maps ingestion
-                    business_id = self.repo.insert_business(b_dict)
+            business_id = self._resolve_and_save_business(b_dict, source)
                 
             if not business_id:
                 logger.error(f"[{b_name}] Failed to save business to database. Skipping downstream pipeline.")
@@ -264,9 +245,20 @@ class MVPPipeline:
                 except Exception as ex:
                     logger.error(f"[{b_name}] Failed to run ChangeDetector: {ex}")
 
+            # Run advanced SEO checks
+            seo_dict = {}
+            if analysis_obj.website_exists and website:
+                try:
+                    logger.info(f"[{b_name}] Running advanced SEO audit for {website}...")
+                    seo_obj = self.seo_checker.audit(b_name, website)
+                    seo_dict = asdict(seo_obj)
+                    self.repo.insert_seo_profile(business_id, seo_dict)
+                except Exception as seo_err:
+                    logger.error(f"[{b_name}] Failed to run SEOChecker: {seo_err}")
+
             # Step 3: Generate Scores
             start_t = time.time()
-            score_obj = self.scorer.calculate_scores(analysis_dict)
+            score_obj = self.scorer.calculate_scores(analysis_dict, seo_dict if seo_dict else None)
             score_dict = asdict(score_obj)
             self.repo.insert_scoring_result(business_id, score_dict)
             stages_results.append(StageResult(
@@ -327,7 +319,7 @@ class MVPPipeline:
             oc_dict = asdict(oc_obj)
             self.repo.insert_company_registry(business_id, oc_dict)
 
-            # Step 8: Social Analysis
+            # Step 8: Social Analysis (reachability + activity score via SocialAnalyzer)
             social_activity_score = 0.0
             if analysis_obj.website_url:
                 social_links = analysis_dict.get("social_links_found", [])
@@ -337,6 +329,26 @@ class MVPPipeline:
                     social_dict = asdict(social_obj)
                     self.repo.insert_social_profile(business_id, social_dict)
                     social_activity_score = social_dict.get("social_activity_score", 0.0)
+
+                    # Step 8b: Deep Social Audit (follower counts, bios, handles via SocialScraper)
+                    # Only scrape Instagram and Facebook links detected on the website.
+                    deep_social_platforms = ["instagram.com", "facebook.com", "fb.com"]
+                    deep_links = [
+                        link for link in social_links
+                        if any(p in link.lower() for p in deep_social_platforms)
+                    ]
+                    if deep_links:
+                        logger.info(f"[{b_name}] Running deep social audit on {len(deep_links)} profile(s)...")
+                        for profile_url in deep_links:
+                            try:
+                                deep_result = self.social_scraper.scrape(profile_url)
+                                self.repo.insert_deep_social_audit(business_id, asdict(deep_result))
+                                logger.info(
+                                    f"[{b_name}] Deep scrape: {deep_result.platform} | "
+                                    f"handle={deep_result.handle} | followers={deep_result.follower_count}"
+                                )
+                            except Exception as deep_err:
+                                logger.warning(f"[{b_name}] Deep social scrape failed for {profile_url}: {deep_err}")
 
             # Step 9: Freshness Monitoring
             freshness_score = 0.0
@@ -359,7 +371,8 @@ class MVPPipeline:
             review_obj = self.review_trend_detector.analyze(
                 business_name=b_name,
                 current_rating=float(b_dict.get("google_rating")) if b_dict.get("google_rating") is not None else None,
-                review_count=b_dict.get("review_count")
+                review_count=b_dict.get("review_count"),
+                business_id=business_id
             )
             review_dict = asdict(review_obj)
             review_trend_score = review_dict.get("review_trend_score", 0.0)
@@ -541,55 +554,16 @@ class MVPPipeline:
             # Pre-populate all scraped businesses in the database first so they show up on the dashboard in real-time
             logger.info("Pre-populating scraped businesses in the database...")
             pre_populated_businesses = []
+
             for i, business in enumerate(businesses, start=1):
                 if hasattr(business, "__dataclass_fields__"):
                     b_dict = asdict(business)
                 else:
                     b_dict = dict(business)
                 b_name = b_dict.get("business_name", "Unknown")
-                
+
                 try:
-                    business_id = None
-                    if source == "justdial":
-                        existing_businesses = self.repo.get_all_businesses()
-                        matched_id = None
-                        highest_conf = 0.0
-                        for existing in existing_businesses:
-                            match_result = self.entity_resolver.compare(existing, b_dict)
-                            if match_result.is_match and match_result.confidence > highest_conf:
-                                matched_id = existing["id"]
-                                highest_conf = match_result.confidence
-                        if matched_id:
-                            b_dict["source_platform"] = "justdial"
-                            self.repo.update_business_sources(matched_id, b_dict)
-                            business_id = matched_id
-                        else:
-                            b_dict["source_platforms"] = ["justdial"]
-                            business_id = self.repo.insert_business(b_dict)
-                    elif source == "indiamart":
-                        existing_businesses = self.repo.get_all_businesses()
-                        matched_id = None
-                        highest_conf = 0.0
-                        for existing in existing_businesses:
-                            match_result = self.entity_resolver.compare(existing, b_dict)
-                            if match_result.is_match and match_result.confidence > highest_conf:
-                                matched_id = existing["id"]
-                                highest_conf = match_result.confidence
-                        if matched_id:
-                            b_dict["source_platform"] = "indiamart"
-                            self.repo.update_business_sources(matched_id, b_dict)
-                            business_id = matched_id
-                        else:
-                            b_dict["source_platforms"] = ["indiamart"]
-                            business_id = self.repo.insert_business(b_dict)
-                    elif source == "recrawl":
-                        business_id = b_dict.get("id")
-                        if not business_id:
-                            business_id = self.repo.insert_business(b_dict)
-                    else:
-                        # Default: Google Maps ingestion
-                        business_id = self.repo.insert_business(b_dict)
-                    
+                    business_id = self._resolve_and_save_business(b_dict, source)
                     if business_id:
                         b_dict["id"] = business_id
                     pre_populated_businesses.append(b_dict)
@@ -606,8 +580,12 @@ class MVPPipeline:
             for i, business in enumerate(businesses, start=1):
                 name = business.get("business_name", "Unknown")
                 logger.info(f"--- Processing {i}/{len(businesses)}: {name} ---")
-                
-                is_success = self.process_business(business, source=source, scrape_duration_ms=per_business_scrape_ms)
+
+                is_success = self.process_business(
+                    business,
+                    source=source,
+                    scrape_duration_ms=per_business_scrape_ms,
+                )
                 if is_success:
                     success_count += 1
                     
@@ -615,6 +593,10 @@ class MVPPipeline:
             logger.info(f"========== PIPELINE FINISHED ==========")
             logger.info(f"Successfully processed {success_count}/{len(businesses)} businesses end-to-end.")
             
+            # Clean up social scraper browser instance if instantiated
+            if hasattr(self, "social_scraper") and self.social_scraper:
+                self.social_scraper.close()
+
             # Finalize pipeline monitoring and save run report
             self.pipeline_monitor.finish_run(self.current_run)
             self.pipeline_monitor.print_run_report(self.current_run)
@@ -631,6 +613,8 @@ class MVPPipeline:
 
         except Exception as e:
             logger.critical(f"Critical pipeline failure: {e}")
+            if hasattr(self, "social_scraper") and self.social_scraper:
+                self.social_scraper.close()
             if hasattr(self, "current_run") and self.current_run:
                 self.pipeline_monitor.finish_run(self.current_run)
                 self.pipeline_monitor.save_run_summary(self.current_run)

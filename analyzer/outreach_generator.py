@@ -1,34 +1,23 @@
 import json
 import logging
+import os
 from pathlib import Path
 from dataclasses import dataclass, asdict
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
+import requests
+from dotenv import load_dotenv
 
+# Load environment variables
+load_dotenv()
+
+
+# ---------------------------------------------------------
 # ---------------------------------------------------------
 # 1. Structured Logging
 # ---------------------------------------------------------
-class StructuredLogger:
-    @staticmethod
-    def get_logger(name: str):
-        logger = logging.getLogger(name)
-        if not logger.handlers:
-            logger.setLevel(logging.INFO)
-            formatter = logging.Formatter('%(asctime)s - %(levelname)s - [%(name)s] - %(message)s')
-            
-            # Console handler
-            ch = logging.StreamHandler()
-            ch.setFormatter(formatter)
-            logger.addHandler(ch)
-            
-            # File handler
-            log_dir = Path("logs")
-            log_dir.mkdir(exist_ok=True)
-            fh = logging.FileHandler(log_dir / "outreach_generator.log")
-            fh.setFormatter(formatter)
-            logger.addHandler(fh)
-        return logger
+from scraper.utils.logger import get_scraper_logger
 
-logger = StructuredLogger.get_logger(__name__)
+logger = get_scraper_logger(__name__)
 
 # ---------------------------------------------------------
 # 2. Data Structure
@@ -48,10 +37,100 @@ class OutreachDrafts:
 # ---------------------------------------------------------
 class OutreachGenerator:
     """
-    Generates non-spammy, highly contextual outreach drafts based on technical heuristics.
-    Prepares raw prompts for future LLM integrations to allow dynamic content scaling.
+    Generates non-spammy, highly contextual outreach drafts.
+    Uses Google's Gemini API or OpenAI API when available, falling back to rule-based templates otherwise.
     """
     
+    def _generate_via_gemini(self, prompt: str, api_key: str) -> Optional[Dict[str, str]]:
+        """Calls Gemini API using structured JSON output to generate outreach drafts."""
+        model = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+        headers = {
+            "Content-Type": "application/json"
+        }
+        
+        # Request JSON structured output
+        payload = {
+            "contents": [
+                {
+                    "parts": [
+                        {
+                            "text": prompt + "\n\nProvide the response strictly in JSON format as specified."
+                        }
+                    ]
+                }
+            ],
+            "generationConfig": {
+                "responseMimeType": "application/json",
+                "responseSchema": {
+                    "type": "OBJECT",
+                    "properties": {
+                        "cold_email_draft": {
+                            "type": "STRING",
+                            "description": "Personalized cold email under 120 words."
+                        },
+                        "whatsapp_draft": {
+                            "type": "STRING",
+                            "description": "Short WhatsApp message under 50 words."
+                        }
+                    },
+                    "required": ["cold_email_draft", "whatsapp_draft"]
+                }
+            }
+        }
+        
+        try:
+            logger.info(f"Sending request to Gemini API (model: {model})...")
+            response = requests.post(url, headers=headers, json=payload, timeout=12)
+            if response.status_code == 200:
+                res_data = response.json()
+                text_content = res_data["candidates"][0]["content"]["parts"][0]["text"]
+                parsed = json.loads(text_content)
+                if "cold_email_draft" in parsed and "whatsapp_draft" in parsed:
+                    return parsed
+                else:
+                    logger.warning("Gemini JSON response is missing required fields.")
+            else:
+                logger.warning(f"Gemini API returned status code {response.status_code}: {response.text}")
+        except Exception as e:
+            logger.error(f"Failed to generate outreach via Gemini API: {e}")
+        
+        return None
+
+    def _generate_via_openai(self, prompt: str, api_key: str) -> Optional[Dict[str, str]]:
+        """Calls OpenAI Chat Completion API to generate structured JSON outreach drafts."""
+        url = "https://api.openai.com/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+        model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+        payload = {
+            "model": model,
+            "response_format": {"type": "json_object"},
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "You are a sales copywriter. Output JSON containing keys 'cold_email_draft' and 'whatsapp_draft'."
+                },
+                {"role": "user", "content": prompt}
+            ]
+        }
+        try:
+            logger.info(f"Sending request to OpenAI API (model: {model})...")
+            response = requests.post(url, headers=headers, json=payload, timeout=12)
+            if response.status_code == 200:
+                res_data = response.json()
+                text_content = res_data["choices"][0]["message"]["content"]
+                parsed = json.loads(text_content)
+                if "cold_email_draft" in parsed and "whatsapp_draft" in parsed:
+                    return parsed
+            else:
+                logger.warning(f"OpenAI API returned status code {response.status_code}: {response.text}")
+        except Exception as e:
+            logger.error(f"Failed to generate outreach via OpenAI API: {e}")
+        return None
+
     def _generate_pain_point_positioning(self, pain_points: List[str], services: List[str]) -> str:
         """Determines how to position your agency based on their biggest weakness."""
         if not pain_points:
@@ -147,6 +226,7 @@ Rules:
         """
         Main orchestration function to generate all outreach materials.
         Takes data from scoring_engine and (optionally) basic scraper/analysis data.
+        If GEMINI_API_KEY is present in env, generates using Gemini; otherwise, falls back to static templates.
         """
         b_name = score_data.get("business_name", "your business")
         category = analysis_data.get("category", "")
@@ -173,14 +253,78 @@ Rules:
         else:
             angles.append("The 'Trust & Security' angle: Focus on technical errors making the business look unprofessional.")
 
-        # 2. Actionable Drafts
-        email_draft = self._generate_cold_email(b_name, category, primary_pain, primary_service, contact_name, opp_reasoning)
-        wa_draft = self._generate_whatsapp(b_name, primary_pain, contact_name)
-        
-        # 3. AI Readiness
+        # 2. AI Readiness (Always generate the template for database record)
         ai_prompt = self._generate_ai_prompt(b_name, opp_score, pain_points, services, contact_name, opp_reasoning)
 
-        logger.info(f"Generated outreach materials for {b_name}.")
+        # 3. Actionable Drafts (Gemini with Rule-based fallback)
+        email_draft = None
+        wa_draft = None
+        
+        api_key = os.environ.get("GEMINI_API_KEY")
+        if api_key:
+            logger.info(f"[{b_name}] GEMINI_API_KEY found. Generating personalized outreach via AI...")
+            prompt = f"""You are an expert, consultative B2B sales copywriter.
+Write a highly personalized, professional, non-spammy cold email and a WhatsApp message for '{b_name}'.
+
+Context:
+- Business Name: {b_name}
+- Industry/Category: {category if category else 'Local Business'}
+- Overall Opportunity Score: {opp_score}/100 (A higher score indicates significant technical/digital gaps)
+- Key Pain Points Detected: {', '.join(pain_points)}
+- Suggested Services to Pitch: {', '.join(services)}
+- Contact Decision-Maker: {contact_name if contact_name else 'Not found (use a warm generic greeting like "Hi Team" or "Hi there")'}
+- Opportunity Analysis / Reasoning: {opp_reasoning if opp_reasoning else 'No detailed reasoning provided.'}
+
+Requirements for Cold Email:
+1. Warm, human, and direct tone. Do not use fake statistics, generic fluff, or hyperbolic marketing claims.
+2. Specifically address how their detected pain points (e.g. {', '.join(pain_points)}) impact their business, website conversion, customer trust, or ranking.
+3. Keep it extremely concise and under 120 words.
+4. End with a low-friction call-to-action (e.g., offering a free 2-minute mockup or screencast showing how to fix the issue).
+5. Ensure a clear placeholder for your name at the end (e.g., "[Your Name]").
+
+Requirements for WhatsApp Message:
+1. Keep it extremely short (under 50 words).
+2. Direct, friendly, and informal but professional.
+3. Briefly mention the most critical issue and ask if you can send a mockup or quick explanation.
+4. Must not sound like a broadcast or bulk spam message.
+"""
+            gemini_drafts = self._generate_via_gemini(prompt, api_key)
+            if gemini_drafts:
+                email_draft = gemini_drafts.get("cold_email_draft")
+                wa_draft = gemini_drafts.get("whatsapp_draft")
+                logger.info(f"[{b_name}] Successfully generated AI personalized outreach drafts via Gemini.")
+
+        openai_key = os.environ.get("OPENAI_API_KEY")
+        if not email_draft and openai_key:
+            logger.info(f"[{b_name}] OPENAI_API_KEY found. Generating personalized outreach via OpenAI...")
+            prompt = f"""You are an expert, consultative B2B sales copywriter.
+Write a highly personalized, professional, non-spammy cold email and a WhatsApp message for '{b_name}'.
+
+Context:
+- Business Name: {b_name}
+- Industry/Category: {category if category else 'Local Business'}
+- Overall Opportunity Score: {opp_score}/100
+- Key Pain Points Detected: {', '.join(pain_points)}
+- Suggested Services to Pitch: {', '.join(services)}
+- Contact Decision-Maker: {contact_name if contact_name else 'Not found'}
+- Opportunity Analysis / Reasoning: {opp_reasoning if opp_reasoning else 'No detailed reasoning provided.'}
+
+Return JSON with keys 'cold_email_draft' and 'whatsapp_draft'.
+"""
+            openai_drafts = self._generate_via_openai(prompt, openai_key)
+            if openai_drafts:
+                email_draft = openai_drafts.get("cold_email_draft")
+                wa_draft = openai_drafts.get("whatsapp_draft")
+                logger.info(f"[{b_name}] Successfully generated AI personalized outreach drafts via OpenAI.")
+        
+        # If API keys are missing or generation fails, use the rule-based fallback
+        if not email_draft or not wa_draft:
+            if api_key or openai_key:
+                logger.warning(f"[{b_name}] AI generation failed. Falling back to rule-based templates.")
+            else:
+                logger.info(f"[{b_name}] No AI API key found. Using rule-based templates.")
+            email_draft = self._generate_cold_email(b_name, category, primary_pain, primary_service, contact_name, opp_reasoning)
+            wa_draft = self._generate_whatsapp(b_name, primary_pain, contact_name)
 
         return OutreachDrafts(
             business_name=b_name,

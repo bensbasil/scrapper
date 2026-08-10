@@ -174,18 +174,34 @@ class SocialAnalyzer:
             result.error = "No social URLs provided"
             return result
 
+        from scraper.connectors.social.social_scraper import SocialScraper
+        scraper = SocialScraper()
+
         for url in social_urls:
             platform = self._identify_platform(url)
             profile = SocialProfile(platform=platform, url=url)
 
-            is_reachable, err = self._check_reachability(url)
-            profile.is_reachable = is_reachable
-            profile.error = err
-            profile.is_active = self._estimate_activity(url, platform) if is_reachable else False
+            try:
+                scrap_res = scraper.scrape(url)
+                profile.is_reachable = scrap_res.is_reachable
+                profile.error = scrap_res.error_message
+                profile.is_active = scrap_res.is_reachable
+                profile.follower_estimate = scrap_res.follower_count
+                if scrap_res.post_count:
+                    profile.last_post_estimate = f"{scrap_res.post_count} posts"
+                if scrap_res.bio:
+                    profile.error = f"Bio: {scrap_res.bio[:60]}" if not profile.error else profile.error
+            except Exception as se:
+                logger.error(f"[{business_name}] Deep social scraper failed for {url}: {se}")
+                # Fall back to simple reachability check
+                is_reachable, err = self._check_reachability(url)
+                profile.is_reachable = is_reachable
+                profile.error = err
+                profile.is_active = self._estimate_activity(url, platform) if is_reachable else False
 
             result.profiles.append(profile)
             logger.info(
-                f"[{business_name}] {platform}: reachable={is_reachable}, active={profile.is_active}"
+                f"[{business_name}] {platform}: reachable={profile.is_reachable}, active={profile.is_active}, followers={profile.follower_estimate}"
             )
 
         result.total_platforms_found = len(result.profiles)

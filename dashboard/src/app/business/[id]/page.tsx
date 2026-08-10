@@ -1,181 +1,52 @@
 import { query } from "@/lib/db";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ScoringResult } from "@/types";
 import StatusSelect from "@/components/StatusSelect";
-import { MOCK_BUSINESSES } from "@/lib/mockData";
-
-function normalizeEmails(emailsRaw: any): string[] {
-  if (!emailsRaw) return [];
-  try {
-    const list = typeof emailsRaw === 'string' ? JSON.parse(emailsRaw) : emailsRaw;
-    if (!Array.isArray(list)) return [];
-    return list
-      .map((item: any) => {
-        if (typeof item === 'string') return item;
-        if (item && typeof item === 'object' && item.email) return item.email;
-        return null;
-      })
-      .filter(Boolean) as string[];
-  } catch (e) {
-    return [];
-  }
-}
-
-async function getBusinessDetail(id: string): Promise<ScoringResult | null> {
-  try {
-    const res = await query(`
-      SELECT 
-        b.id::text, 
-        b.business_name, 
-        b.website as website_url, 
-        s.opportunity_score, 
-        s.website_quality_score, 
-        s.seo_score, 
-        s.automation_need_score, 
-        s.likely_service_match, 
-        s.detected_pain_points,
-        r.overall_opportunity,
-        r.website_quality_summary,
-        r.seo_summary,
-        r.automation_summary,
-        r.suggested_services,
-        r.outreach_angles,
-        r.improvement_recommendations,
-        r.raw_text_report,
-        COALESCE(b.outreach_status, 'new') AS outreach_status,
-        e.extracted_emails,
-        t.cms,
-        t.frontend_framework,
-        t.analytics_tools,
-        t.payment_tools,
-        t.chat_tools,
-        (SELECT json_agg(dm) FROM (SELECT name, role, confidence, source FROM decision_makers WHERE business_id = b.id ORDER BY discovered_at DESC) dm) AS decision_makers,
-        h.overall_health_score,
-        h.website_health_score,
-        h.review_health_score,
-        h.trust_health_score,
-        h.conversion_health_score,
-        h.conversion_friction_score,
-        h.conversion_issues,
-        h.trust_signals,
-        h.service_recommendations,
-        h.opportunity_reasoning,
-        c_comp.competitors,
-        c_comp.competitor_gap_summary,
-        p.recurring_complaints,
-        p.recurring_praise,
-        p.common_themes,
-        p.bottlenecks,
-        p.pain_summary
-      FROM businesses b
-      JOIN (
-        SELECT DISTINCT ON (business_id) business_id, opportunity_score, website_quality_score, seo_score, automation_need_score, likely_service_match, detected_pain_points 
-        FROM scoring_results 
-        ORDER BY business_id, scored_at DESC
-      ) s ON b.id = s.business_id
-      LEFT JOIN business_reports r ON b.id = r.business_id
-      LEFT JOIN (
-        SELECT DISTINCT ON (business_id) business_id, extracted_emails 
-        FROM email_intelligence 
-        ORDER BY business_id, extracted_at DESC
-      ) e ON b.id = e.business_id
-      LEFT JOIN (
-        SELECT DISTINCT ON (business_id) business_id, cms, analytics_tools, frontend_framework, payment_tools, chat_tools 
-        FROM tech_stacks 
-        ORDER BY business_id, detected_at DESC
-      ) t ON b.id = t.business_id
-      LEFT JOIN (
-        SELECT DISTINCT ON (business_id) business_id, overall_health_score, website_health_score, review_health_score, trust_health_score, conversion_health_score, conversion_friction_score, conversion_issues, trust_signals, service_recommendations, opportunity_reasoning
-        FROM business_health_profiles
-        ORDER BY business_id, evaluated_at DESC
-      ) h ON b.id = h.business_id
-      LEFT JOIN (
-        SELECT DISTINCT ON (business_id) business_id, competitors, competitor_gap_summary
-        FROM competitor_analysis
-        ORDER BY business_id, analyzed_at DESC
-      ) c_comp ON b.id = c_comp.business_id
-      LEFT JOIN (
-        SELECT DISTINCT ON (business_id) business_id, recurring_complaints, recurring_praise, common_themes, bottlenecks, pain_summary
-        FROM customer_pain_signals
-        ORDER BY business_id, analyzed_at DESC
-      ) p ON b.id = p.business_id
-      WHERE b.id = $1
-    `, [id]);
-
-    if (res.rows.length === 0) return null;
-
-    const row = res.rows[0];
-    
-    // Transform DB row into our ScoringResult + Report structure
-    return {
-      id: row.id,
-      business_name: row.business_name,
-      website_url: row.website_url,
-      opportunity_score: row.opportunity_score,
-      website_quality_score: row.website_quality_score,
-      seo_score: row.seo_score,
-      automation_need_score: row.automation_need_score,
-      likely_service_match: typeof row.likely_service_match === 'string' ? JSON.parse(row.likely_service_match) : (row.likely_service_match || []),
-      detected_pain_points: typeof row.detected_pain_points === 'string' ? JSON.parse(row.detected_pain_points) : (row.detected_pain_points || []),
-      outreach_status: row.outreach_status,
-      extracted_emails: normalizeEmails(row.extracted_emails),
-      cms: row.cms,
-      frontend_framework: row.frontend_framework,
-      analytics_tools: typeof row.analytics_tools === 'string' ? JSON.parse(row.analytics_tools) : (row.analytics_tools || []),
-      decision_makers: typeof row.decision_makers === 'string' ? JSON.parse(row.decision_makers) : (row.decision_makers || []),
-      overall_health_score: row.overall_health_score !== null ? Number(row.overall_health_score) : undefined,
-      website_health_score: row.website_health_score !== null ? Number(row.website_health_score) : undefined,
-      review_health_score: row.review_health_score !== null ? Number(row.review_health_score) : undefined,
-      trust_health_score: row.trust_health_score !== null ? Number(row.trust_health_score) : undefined,
-      conversion_health_score: row.conversion_health_score !== null ? Number(row.conversion_health_score) : undefined,
-      conversion_friction_score: row.conversion_friction_score !== null ? Number(row.conversion_friction_score) : undefined,
-      conversion_issues: typeof row.conversion_issues === 'string' ? JSON.parse(row.conversion_issues) : (row.conversion_issues || []),
-      trust_signals: typeof row.trust_signals === 'string' ? JSON.parse(row.trust_signals) : (row.trust_signals || []),
-      service_recommendations: typeof row.service_recommendations === 'string' ? JSON.parse(row.service_recommendations) : (row.service_recommendations || []),
-      opportunity_reasoning: row.opportunity_reasoning,
-      competitors: typeof row.competitors === 'string' ? JSON.parse(row.competitors) : (row.competitors || []),
-      competitor_gap_summary: row.competitor_gap_summary,
-      recurring_complaints: typeof row.recurring_complaints === 'string' ? JSON.parse(row.recurring_complaints) : (row.recurring_complaints || []),
-      recurring_praise: typeof row.recurring_praise === 'string' ? JSON.parse(row.recurring_praise) : (row.recurring_praise || []),
-      common_themes: typeof row.common_themes === 'string' ? JSON.parse(row.common_themes) : (row.common_themes || []),
-      bottlenecks: typeof row.bottlenecks === 'string' ? JSON.parse(row.bottlenecks) : (row.bottlenecks || []),
-      pain_summary: row.pain_summary,
-      report: row.overall_opportunity ? {
-        business_name: row.business_name,
-        overall_opportunity: row.overall_opportunity,
-        website_quality_summary: row.website_quality_summary,
-        seo_summary: row.seo_summary,
-        automation_summary: row.automation_summary,
-        suggested_services: typeof row.suggested_services === 'string' ? JSON.parse(row.suggested_services) : (row.suggested_services || []),
-        outreach_angles: typeof row.outreach_angles === 'string' ? JSON.parse(row.outreach_angles) : (row.outreach_angles || []),
-        improvement_recommendations: typeof row.improvement_recommendations === 'string' ? JSON.parse(row.improvement_recommendations) : (row.improvement_recommendations || []),
-        raw_text_report: row.raw_text_report
-      } : undefined
-    };
-  } catch (error) {
-    console.error(`Database query failed for business ${id}. Falling back to mock data:`, error);
-    const mockBiz = MOCK_BUSINESSES.find(b => b.id === id) || MOCK_BUSINESSES[0];
-    return mockBiz;
-  }
-}
+// Critical fix #1: import normalizeEmails from its single source of truth.
+// Critical fix #2: import the data-fetching logic from its dedicated lib.
+// Critical fix #4 & #6 are applied inside businessDetail.ts.
+import { getBusinessDetail } from "@/lib/businessDetail";
 
 async function getChangeEvents(businessId: string): Promise<any[]> {
+  // Validate id before querying (mirrors the same guard in businessDetail.ts).
+  const numericId = parseInt(businessId, 10);
+  if (isNaN(numericId) || numericId <= 0) return [];
   try {
-    const res = await query(`
-      SELECT id, changes, previous_snapshot_at, current_snapshot_at, change_summary, detected_at
-      FROM change_events
-      WHERE business_id = $1
-      ORDER BY detected_at DESC
-    `, [businessId]);
-    
-    return res.rows.map(row => ({
+    const res = await query(
+      `SELECT id, changes, previous_snapshot_at, current_snapshot_at, change_summary, detected_at
+       FROM change_events
+       WHERE business_id = $1
+       ORDER BY detected_at DESC`,
+      [numericId]
+    );
+    return res.rows.map((row) => ({
       ...row,
-      changes: typeof row.changes === 'string' ? JSON.parse(row.changes) : (row.changes || [])
+      changes: typeof row.changes === "string" ? JSON.parse(row.changes) : (row.changes || []),
     }));
   } catch (err) {
     console.error("Error fetching change events:", err);
     return [];
+  }
+}
+
+async function getOutreachDrafts(businessId: string): Promise<any | null> {
+  const numericId = parseInt(businessId, 10);
+  if (isNaN(numericId) || numericId <= 0) return null;
+  try {
+    const res = await query(
+      `SELECT pain_point_positioning, concise_audit_summary,
+              cold_email_draft, whatsapp_draft, ai_prompt_template, generated_at
+       FROM outreach_drafts
+       WHERE business_id = $1
+       ORDER BY generated_at DESC
+       LIMIT 1`,
+      [numericId]
+    );
+    if (res.rows.length === 0) return null;
+    return res.rows[0];
+  } catch (err) {
+    console.error("Error fetching outreach drafts:", err);
+    return null;
   }
 }
 
@@ -191,6 +62,7 @@ export default async function BusinessDetail({
 
   const report = business.report;
   const changes = await getChangeEvents(id);
+  const outreachDrafts = await getOutreachDrafts(id);
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
@@ -750,6 +622,72 @@ export default async function BusinessDetail({
         </div>
         
       </div>
+
+      {/* ── Outreach Drafts ─────────────────────────────────────────── */}
+      {outreachDrafts && (
+        <div className="bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700 rounded-2xl p-8 shadow-xl space-y-6">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="bg-violet-500 p-2 rounded-lg shadow-lg shadow-violet-500/20">
+              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-white">Outreach Drafts</h2>
+              <p className="text-xs text-slate-400">
+                {outreachDrafts.generated_at
+                  ? `Generated ${new Date(outreachDrafts.generated_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}`
+                  : "AI-generated outreach copy"}
+              </p>
+            </div>
+          </div>
+
+          {/* Strategy Header */}
+          {outreachDrafts.concise_audit_summary && (
+            <div className="bg-violet-500/10 border border-violet-500/20 rounded-xl px-5 py-3">
+              <p className="text-xs font-bold text-violet-400 uppercase tracking-wider mb-1">Audit Summary</p>
+              <p className="text-sm text-slate-200">{outreachDrafts.concise_audit_summary}</p>
+            </div>
+          )}
+          {outreachDrafts.pain_point_positioning && (
+            <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl px-5 py-3">
+              <p className="text-xs font-bold text-amber-400 uppercase tracking-wider mb-1">Positioning Strategy</p>
+              <p className="text-sm text-slate-200">{outreachDrafts.pain_point_positioning}</p>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Cold Email */}
+            {outreachDrafts.cold_email_draft && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
+                    <span className="text-violet-400">✉</span> Cold Email Draft
+                  </h3>
+                </div>
+                <pre className="bg-slate-950 border border-slate-800 rounded-xl p-5 text-xs text-slate-300 whitespace-pre-wrap font-mono leading-relaxed overflow-x-auto">
+                  {outreachDrafts.cold_email_draft}
+                </pre>
+              </div>
+            )}
+
+            {/* WhatsApp */}
+            {outreachDrafts.whatsapp_draft && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
+                    <span className="text-emerald-400">💬</span> WhatsApp Message
+                  </h3>
+                </div>
+                <pre className="bg-slate-950 border border-slate-800 rounded-xl p-5 text-xs text-slate-300 whitespace-pre-wrap font-mono leading-relaxed overflow-x-auto">
+                  {outreachDrafts.whatsapp_draft}
+                </pre>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

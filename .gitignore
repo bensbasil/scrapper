@@ -24,3 +24,9 @@ data/processed/
 
 # IDE local configuration
 .vscode/
+
+# Local development / scratch files
+scratch/
+
+# Debug screenshots
+debug_maps*.png

@@ -82,10 +82,13 @@ class EntityResolver:
         return re.sub(r"[^a-z0-9\s]", "", name.lower()).strip()
 
     def _normalize_phone(self, phone: Optional[str]) -> str:
-        """Strip all non-digit characters from a phone number."""
+        """Strip all non-digit characters and return last 10 digits for comparison."""
         if not phone:
             return ""
-        return re.sub(r"\D", "", phone)
+        digits = re.sub(r"\D", "", phone)
+        if len(digits) > 10:
+            return digits[-10:]
+        return digits
 
     def _normalize_domain(self, url: Optional[str]) -> str:
         """Extract and normalize domain from a URL, handling Google redirects."""

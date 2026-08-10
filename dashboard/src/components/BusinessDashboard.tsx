@@ -11,12 +11,12 @@ const allCategoryValues = Object.values(categories).flat();
 
 export default function BusinessDashboard({ initialBusinesses }: { initialBusinesses: ScoringResult[] }) {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [limit, setLimit] = useState<number | "all">(10);
+  const [displayLimit, setDisplayLimit] = useState<number | null>(null); // null = show all
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [sourceFilter, setSourceFilter] = useState<string>("all");
   const [businesses, setBusinesses] = useState<ScoringResult[]>(initialBusinesses);
-  
+
   // Real-time Console Log State
   const [showLogs, setShowLogs] = useState(false);
   const [logLines, setLogLines] = useState<string[]>([]);
@@ -29,13 +29,21 @@ export default function BusinessDashboard({ initialBusinesses }: { initialBusine
     city: "",
     state: "",
     country: "",
-    limit: 5
+    limit: 0,                // 0 = All Results (Unlimited)
+    source: "gmaps"          // "gmaps" | "justdial" | "indiamart"
   });
+
+
 
   const isPresetCategory = formData.category === "" || formData.category === "ALL" || allCategoryValues.includes(formData.category);
 
-  // Keep dashboard updated in real-time by polling every 5 seconds
+  // Sig fix #7: Poll /api/businesses only while a scrape is running.
+  // An always-on 5s interval hammers the DB even when nothing is happening.
+  // Re-fetches once immediately when scraping starts, every 5s while active,
+  // and does a final fetch 2s after the scraper finishes.
   useEffect(() => {
+    if (!isScraping) return;
+
     let active = true;
     const fetchLatest = async () => {
       try {
@@ -49,26 +57,32 @@ export default function BusinessDashboard({ initialBusinesses }: { initialBusine
       }
     };
 
+    fetchLatest(); // immediate fetch when scrape starts
     const interval = setInterval(fetchLatest, 5000);
     return () => {
       active = false;
       clearInterval(interval);
+      // Final fetch after scraping stops to capture last-written records
+      setTimeout(fetchLatest, 2000);
     };
-  }, []);
+  }, [isScraping]);
 
-  // Listen to the scraper's live logs via Server-Sent Events (SSE)
+  // Sig fix #8: Open SSE log stream only while a scrape is in progress.
+  // Keeping it open permanently holds a persistent HTTP connection regardless
+  // of activity. Opens when isScraping flips true, closes with a 3s drain
+  // grace period so final log lines from the exiting process still arrive.
   useEffect(() => {
+    if (!isScraping) return;
+
     const eventSource = new EventSource("/api/logs");
-    
+
     eventSource.onmessage = (event) => {
       const line = event.data;
       if (line) {
         setLogLines((prev) => {
           const next = [...prev, line];
-          // Limit to last 300 logs to prevent memory leak / performance degradation
-          if (next.length > 300) {
-            next.shift();
-          }
+          // Cap at 300 entries to prevent memory / performance degradation
+          if (next.length > 300) next.shift();
           return next;
         });
       }
@@ -79,9 +93,11 @@ export default function BusinessDashboard({ initialBusinesses }: { initialBusine
     };
 
     return () => {
-      eventSource.close();
+      // Short delay so final log lines emitted just before process exit
+      // have time to arrive before the stream is cut.
+      setTimeout(() => eventSource.close(), 3000);
     };
-  }, []);
+  }, [isScraping]);
 
   // Automatically scroll live console to the bottom on new logs
   useEffect(() => {
@@ -94,22 +110,27 @@ export default function BusinessDashboard({ initialBusinesses }: { initialBusine
     setIsScraping(true);
     setShowLogs(true);
     setLogLines([]);
-    
-    const categoriesToScrape = formData.category === "ALL" ? allCategoryValues : [formData.category];
-    
+
     try {
-      for (const cat of categoriesToScrape) {
-        const res = await fetch("/api/scrape", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...formData, category: cat })
-        });
-        const data = await res.json();
-        if (!data.success) {
-          console.error(`Failed to start scraper for ${cat}:`, data.error);
-        }
+      const res = await fetch("/api/scrape", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          category: formData.category,
+          city: formData.city,
+          state: formData.state,
+          country: formData.country,
+          limit: formData.limit,
+          source: formData.source
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert("Scraper sequence started! Real-time logs will appear in the console below.");
+      } else {
+        console.error("Failed to start scraper:", data.message || data.error);
+        alert(data.message || "Failed to start scraper.");
       }
-      alert("Scraper sequence started! The dashboard will update automatically as results come in.");
     } catch (err) {
       alert("Network error starting scraper.");
     } finally {
@@ -117,11 +138,13 @@ export default function BusinessDashboard({ initialBusinesses }: { initialBusine
     }
   };
 
+
+
   // Stats calculation
   const totalLeads = businesses.length;
   const newLeads = businesses.filter(b => (b.outreach_status || 'new') === 'new').length;
   const contactedLeads = businesses.filter(b => b.outreach_status === 'contacted' || b.outreach_status === 'followed_up').length;
-  const avgOppScore = totalLeads > 0 
+  const avgOppScore = totalLeads > 0
     ? (businesses.reduce((acc, b) => acc + b.opportunity_score, 0) / totalLeads).toFixed(1)
     : "0.0";
 
@@ -129,20 +152,20 @@ export default function BusinessDashboard({ initialBusinesses }: { initialBusine
   const filtered = businesses.filter(b => {
     const matchesSearch = b.business_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (b.website_url || "").toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     const matchesStatus = statusFilter === "all" || (b.outreach_status || "new") === statusFilter;
-    
-    const matchesSource = sourceFilter === "all" || 
+
+    const matchesSource = sourceFilter === "all" ||
       (b.source_platforms && b.source_platforms.includes(sourceFilter));
-      
+
     return matchesSearch && matchesStatus && matchesSource;
   });
 
-  const displayedBusinesses = limit === "all" ? filtered : filtered.slice(0, limit);
+  const displayedBusinesses = displayLimit === null ? filtered : filtered.slice(0, displayLimit);
 
   const clearDatabase = async () => {
     if (!confirm("Are you sure you want to delete ALL scraped data? This cannot be undone.")) return;
-    
+
     try {
       const res = await fetch("/api/businesses", { method: "DELETE" });
       const data = await res.json();
@@ -159,12 +182,12 @@ export default function BusinessDashboard({ initialBusinesses }: { initialBusine
 
   const exportToCSV = () => {
     const headers = [
-      "Business Name", 
-      "Website", 
-      "Opportunity Score", 
+      "Business Name",
+      "Website",
+      "Opportunity Score",
       "Outreach Status",
-      "Extracted Emails", 
-      "Tech Stack (CMS)", 
+      "Extracted Emails",
+      "Tech Stack (CMS)",
       "Tech Stack (Frontend)",
       "Tech Stack (Analytics)",
       "Decision Makers",
@@ -182,7 +205,7 @@ export default function BusinessDashboard({ initialBusinesses }: { initialBusine
       `"${(b.decision_makers || []).map(dm => `${dm.name} (${dm.role})`).join(" | ").replace(/"/g, '""')}"`,
       `"${(b.detected_pain_points || []).join(" | ").replace(/"/g, '""')}"`
     ]);
-    
+
     const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -197,7 +220,7 @@ export default function BusinessDashboard({ initialBusinesses }: { initialBusine
 
   return (
     <div className="space-y-6">
-      
+
       {/* Stats row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700 rounded-xl p-5 shadow-lg">
@@ -259,12 +282,12 @@ export default function BusinessDashboard({ initialBusinesses }: { initialBusine
                 ))}
                 <option value="custom">Custom...</option>
               </select>
-              
+
               {!isPresetCategory && (
-                <input 
-                  placeholder="Enter custom category" 
+                <input
+                  placeholder="Enter custom category"
                   value={formData.category === "Custom Category" ? "" : formData.category}
-                  onChange={(e) => setFormData({...formData, category: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:ring-2 focus:ring-blue-500/50 outline-none transition-all"
                 />
               )}
@@ -272,68 +295,84 @@ export default function BusinessDashboard({ initialBusinesses }: { initialBusine
           </div>
           <div className="space-y-1">
             <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">City</label>
-            <input 
-              placeholder="e.g. Trivandrum" 
+            <input
+              placeholder="e.g. Trivandrum"
               value={formData.city}
-              onChange={(e) => setFormData({...formData, city: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, city: e.target.value })}
               className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:ring-2 focus:ring-blue-500/50 outline-none transition-all"
             />
           </div>
           <div className="space-y-1">
             <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">State</label>
-            <input 
-              placeholder="e.g. Kerala" 
+            <input
+              placeholder="e.g. Kerala"
               value={formData.state}
-              onChange={(e) => setFormData({...formData, state: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, state: e.target.value })}
               className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:ring-2 focus:ring-blue-500/50 outline-none transition-all"
             />
           </div>
           <div className="space-y-1">
             <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Country</label>
-            <input 
-              placeholder="e.g. India" 
+            <input
+              placeholder="e.g. India"
               value={formData.country}
-              onChange={(e) => setFormData({...formData, country: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, country: e.target.value })}
               className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:ring-2 focus:ring-blue-500/50 outline-none transition-all"
             />
+          </div>
+          {/* Source Selector */}
+          <div className="space-y-1">
+            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Source</label>
+            <select
+              value={formData.source}
+              onChange={(e) => setFormData({ ...formData, source: e.target.value })}
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:ring-2 focus:ring-blue-500/50 outline-none transition-all"
+            >
+              <option value="gmaps">Google Maps</option>
+              <option value="justdial">JustDial</option>
+              <option value="indiamart">IndiaMart</option>
+            </select>
           </div>
           <div className="space-y-1">
             <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Max Results</label>
             <div className="flex gap-2">
               <select
-                value={[0, 1, 3, 5, 10].includes(formData.limit) ? formData.limit : "custom"}
+                value={[0, 1, 3, 5, 10, 25, 50].includes(formData.limit) ? formData.limit : "custom"}
                 onChange={(e) => {
                   const val = e.target.value;
                   if (val === "custom") {
-                    setFormData({...formData, limit: 15}); // Default custom scraping limit
+                    setFormData({ ...formData, limit: 15 });
                   } else {
-                    setFormData({...formData, limit: Number(val)});
+                    setFormData({ ...formData, limit: Number(val) });
                   }
                 }}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:ring-2 focus:ring-blue-500/50 outline-none transition-all"
               >
+                <option value={0}>All Results (Unlimited)</option>
                 <option value={1}>1 Result</option>
                 <option value={3}>3 Results</option>
                 <option value={5}>5 Results</option>
                 <option value={10}>10 Results</option>
-                <option value={0}>All Results</option>
+                <option value={25}>25 Results</option>
+                <option value={50}>50 Results</option>
                 <option value="custom">Custom...</option>
               </select>
-              
+
+
               {![0, 1, 3, 5, 10].includes(formData.limit) && (
-                <input 
+                <input
                   type="number"
                   min={1}
                   placeholder="Num"
                   value={formData.limit}
-                  onChange={(e) => setFormData({...formData, limit: Math.max(1, parseInt(e.target.value) || 1)})}
+                  onChange={(e) => setFormData({ ...formData, limit: Math.max(1, parseInt(e.target.value) || 1) })}
                   className="w-20 bg-slate-950 border border-slate-800 rounded-xl px-2 py-2 text-sm text-white focus:ring-2 focus:ring-blue-500/50 outline-none transition-all"
                 />
               )}
             </div>
           </div>
           <div className="flex gap-2 items-end">
-            <button 
+            <button
               onClick={triggerScrape}
               disabled={isScraping || (!formData.category && !formData.city && !formData.state && !formData.country)}
               className={`flex-grow h-[42px] rounded-xl font-bold text-sm transition-all shadow-lg ${isScraping ? 'bg-slate-700 text-slate-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-500/20 active:scale-95'}`}
@@ -363,14 +402,14 @@ export default function BusinessDashboard({ initialBusinesses }: { initialBusine
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Real-time Scraper Console Logs</span>
             </div>
             <div className="flex gap-4">
-              <button 
+              <button
                 type="button"
                 onClick={() => setLogLines([])}
                 className="text-[10px] text-slate-500 hover:text-slate-300 font-bold uppercase tracking-wider transition-colors"
               >
                 Clear
               </button>
-              <button 
+              <button
                 type="button"
                 onClick={() => setShowLogs(false)}
                 className="text-[10px] text-slate-500 hover:text-slate-300 font-bold uppercase tracking-wider transition-colors"
@@ -379,7 +418,7 @@ export default function BusinessDashboard({ initialBusinesses }: { initialBusine
               </button>
             </div>
           </div>
-          <div 
+          <div
             ref={consoleEndRef}
             className="p-4 h-[250px] overflow-y-auto space-y-1.5 scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent"
           >
@@ -419,9 +458,9 @@ export default function BusinessDashboard({ initialBusinesses }: { initialBusine
             <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
-            <input 
-              type="text" 
-              placeholder="Search by name or website..." 
+            <input
+              type="text"
+              placeholder="Search by name or website..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-slate-500"
@@ -431,8 +470,8 @@ export default function BusinessDashboard({ initialBusinesses }: { initialBusine
           {/* Status Filter */}
           <div className="flex items-center gap-2">
             <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Status:</span>
-            <select 
-              value={statusFilter} 
+            <select
+              value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               className="bg-slate-900 border border-slate-700 text-white text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
             >
@@ -447,8 +486,8 @@ export default function BusinessDashboard({ initialBusinesses }: { initialBusine
           {/* Source Filter */}
           <div className="flex items-center gap-2">
             <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Source:</span>
-            <select 
-              value={sourceFilter} 
+            <select
+              value={sourceFilter}
               onChange={(e) => setSourceFilter(e.target.value)}
               className="bg-slate-900 border border-slate-700 text-white text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
             >
@@ -460,30 +499,32 @@ export default function BusinessDashboard({ initialBusinesses }: { initialBusine
           </div>
 
           <div className="flex bg-slate-900 rounded-lg p-1 border border-slate-700">
-            <button 
+            <button
               onClick={() => setViewMode("grid")}
               className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${viewMode === "grid" ? "bg-blue-500 text-white shadow-lg" : "text-slate-400 hover:text-white"}`}
             >
               GRID
             </button>
-            <button 
+            <button
               onClick={() => setViewMode("list")}
               className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${viewMode === "list" ? "bg-blue-500 text-white shadow-lg" : "text-slate-400 hover:text-white"}`}
             >
               LIST
             </button>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Show:</span>
-            <select 
-              value={["all", 3, 10, 25, 50, 100].includes(limit) ? limit : "custom"} 
+            <select
+              value={displayLimit === null ? "all" : [3, 10, 25, 50, 100].includes(displayLimit) ? displayLimit : "custom"}
               onChange={(e) => {
                 const val = e.target.value;
-                if (val === "custom") {
-                  setLimit(5); // Default custom value
+                if (val === "all") {
+                  setDisplayLimit(null);
+                } else if (val === "custom") {
+                  setDisplayLimit(15);
                 } else {
-                  setLimit(val === "all" ? "all" : Number(val));
+                  setDisplayLimit(Number(val));
                 }
               }}
               className="bg-slate-900 border border-slate-700 text-white text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -496,22 +537,25 @@ export default function BusinessDashboard({ initialBusinesses }: { initialBusine
               <option value="all">All</option>
               <option value="custom">Custom...</option>
             </select>
-            
-            {!["all", 3, 10, 25, 50, 100].includes(limit) && (
+
+            {displayLimit !== null && ![3, 10, 25, 50, 100].includes(displayLimit) && (
               <input
                 type="number"
                 min={1}
-                value={limit}
-                onChange={(e) => setLimit(Math.max(1, parseInt(e.target.value) || 1))}
+                value={displayLimit}
+                onChange={(e) => {
+                  const parsed = parseInt(e.target.value);
+                  setDisplayLimit(isNaN(parsed) || parsed < 1 ? 1 : parsed);
+                }}
                 className="w-16 bg-slate-900 border border-slate-700 text-white text-xs rounded-lg px-2.5 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Limit"
+                placeholder="#"
               />
             )}
           </div>
         </div>
 
         <div className="flex gap-2">
-          <button 
+          <button
             onClick={clearDatabase}
             className="bg-transparent hover:bg-red-500/10 text-red-400 border border-red-500/20 px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2"
           >
@@ -520,8 +564,8 @@ export default function BusinessDashboard({ initialBusinesses }: { initialBusine
             </svg>
             Clear All
           </button>
-          
-          <button 
+
+          <button
             onClick={exportToCSV}
             className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 shadow-lg shadow-green-900/20"
           >
@@ -547,13 +591,15 @@ export default function BusinessDashboard({ initialBusinesses }: { initialBusine
               <tr className="border-b border-white/10 bg-white/5">
                 <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Business Name</th>
                 <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Website</th>
-                <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-center">Score</th>
+                <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-center">Opp Score</th>
+                <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-center">Intent</th>
+                <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
                 <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Top Pain Point</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
               {displayedBusinesses.map((biz) => (
-                <tr key={biz.id} className="hover:bg-white/5 transition-colors cursor-pointer group">
+                <tr key={biz.id} className="hover:bg-white/5 transition-colors cursor-pointer group" onClick={() => window.location.href = `/business/${biz.id}`}>
                   <td className="p-4">
                     <div className="font-bold text-white group-hover:text-blue-400 transition-colors">{biz.business_name}</div>
                     {biz.source_platforms && biz.source_platforms.length > 0 && (
@@ -570,8 +616,8 @@ export default function BusinessDashboard({ initialBusinesses }: { initialBusine
                             indiamart: "IndiaMart"
                           };
                           return (
-                            <span 
-                              key={source} 
+                            <span
+                              key={source}
                               className={`text-[8px] px-1.5 py-0.2 rounded border font-semibold uppercase tracking-wider ${colors[source] || "bg-slate-500/10 text-slate-400 border-slate-500/20"}`}
                             >
                               {label[source] || source}
@@ -585,12 +631,40 @@ export default function BusinessDashboard({ initialBusinesses }: { initialBusine
                     <span className="text-slate-400 text-sm">{biz.website_url || "None"}</span>
                   </td>
                   <td className="p-4 text-center">
-                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-black ${biz.opportunity_score === undefined || biz.opportunity_score === null ? 'bg-slate-700/50 text-slate-400 animate-pulse' : biz.opportunity_score > 60 ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}>
+                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-black ${biz.opportunity_score === undefined || biz.opportunity_score === null
+                        ? 'bg-slate-700/50 text-slate-400 animate-pulse'
+                        : biz.opportunity_score > 60
+                          ? 'bg-red-500/20 text-red-400'
+                          : 'bg-green-500/20 text-green-400'
+                      }`}>
                       {biz.opportunity_score === undefined || biz.opportunity_score === null ? 'Analyzing...' : biz.opportunity_score}
                     </span>
                   </td>
+                  <td className="p-4 text-center">
+                    {biz.intent_score !== undefined && biz.intent_score !== null ? (
+                      <span className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wide ${biz.outreach_urgency === 'high'
+                          ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                          : biz.outreach_urgency === 'medium'
+                            ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                            : 'bg-slate-700/40 text-slate-400 border border-slate-700'
+                        }`}>
+                        {biz.outreach_urgency || 'normal'}
+                      </span>
+                    ) : (
+                      <span className="text-slate-600 text-xs">—</span>
+                    )}
+                  </td>
                   <td className="p-4">
-                    <span className="text-slate-300 text-sm line-clamp-1">{biz.detected_pain_points[0] || "No issues"}</span>
+                    <span className={`inline-block px-2.5 py-0.5 rounded text-[10px] font-semibold ${(biz.outreach_status || 'new') === 'new' ? 'bg-blue-500/15 text-blue-400'
+                        : biz.outreach_status === 'contacted' ? 'bg-amber-500/15 text-amber-400'
+                          : biz.outreach_status === 'followed_up' ? 'bg-violet-500/15 text-violet-400'
+                            : 'bg-emerald-500/15 text-emerald-400'
+                      }`}>
+                      {(biz.outreach_status || 'New').replace('_', ' ')}
+                    </span>
+                  </td>
+                  <td className="p-4">
+                    <span className="text-slate-300 text-sm line-clamp-1">{(biz.detected_pain_points || [])[0] || "No issues"}</span>
                   </td>
                 </tr>
               ))}

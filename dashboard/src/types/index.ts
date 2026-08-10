@@ -53,4 +53,7 @@ export interface ScoringResult {
   common_themes?: string[] | null;
   bottlenecks?: string[] | null;
   pain_summary?: string;
+  // Intent profile fields (joined from intent_profiles table)
+  intent_score?: number | null;
+  outreach_urgency?: string | null;
 }

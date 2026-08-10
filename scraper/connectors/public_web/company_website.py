@@ -1,6 +1,5 @@
 import csv
 import json
-import logging
 import time
 from pathlib import Path
 from urllib.parse import urlparse
@@ -10,31 +9,10 @@ from typing import List, Dict, Any, Optional
 import requests
 from bs4 import BeautifulSoup
 
-# ---------------------------------------------------------
-# 1. Structured Logging
-# ---------------------------------------------------------
-class StructuredLogger:
-    @staticmethod
-    def get_logger(name: str):
-        logger = logging.getLogger(name)
-        if not logger.handlers:
-            logger.setLevel(logging.INFO)
-            formatter = logging.Formatter('%(asctime)s - %(levelname)s - [%(name)s] - %(message)s')
-            
-            # Console handler
-            ch = logging.StreamHandler()
-            ch.setFormatter(formatter)
-            logger.addHandler(ch)
-            
-            # File handler
-            log_dir = Path("logs")
-            log_dir.mkdir(exist_ok=True)
-            fh = logging.FileHandler(log_dir / "website_analyzer.log")
-            fh.setFormatter(formatter)
-            logger.addHandler(fh)
-        return logger
+# Critical fix #3: use the shared logger utility instead of a copy-pasted StructuredLogger.
+from scraper.utils.logger import get_scraper_logger
 
-logger = StructuredLogger.get_logger(__name__)
+logger = get_scraper_logger(__name__)
 
 # ---------------------------------------------------------
 # 2. Data Structure (Prepares for Scoring/PostgreSQL)
@@ -147,9 +125,22 @@ class WebsiteAnalyzer:
                 result.mobile_friendly = True
                 
             # 5. Integrations & Forms Heuristics
-            # We look for form tags, or 'contact' text as a broad fallback heuristic
-            if soup.find('form') or 'contact' in html_text or 'get in touch' in html_text:
-                result.contact_form_exists = True
+            # Critical fix #5: require a real <form> element with user-input fields.
+            # The old check (`'contact' in html_text`) fired on virtually every website
+            # (nav bars, footers, copyright text all contain the word "contact"), making
+            # this field useless for scoring. We now require structural evidence of a form.
+            forms = soup.find_all('form')
+            for form in forms:
+                # A meaningful form must contain at least one input (text/email) or textarea
+                has_input = form.find(['input', 'textarea']) is not None
+                # Exclude hidden forms that are only CSRF tokens or tracking pixels
+                visible_inputs = [
+                    inp for inp in form.find_all(['input', 'textarea'])
+                    if inp.get('type', 'text') not in ('hidden', 'submit', 'button', 'image', 'reset')
+                ]
+                if has_input and len(visible_inputs) >= 1:
+                    result.contact_form_exists = True
+                    break
                 
             # Check WhatsApp
             if 'wa.me/' in html_text or 'api.whatsapp.com' in html_text or 'whatsapp' in html_text:

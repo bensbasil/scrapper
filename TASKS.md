@@ -171,8 +171,32 @@ All Phase 1 quick wins are fully implemented, tested, and integrated end-to-end 
 
 ## 🔲 Future (Backlog)
 
-- [ ] LLM-powered outreach generation (Gemini / OpenAI API integration)
-- [ ] `analyzer/seo_checker.py` — implement advanced SEO checks
-- [ ] `scraper/connectors/social/social_scraper.py` — deep Instagram/Facebook audit
-- [ ] `intent/review_trend_detector.py` Phase 2 — historical snapshot comparison
+- [ ] LLM-powered outreach generation (Gemini / OpenAI API integration) — **Gemini integration already wired in `outreach_generator.py`, just requires `GEMINI_API_KEY` in `.env`**
+- [x] `analyzer/seo_checker.py` — implement advanced SEO checks
+- [x] `scraper/connectors/social/social_scraper.py` — deep Instagram/Facebook audit
+- [x] `intent/review_trend_detector.py` Phase 2 — historical snapshot comparison
 - [ ] FastAPI backend to replace Next.js API routes
+
+---
+
+## ✅ Phase 8 — API Completeness & Dashboard Polish (Completed)
+
+- [x] Add `python-dotenv` to `requirements.txt` (was missing despite being imported)
+- [x] Expand `api_server.py`:
+  - [x] `GET /api/businesses/{id}` — full business detail via API
+  - [x] `GET /api/businesses/{id}/outreach` — outreach drafts endpoint
+  - [x] `GET /api/businesses/{id}/intent` — intent profile endpoint
+  - [x] `GET /api/runs` — pipeline run history list
+  - [x] `GET /api/runs/{run_id}` — individual run detail
+  - [x] `POST /api/recrawl` — trigger recrawl mode from dashboard
+  - [x] `GET /api/status` — check if scraper is running
+  - [x] Extend `POST /api/scrape` with `source` (gmaps/justdial/indiamart) and raw `query` parameters
+- [x] Update `BusinessDashboard.tsx`:
+  - [x] Add source selector (Google Maps / JustDial / IndiaMart) to scraper control panel
+  - [x] Add Intent urgency badge to list view table
+  - [x] Add Status column to list view table
+  - [x] Make list view rows clickable (navigates to `/business/{id}`)
+- [x] Update `database/db.py` — `get_businesses_for_dashboard()` now joins `intent_profiles` for `intent_score` and `outreach_urgency`
+- [x] Add `intent_score` and `outreach_urgency` fields to `ScoringResult` TypeScript interface
+- [x] Add Outreach Drafts section to business detail page (`/business/[id]`) — shows cold email, WhatsApp draft, audit summary, and positioning strategy
+

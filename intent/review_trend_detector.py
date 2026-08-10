@@ -83,15 +83,10 @@ class ReviewTrendDetector:
 
     Phase 1: Static analysis of existing scraped data.
     Phase 2: Historical trend detection (requires snapshot storage).
-
-    Usage:
-        detector = ReviewTrendDetector()
-        result = detector.analyze(
-            business_name="Acme Corp",
-            current_rating=3.2,
-            review_count=12,
-        )
     """
+
+    def __init__(self, repo: Optional[Any] = None):
+        self.repo = repo
 
     def _classify_rating(self, rating: Optional[float]) -> str:
         """Classify rating into named categories."""
@@ -159,6 +154,7 @@ class ReviewTrendDetector:
         business_name: str,
         current_rating: Optional[float],
         review_count: Optional[int],
+        business_id: Optional[int] = None,
         previous_rating: Optional[float] = None,
         review_texts: Optional[List[str]] = None,
     ) -> ReviewTrendResult:
@@ -169,12 +165,24 @@ class ReviewTrendDetector:
             business_name:    Display name for logging.
             current_rating:   Current Google Maps rating (0-5).
             review_count:     Total number of reviews on Google Maps.
+            business_id:      Database ID for snapshot lookup/storage.
             previous_rating:  Historical rating snapshot (Phase 2 — optional).
             review_texts:     List of recent review texts (future — optional).
 
         Returns:
             ReviewTrendResult with review_trend_score.
         """
+        # Fetch historical snapshot from database if repo and business_id are present
+        if business_id is not None and self.repo is not None:
+            prev_snapshot = self.repo.get_latest_review_snapshot(business_id)
+            if prev_snapshot:
+                previous_rating = float(prev_snapshot["rating"]) if prev_snapshot["rating"] is not None else None
+                logger.info(f"[{business_name}] Found historical snapshot in DB: rating={previous_rating}")
+            
+            # Save the current state as a new snapshot in the DB for future runs
+            self.repo.insert_review_snapshot(business_id, current_rating, review_count)
+            logger.info(f"[{business_name}] Saved current review snapshot to database.")
+
         result = ReviewTrendResult(
             business_name=business_name,
             current_rating=current_rating,

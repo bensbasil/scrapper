@@ -62,7 +62,9 @@ CREATE TABLE IF NOT EXISTS business_reports (
     outreach_angles JSONB DEFAULT '[]'::jsonb,
     improvement_recommendations JSONB DEFAULT '[]'::jsonb,
     raw_text_report TEXT,
-    generated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    generated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    -- Sig fix #11: one report per business — prevents duplicate rows on re-runs.
+    UNIQUE(business_id)
 );
 
 CREATE TABLE IF NOT EXISTS outreach_drafts (
@@ -181,6 +183,20 @@ CREATE INDEX IF NOT EXISTS idx_businesses_jd_rating ON businesses(jd_rating DESC
 CREATE INDEX IF NOT EXISTS idx_businesses_im_rating ON businesses(im_rating DESC);
 CREATE INDEX IF NOT EXISTS idx_businesses_last_checked ON businesses(last_checked);
 
+-- Sig fix #11 migration: add UNIQUE constraint to business_reports if not present.
+-- This prevents duplicate report rows when the pipeline reruns for the same business.
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'business_reports_business_id_key'
+          AND conrelid = 'business_reports'::regclass
+    ) THEN
+        ALTER TABLE business_reports ADD CONSTRAINT business_reports_business_id_key UNIQUE (business_id);
+    END IF;
+END $$;
+
+
 -- Phase 5 Monitoring Tables
 CREATE TABLE IF NOT EXISTS pipeline_runs (
     id SERIAL PRIMARY KEY,
@@ -252,4 +268,57 @@ CREATE INDEX IF NOT EXISTS idx_customer_pains_business ON customer_pain_signals(
 CREATE INDEX IF NOT EXISTS idx_competitor_analysis_business ON competitor_analysis(business_id);
 CREATE INDEX IF NOT EXISTS idx_business_health_business ON business_health_profiles(business_id);
 
+-- New Tables for Advanced SEO and Review Trend Snapshots
+CREATE TABLE IF NOT EXISTS seo_profiles (
+    id SERIAL PRIMARY KEY,
+    business_id INTEGER NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+    title_tag VARCHAR(255),
+    title_length INTEGER,
+    title_optimized BOOLEAN DEFAULT FALSE,
+    meta_description TEXT,
+    meta_description_length INTEGER,
+    meta_description_optimized BOOLEAN DEFAULT FALSE,
+    h1_count INTEGER DEFAULT 0,
+    h2_count INTEGER DEFAULT 0,
+    headings_structure JSONB DEFAULT '[]'::jsonb,
+    images_count INTEGER DEFAULT 0,
+    images_missing_alt INTEGER DEFAULT 0,
+    open_graph_tags JSONB DEFAULT '{}'::jsonb,
+    has_viewport_tag BOOLEAN DEFAULT FALSE,
+    has_robots_txt BOOLEAN DEFAULT FALSE,
+    has_sitemap BOOLEAN DEFAULT FALSE,
+    load_time_ms INTEGER,
+    checked_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
 
+CREATE TABLE IF NOT EXISTS review_snapshots (
+    id SERIAL PRIMARY KEY,
+    business_id INTEGER NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+    rating NUMERIC(3, 2),
+    review_count INTEGER,
+    captured_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_seo_profiles_business_id ON seo_profiles(business_id);
+CREATE INDEX IF NOT EXISTS idx_review_snapshots_business_id ON review_snapshots(business_id);
+
+-- Deep Social Audit Table (SocialScraper — follower counts, bios, handles)
+CREATE TABLE IF NOT EXISTS deep_social_audits (
+    id SERIAL PRIMARY KEY,
+    business_id INTEGER NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+    platform VARCHAR(50) NOT NULL,          -- 'instagram' | 'facebook'
+    profile_url TEXT NOT NULL,
+    is_reachable BOOLEAN DEFAULT FALSE,
+    handle VARCHAR(255),
+    follower_count VARCHAR(50),             -- stored as string (e.g. '1.2M', '45K')
+    follower_count_normalized INTEGER,      -- Minor fix #15: numeric integer for sorting/ranking
+    post_count VARCHAR(50),
+    bio TEXT,
+    error_message TEXT,
+    scraped_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+ALTER TABLE deep_social_audits ADD COLUMN IF NOT EXISTS follower_count_normalized INTEGER;
+
+CREATE INDEX IF NOT EXISTS idx_deep_social_audits_business_id ON deep_social_audits(business_id);
+CREATE INDEX IF NOT EXISTS idx_deep_social_audits_followers ON deep_social_audits(follower_count_normalized DESC);
