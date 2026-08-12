@@ -10,8 +10,33 @@ export function normalizeEmails(emailsRaw: any): string[] {
     return list
       .map((item: any) => {
         if (typeof item === 'string') return item;
-        if (item && typeof item === 'object' && item.email) return item.email;
+        if (item && typeof item === 'object') {
+          if (typeof item.email === 'string') return item.email;
+          if (typeof item.address === 'string') return item.address;
+          if (typeof item.value === 'string') return item.value;
+          if (item.email && typeof item.email === 'object' && item.email.email) return String(item.email.email);
+        }
         return null;
+      })
+      .filter((e): e is string => typeof e === 'string' && e.length > 0);
+  } catch (e) {
+    return [];
+  }
+}
+
+
+export function normalizePainPoints(pointsRaw: any): string[] {
+  if (!pointsRaw) return [];
+  try {
+    const list = typeof pointsRaw === 'string' ? JSON.parse(pointsRaw) : pointsRaw;
+    if (!Array.isArray(list)) return [];
+    return list
+      .map((item: any) => {
+        if (typeof item === 'string') return item;
+        if (item && typeof item === 'object') {
+          return item.validation_error || item.issue || item.error || JSON.stringify(item);
+        }
+        return String(item);
       })
       .filter(Boolean) as string[];
   } catch (e) {
@@ -25,6 +50,9 @@ export async function getBusinesses(): Promise<ScoringResult[]> {
       SELECT 
         b.id::text, 
         b.business_name, 
+        b.category,
+        b.phone,
+        b.address,
         b.website as website_url, 
         s.opportunity_score, 
         s.website_quality_score, 
@@ -46,6 +74,8 @@ export async function getBusinesses(): Promise<ScoringResult[]> {
         t.cms,
         t.analytics_tools,
         t.frontend_framework,
+        i.intent_score,
+        i.outreach_urgency,
         (SELECT json_agg(dm) FROM (SELECT name, role, confidence FROM decision_makers WHERE business_id = b.id ORDER BY discovered_at DESC) dm) AS decision_makers
       FROM businesses b
       LEFT JOIN (
@@ -63,13 +93,18 @@ export async function getBusinesses(): Promise<ScoringResult[]> {
         FROM tech_stacks 
         ORDER BY business_id, detected_at DESC
       ) t ON b.id = t.business_id
+      LEFT JOIN (
+        SELECT DISTINCT ON (business_id) business_id, intent_score, outreach_urgency
+        FROM intent_profiles
+        ORDER BY business_id, evaluated_at DESC
+      ) i ON b.id = i.business_id
       ORDER BY s.opportunity_score DESC NULLS LAST, b.id DESC
     `);
     
     return res.rows.map(row => ({
       ...row,
       likely_service_match: typeof row.likely_service_match === 'string' ? JSON.parse(row.likely_service_match) : (row.likely_service_match || []),
-      detected_pain_points: typeof row.detected_pain_points === 'string' ? JSON.parse(row.detected_pain_points) : (row.detected_pain_points || []),
+      detected_pain_points: normalizePainPoints(row.detected_pain_points),
       source_platforms: typeof row.source_platforms === 'string' ? JSON.parse(row.source_platforms) : (row.source_platforms || []),
       google_rating: row.google_rating !== null ? Number(row.google_rating) : undefined,
       jd_rating: row.jd_rating !== null ? Number(row.jd_rating) : undefined,
@@ -83,3 +118,4 @@ export async function getBusinesses(): Promise<ScoringResult[]> {
     return MOCK_BUSINESSES;
   }
 }
+

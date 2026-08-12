@@ -1,7 +1,8 @@
 import { query } from "./db";
 import { ScoringResult } from "@/types";
-import { normalizeEmails } from "./businesses";
+import { normalizeEmails, normalizePainPoints } from "./businesses";
 import { MOCK_BUSINESSES } from "./mockData";
+
 
 /**
  * Fetches a single business with all enrichment data joined.
@@ -133,8 +134,9 @@ function transformRow(row: any): ScoringResult {
     seo_score: row.seo_score,
     automation_need_score: row.automation_need_score,
     likely_service_match: parseJsonField(row.likely_service_match),
-    detected_pain_points: parseJsonField(row.detected_pain_points),
+    detected_pain_points: normalizePainPoints(row.detected_pain_points),
     outreach_status: row.outreach_status,
+
     extracted_emails: normalizeEmails(row.extracted_emails),
     cms: row.cms,
     frontend_framework: row.frontend_framework,

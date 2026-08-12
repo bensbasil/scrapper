@@ -463,13 +463,23 @@ class ScraperRepository:
             return False
 
     def insert_pipeline_run(self, data: Dict[str, Any]) -> bool:
-        """Inserts a completed pipeline run metrics report."""
+        """Inserts or updates a completed pipeline run metrics report."""
         query = """
             INSERT INTO pipeline_runs 
             (run_id, search_query, started_at, finished_at, total_businesses, 
              successful_businesses, failed_businesses, success_rate, 
              high_opportunity_count, stage_failure_counts, business_records, notes)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT (run_id) DO UPDATE SET
+                finished_at = EXCLUDED.finished_at,
+                total_businesses = EXCLUDED.total_businesses,
+                successful_businesses = EXCLUDED.successful_businesses,
+                failed_businesses = EXCLUDED.failed_businesses,
+                success_rate = EXCLUDED.success_rate,
+                high_opportunity_count = EXCLUDED.high_opportunity_count,
+                stage_failure_counts = EXCLUDED.stage_failure_counts,
+                business_records = EXCLUDED.business_records,
+                notes = EXCLUDED.notes;
         """
         try:
             with self.db.get_connection() as conn:
@@ -969,6 +979,9 @@ class ScraperRepository:
             SELECT 
               b.id::text, 
               b.business_name, 
+              b.category,
+              b.phone,
+              b.address,
               b.website as website_url, 
               s.opportunity_score, 
               s.website_quality_score, 
@@ -1014,7 +1027,7 @@ class ScraperRepository:
               FROM intent_profiles
               ORDER BY business_id, evaluated_at DESC
             ) i ON b.id = i.business_id
-            ORDER BY s.opportunity_score DESC NULLS LAST, b.id DESC
+            ORDER BY b.id DESC
         """
         params = []
         if limit is not None:
@@ -1030,16 +1043,42 @@ class ScraperRepository:
                     businesses = []
                     for r in rows:
                         d = dict(r)
-                        if d.get("likely_service_match") is None:
-                            d["likely_service_match"] = []
-                        if d.get("detected_pain_points") is None:
-                            d["detected_pain_points"] = []
-                        if d.get("extracted_emails") is None:
-                            d["extracted_emails"] = []
+                        # Sanitize detected_pain_points to guarantee string array for React
+                        raw_points = d.get("detected_pain_points") or []
+                        clean_points = []
+                        for p in raw_points:
+                            if isinstance(p, str):
+                                clean_points.append(p)
+                            elif isinstance(p, dict):
+                                clean_points.append(p.get("validation_error") or p.get("issue") or p.get("error") or str(p))
+                            else:
+                                clean_points.append(str(p))
+                        d["detected_pain_points"] = clean_points
+
+                        # Sanitize likely_service_match
+                        raw_services = d.get("likely_service_match") or []
+                        d["likely_service_match"] = [s if isinstance(s, str) else str(s) for s in raw_services]
+
+                        # Sanitize extracted_emails to guarantee string array for React
+                        raw_emails = d.get("extracted_emails") or []
+                        clean_emails = []
+                        for em in raw_emails:
+                            if isinstance(em, str):
+                                clean_emails.append(em)
+                            elif isinstance(em, dict):
+                                email_val = em.get("email") or em.get("address") or em.get("value")
+                                if isinstance(email_val, str):
+                                    clean_emails.append(email_val)
+                                elif email_val:
+                                    clean_emails.append(str(email_val))
+                        d["extracted_emails"] = clean_emails
+
                         if d.get("source_platforms") is None:
                             d["source_platforms"] = []
                         businesses.append(d)
                     return businesses
+
+
         except Exception as e:
             logger.error(f"Error fetching dashboard businesses: {e}")
             return []

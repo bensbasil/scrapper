@@ -110,8 +110,11 @@ class PipelineMonitor:
         self.db = db_manager
 
     def _generate_run_id(self) -> str:
-        """Generate a unique run ID using timestamp."""
-        return datetime.utcnow().strftime("run_%Y%m%d_%H%M%S")
+        """Generate a unique run ID using timestamp + short hex entropy."""
+        import uuid
+        timestamp = datetime.utcnow().strftime("run_%Y%m%d_%H%M%S")
+        suffix = uuid.uuid4().hex[:4]
+        return f"{timestamp}_{suffix}"
 
     def start_run(self, search_query: str) -> PipelineRunSummary:
         """

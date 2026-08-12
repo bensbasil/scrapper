@@ -146,14 +146,17 @@ class GoogleMapsScraper:
         return data
 
     def _scroll_feed(self, page: Page, feed_selector: str = "div[role='feed']") -> bool:
-        """Handle scrolling to load more results, returns False if end is reached."""
+        """Handle scrolling inside div[role='feed'] to load more results, returns False if end is reached."""
         try:
-            page.hover(feed_selector)
-            page.mouse.wheel(0, 5000)
-            page.wait_for_timeout(2500)
+            feed = page.locator(feed_selector).first
+            if feed.is_visible(timeout=1000):
+                feed.evaluate("el => el.scrollBy(0, 8000)")
+            else:
+                page.mouse.wheel(0, 5000)
+            page.wait_for_timeout(2000)
             
-            # Check for the Google Maps "end of list" message
-            end_msg = page.locator("span:has-text(\"You've reached the end of the list.\")")
+            # Check for the Google Maps "end of list" message using .first to prevent strict mode violation
+            end_msg = page.locator("span:has-text(\"You've reached the end of the list.\")").first
             if end_msg.is_visible(timeout=1000):
                 logger.info("Reached the end of the results list.")
                 return False
@@ -161,6 +164,7 @@ class GoogleMapsScraper:
         except Exception as e:
             logger.warning(f"Scrolling issue: {e}")
             return True
+
 
     def scrape(self, search_query: str, max_results: int = 20) -> List[BusinessData]:
         logger.info(f"Starting scrape: '{search_query}' (max: {max_results})")
@@ -240,7 +244,7 @@ class GoogleMapsScraper:
                 processed_names = set()
                 consecutive_scrolls_without_new = 0
                 
-                while len(results) < max_results and consecutive_scrolls_without_new < 5:
+                while len(results) < max_results and consecutive_scrolls_without_new < 12:
                     listings = page.locator(listing_selector).all()
                     found_new = False
                     
@@ -278,11 +282,12 @@ class GoogleMapsScraper:
                         consecutive_scrolls_without_new = 0
                     else:
                         consecutive_scrolls_without_new += 1
-                        logger.info(f"No new listings found in view. Scroll attempt {consecutive_scrolls_without_new}/5...")
+                        logger.info(f"No new listings found in view. Scroll attempt {consecutive_scrolls_without_new}/12...")
                         
                     # Trigger modular scrolling
                     if not self._scroll_feed(page):
                         break
+
 
             except Exception as e:
                 logger.error(f"Critical scraping error: {e}")

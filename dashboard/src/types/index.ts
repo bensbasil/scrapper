@@ -13,6 +13,9 @@ export interface BusinessReport {
 export interface ScoringResult {
   id: string;
   business_name: string;
+  category?: string | null;
+  phone?: string | null;
+  address?: string | null;
   website_url: string | null;
   opportunity_score: number;
   website_quality_score: number;

@@ -119,10 +119,35 @@ async def read_stream(stream: asyncio.StreamReader, is_stderr: bool):
             break
 
 
+def read_sync_stream(stream, is_stderr: bool):
+    """Sync line reader for subprocess.Popen fallback."""
+    for line in iter(stream.readline, ''):
+        if not line:
+            break
+        line_clean = line.rstrip()
+        if not line_clean:
+            continue
+        if is_stderr:
+            if " - ERROR - " in line_clean or " - CRITICAL - " in line_clean:
+                formatted = f"[Scraper ERROR] {line_clean}"
+            elif " - WARNING - " in line_clean:
+                formatted = f"[Scraper WARNING] {line_clean}"
+            else:
+                formatted = f"[Scraper Info] {line_clean}"
+        else:
+            formatted = f"[Scraper Output] {line_clean}"
+        add_log(formatted)
+    try:
+        stream.close()
+    except Exception:
+        pass
+
+
 async def run_scraper_process(args: List[str]):
     """
-    Critical fix #1 & #4: Robust subprocess lifecycle manager.
-    Guarantees state cleanup even if process spawning fails.
+    Robust subprocess lifecycle manager.
+    Tries async create_subprocess_exec first, then falls back to Popen + ThreadPoolExecutor
+    if Windows asyncio event loop limitation (NotImplementedError) occurs.
     """
     global running_process
     rootDir = os.path.dirname(os.path.abspath(__file__))
@@ -139,6 +164,10 @@ async def run_scraper_process(args: List[str]):
 
     env = {**os.environ, "PYTHONIOENCODING": "utf-8", "PYTHONUNBUFFERED": "1"}
 
+    use_async = True
+    proc = None
+    sync_proc = None
+
     async with process_lock:
         try:
             proc = await asyncio.create_subprocess_exec(
@@ -149,35 +178,82 @@ async def run_scraper_process(args: List[str]):
                 env=env
             )
             running_process = proc
-        except Exception as e:
-            add_log(f"[System] Failed to spawn scraper process ({type(e).__name__}): {e}")
-            running_process = None
-            return
+            use_async = True
+        except (NotImplementedError, AttributeError, Exception) as e:
+            add_log(f"[System] Async subprocess spawn limitation ({type(e).__name__}). Using Threaded Popen fallback...")
+            try:
+                sync_proc = subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    cwd=rootDir,
+                    env=env,
+                    text=True,
+                    bufsize=1,
+                    encoding="utf-8",
+                    errors="replace"
+                )
+                running_process = sync_proc
+                use_async = False
+            except Exception as pe:
+                add_log(f"[System] Failed to spawn scraper process ({type(pe).__name__}): {pe}")
+                running_process = None
+                return
 
-    try:
-        await asyncio.gather(
-            read_stream(proc.stdout, is_stderr=False),
-            read_stream(proc.stderr, is_stderr=True)
-        )
-        await proc.wait()
-        add_log(f"[System] Scraper pipeline finished with exit code {proc.returncode}")
-    except Exception as e:
-        add_log(f"[System] Execution exception ({type(e).__name__}): {e}")
-        add_log(f"[Scraper ERROR] {traceback.format_exc()}")
-    finally:
-        async with process_lock:
-            running_process = None
+    if use_async and proc is not None:
+        try:
+            await asyncio.gather(
+                read_stream(proc.stdout, is_stderr=False),
+                read_stream(proc.stderr, is_stderr=True)
+            )
+            await proc.wait()
+            add_log(f"[System] Scraper pipeline finished with exit code {proc.returncode}")
+        except Exception as e:
+            add_log(f"[System] Execution exception ({type(e).__name__}): {e}")
+            add_log(f"[Scraper ERROR] {traceback.format_exc()}")
+        finally:
+            async with process_lock:
+                running_process = None
+    elif not use_async and sync_proc is not None:
+        try:
+            loop = asyncio.get_running_loop()
+            t1 = loop.run_in_executor(None, read_sync_stream, sync_proc.stdout, False)
+            t2 = loop.run_in_executor(None, read_sync_stream, sync_proc.stderr, True)
+            await asyncio.gather(t1, t2)
+            await loop.run_in_executor(None, sync_proc.wait)
+            add_log(f"[System] Scraper pipeline finished with exit code {sync_proc.returncode}")
+        except Exception as e:
+            add_log(f"[System] Execution exception in Popen fallback ({type(e).__name__}): {e}")
+            add_log(f"[Scraper ERROR] {traceback.format_exc()}")
+        finally:
+            async with process_lock:
+                running_process = None
 
 
 def is_scraper_running() -> bool:
     """Returns True if a scraper process is actively running."""
     global running_process
     if running_process is not None:
-        if running_process.returncode is not None:
-            running_process = None
-            return False
-        return True
+        if hasattr(running_process, "poll"):
+            ret = running_process.poll()
+            if ret is not None:
+                running_process = None
+                return False
+            return True
+        elif hasattr(running_process, "returncode"):
+            if running_process.returncode is not None:
+                running_process = None
+                return False
+            return True
     return False
+
+
+@app.get("/api/status")
+def get_scraper_status():
+    """Returns the current status of the scraper pipeline."""
+    running = is_scraper_running()
+    return {"success": True, "is_running": running, "running_process": running}
+
 
 
 # Significant fix #6: Shutdown event handler to prevent orphan Playwright/Chrome processes
@@ -243,6 +319,19 @@ def get_intent_profile(business_id: int):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+class UpdateBusinessRequest(BaseModel):
+    business_name: Optional[str] = None
+    category: Optional[str] = None
+    phone: Optional[str] = None
+    website: Optional[str] = None
+    address: Optional[str] = None
+    outreach_status: Optional[str] = Field(None, pattern="^(new|contacted|followed_up|closed)$")
+
+
+class BatchDeleteRequest(BaseModel):
+    ids: List[str]
+
+
 @app.delete("/api/businesses")
 def delete_all_businesses():
     try:
@@ -255,21 +344,87 @@ def delete_all_businesses():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.delete("/api/businesses/{business_id}")
+def delete_single_business(business_id: str):
+    """Deletes a single business by ID."""
+    try:
+        numeric_id = int(business_id)
+        with db_manager.get_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("DELETE FROM businesses WHERE id = %s RETURNING id;", (numeric_id,))
+                row = cur.fetchone()
+        return {"success": True, "id": business_id, "message": "Business deleted successfully."}
+    except ValueError:
+        # Mock ID or non-integer string — return success so frontend removes seamlessly
+        return {"success": True, "id": business_id, "message": "Local item removed."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
+@app.post("/api/businesses/batch-delete")
+def batch_delete_businesses(req: BatchDeleteRequest):
+    """Deletes multiple businesses by list of string IDs."""
+    if not req.ids:
+        return {"success": True, "deleted_count": 0}
+    try:
+        # Convert IDs to integers safely
+        int_ids = [int(i) for i in req.ids if i.isdigit()]
+        if not int_ids:
+            return {"success": True, "deleted_count": 0}
+
+        with db_manager.get_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("DELETE FROM businesses WHERE id = ANY(%s);", (int_ids,))
+                deleted_count = cur.rowcount
+        return {"success": True, "deleted_count": deleted_count}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.patch("/api/businesses/{business_id}")
-def update_outreach_status(business_id: int, req: UpdateStatusRequest):
-    query_sql = "UPDATE businesses SET outreach_status = %s WHERE id = %s RETURNING id;"
+def update_business_field(business_id: int, req: UpdateBusinessRequest):
+    """Updates one or more fields of a business."""
+    fields = []
+    params = []
+    
+    if req.business_name is not None:
+        fields.append("business_name = %s")
+        params.append(req.business_name)
+    if req.category is not None:
+        fields.append("category = %s")
+        params.append(req.category)
+    if req.phone is not None:
+        fields.append("phone = %s")
+        params.append(req.phone)
+    if req.website is not None:
+        fields.append("website = %s")
+        params.append(req.website)
+    if req.address is not None:
+        fields.append("address = %s")
+        params.append(req.address)
+    if req.outreach_status is not None:
+        fields.append("outreach_status = %s")
+        params.append(req.outreach_status)
+
+    if not fields:
+        return {"success": True, "message": "No fields to update."}
+
+    params.append(business_id)
+    query_sql = f"UPDATE businesses SET {', '.join(fields)} WHERE id = %s RETURNING id;"
     try:
         with db_manager.get_connection() as conn:
             with conn.cursor() as cur:
-                cur.execute(query_sql, (req.outreach_status, business_id))
+                cur.execute(query_sql, tuple(params))
                 row = cur.fetchone()
                 if not row:
                     raise HTTPException(status_code=404, detail="Business not found")
-        return {"success": True, "id": business_id, "outreach_status": req.outreach_status}
+        return {"success": True, "id": business_id, "updated": req.dict(exclude_none=True)}
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 
 # ------------------------------------------------------------------
@@ -306,6 +461,29 @@ async def trigger_scrape(req: ScrapeRequest, background_tasks: BackgroundTasks):
         log_history.clear()
         background_tasks.add_task(run_scraper_process, args)
         return {"success": True, "message": f"Scraper started successfully in background (source: {source})."}
+
+
+@app.post("/api/stop")
+async def stop_scraper():
+    """Terminates active running scraper process safely."""
+    global running_process
+    async with process_lock:
+        if running_process is None:
+            return {"success": False, "message": "No active scraper process running."}
+
+        try:
+            if hasattr(running_process, "terminate"):
+                running_process.terminate()
+            elif hasattr(running_process, "kill"):
+                running_process.kill()
+            
+            add_log("[System] 🛑 Scrape process manually terminated by user.")
+            running_process = None
+            return {"success": True, "message": "Scraper process terminated successfully."}
+        except Exception as e:
+            logger.error(f"Error terminating process: {e}")
+            return {"success": False, "message": f"Error stopping scraper: {e}"}
+
 
 
 @app.post("/api/recrawl")

@@ -168,7 +168,9 @@ class MVPPipeline:
             return self.repo.insert_business(b_dict)
         else:
             # Default: Google Maps ingestion
+            b_dict["source_platforms"] = [source or "gmaps"]
             return self.repo.insert_business(b_dict)
+
 
     def process_business(
         self,

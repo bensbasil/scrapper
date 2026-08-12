@@ -115,9 +115,11 @@ export default function BusinessCard({ business }: { business: ScoringResult }) 
 
           <div className="pt-4 border-t border-white/10">
             <p className="text-slate-400 text-sm line-clamp-2">
-              <strong className="text-slate-300">Top Pain Point:</strong> {business.detected_pain_points[0] || "None detected"}
+              <strong className="text-slate-300">Top Pain Point:</strong> {business.detected_pain_points?.[0] || "None detected"}
             </p>
           </div>
+
+
         </div>
       </div>
     </Link>
