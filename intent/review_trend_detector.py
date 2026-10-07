@@ -157,6 +157,7 @@ class ReviewTrendDetector:
         business_id: Optional[int] = None,
         previous_rating: Optional[float] = None,
         review_texts: Optional[List[str]] = None,
+        save_snapshot: bool = True,
     ) -> ReviewTrendResult:
         """
         Analyze review data for a business and compute intent signals.
@@ -168,20 +169,23 @@ class ReviewTrendDetector:
             business_id:      Database ID for snapshot lookup/storage.
             previous_rating:  Historical rating snapshot (Phase 2 — optional).
             review_texts:     List of recent review texts (future — optional).
+            save_snapshot:    Whether to persist current snapshot if repo is present.
 
         Returns:
             ReviewTrendResult with review_trend_score.
         """
-        # Fetch historical snapshot from database if repo and business_id are present
+        # Fetch historical snapshot from database if repo and business_id are present and previous_rating was not pre-supplied
         if business_id is not None and self.repo is not None:
-            prev_snapshot = self.repo.get_latest_review_snapshot(business_id)
-            if prev_snapshot:
-                previous_rating = float(prev_snapshot["rating"]) if prev_snapshot["rating"] is not None else None
-                logger.info(f"[{business_name}] Found historical snapshot in DB: rating={previous_rating}")
+            if previous_rating is None:
+                prev_snapshot = self.repo.get_latest_review_snapshot(business_id)
+                if prev_snapshot:
+                    previous_rating = float(prev_snapshot["rating"]) if prev_snapshot["rating"] is not None else None
+                    logger.info(f"[{business_name}] Found historical snapshot in DB: rating={previous_rating}")
             
-            # Save the current state as a new snapshot in the DB for future runs
-            self.repo.insert_review_snapshot(business_id, current_rating, review_count)
-            logger.info(f"[{business_name}] Saved current review snapshot to database.")
+            # Save the current state as a new snapshot in the DB for future runs if requested
+            if save_snapshot:
+                self.repo.insert_review_snapshot(business_id, current_rating, review_count)
+                logger.info(f"[{business_name}] Saved current review snapshot to database.")
 
         result = ReviewTrendResult(
             business_name=business_name,

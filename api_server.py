@@ -335,9 +335,7 @@ class BatchDeleteRequest(BaseModel):
 @app.delete("/api/businesses")
 def delete_all_businesses():
     try:
-        with db_manager.get_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute("DELETE FROM businesses;")
+        repo.delete_all_businesses()
         log_history.clear()
         return {"success": True, "message": "Database cleared successfully."}
     except Exception as e:
@@ -349,17 +347,13 @@ def delete_single_business(business_id: str):
     """Deletes a single business by ID."""
     try:
         numeric_id = int(business_id)
-        with db_manager.get_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute("DELETE FROM businesses WHERE id = %s RETURNING id;", (numeric_id,))
-                row = cur.fetchone()
+        repo.delete_business(numeric_id)
         return {"success": True, "id": business_id, "message": "Business deleted successfully."}
     except ValueError:
         # Mock ID or non-integer string — return success so frontend removes seamlessly
         return {"success": True, "id": business_id, "message": "Local item removed."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
 
 
 @app.post("/api/businesses/batch-delete")
@@ -373,10 +367,7 @@ def batch_delete_businesses(req: BatchDeleteRequest):
         if not int_ids:
             return {"success": True, "deleted_count": 0}
 
-        with db_manager.get_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute("DELETE FROM businesses WHERE id = ANY(%s);", (int_ids,))
-                deleted_count = cur.rowcount
+        deleted_count = repo.batch_delete_businesses(int_ids)
         return {"success": True, "deleted_count": deleted_count}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -385,41 +376,15 @@ def batch_delete_businesses(req: BatchDeleteRequest):
 @app.patch("/api/businesses/{business_id}")
 def update_business_field(business_id: int, req: UpdateBusinessRequest):
     """Updates one or more fields of a business."""
-    fields = []
-    params = []
-    
-    if req.business_name is not None:
-        fields.append("business_name = %s")
-        params.append(req.business_name)
-    if req.category is not None:
-        fields.append("category = %s")
-        params.append(req.category)
-    if req.phone is not None:
-        fields.append("phone = %s")
-        params.append(req.phone)
-    if req.website is not None:
-        fields.append("website = %s")
-        params.append(req.website)
-    if req.address is not None:
-        fields.append("address = %s")
-        params.append(req.address)
-    if req.outreach_status is not None:
-        fields.append("outreach_status = %s")
-        params.append(req.outreach_status)
-
-    if not fields:
+    updates = req.model_dump(exclude_none=True) if hasattr(req, "model_dump") else req.dict(exclude_none=True)
+    if not updates:
         return {"success": True, "message": "No fields to update."}
 
-    params.append(business_id)
-    query_sql = f"UPDATE businesses SET {', '.join(fields)} WHERE id = %s RETURNING id;"
     try:
-        with db_manager.get_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute(query_sql, tuple(params))
-                row = cur.fetchone()
-                if not row:
-                    raise HTTPException(status_code=404, detail="Business not found")
-        return {"success": True, "id": business_id, "updated": req.dict(exclude_none=True)}
+        updated = repo.update_business(business_id, updates)
+        if not updated:
+            raise HTTPException(status_code=404, detail="Business not found")
+        return {"success": True, "id": business_id, "updated": updates}
     except HTTPException:
         raise
     except Exception as e:

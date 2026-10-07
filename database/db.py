@@ -614,6 +614,68 @@ class ScraperRepository:
             logger.error(f"Error updating outreach status for business {business_id}: {e}")
             return False
 
+    def delete_all_businesses(self) -> bool:
+        """Deletes all businesses from the database (cascades to related tables)."""
+        query = "DELETE FROM businesses;"
+        try:
+            with self.db.get_connection() as conn:
+                with conn.cursor() as cur:
+                    cur.execute(query)
+            return True
+        except Exception as e:
+            logger.error(f"Error deleting all businesses: {e}")
+            raise
+
+    def delete_business(self, business_id: int) -> bool:
+        """Deletes a single business by ID."""
+        query = "DELETE FROM businesses WHERE id = %s RETURNING id;"
+        try:
+            with self.db.get_connection() as conn:
+                with conn.cursor() as cur:
+                    cur.execute(query, (business_id,))
+                    row = cur.fetchone()
+            return row is not None
+        except Exception as e:
+            logger.error(f"Error deleting business {business_id}: {e}")
+            raise
+
+    def batch_delete_businesses(self, business_ids: List[int]) -> int:
+        """Deletes multiple businesses by ID list and returns the deleted row count."""
+        if not business_ids:
+            return 0
+        query = "DELETE FROM businesses WHERE id = ANY(%s);"
+        try:
+            with self.db.get_connection() as conn:
+                with conn.cursor() as cur:
+                    cur.execute(query, (business_ids,))
+                    return cur.rowcount
+        except Exception as e:
+            logger.error(f"Error batch deleting businesses {business_ids}: {e}")
+            raise
+
+    def update_business(self, business_id: int, fields: Dict[str, Any]) -> bool:
+        """Updates specified fields for a business. Returns True if record existed and was updated."""
+        ALLOWED_FIELDS = {"business_name", "category", "phone", "website", "address", "outreach_status"}
+        valid_updates = {k: v for k, v in fields.items() if k in ALLOWED_FIELDS and v is not None}
+        if not valid_updates:
+            return False
+
+        set_clauses = [f"{k} = %s" for k in valid_updates.keys()]
+        set_clauses.append("updated_at = CURRENT_TIMESTAMP")
+        params = list(valid_updates.values())
+        params.append(business_id)
+
+        query = f"UPDATE businesses SET {', '.join(set_clauses)} WHERE id = %s RETURNING id;"
+        try:
+            with self.db.get_connection() as conn:
+                with conn.cursor() as cur:
+                    cur.execute(query, tuple(params))
+                    row = cur.fetchone()
+            return row is not None
+        except Exception as e:
+            logger.error(f"Error updating business {business_id}: {e}")
+            raise
+
     def find_candidate_matches(self, data: Dict[str, Any], limit: int = 50) -> List[Dict[str, Any]]:
         """Finds potential matching businesses for entity resolution based on phone, website domain, or name similarity.
         

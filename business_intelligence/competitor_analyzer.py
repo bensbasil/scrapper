@@ -20,7 +20,7 @@ class CompetitorAnalysisResult:
     competitor_gap_summary: str
 
 class CompetitorAnalyzer:
-    def __init__(self, repo: Any):
+    def __init__(self, repo: Optional[Any] = None):
         self.repo = repo
 
     def _extract_city(self, address: Optional[str]) -> str:
@@ -37,7 +37,15 @@ class CompetitorAnalyzer:
             return parts[-2].strip()
         return ""
 
-    def analyze(self, business_id: int, business_name: str, category: Optional[str], address: Optional[str], opportunity_score: float) -> CompetitorAnalysisResult:
+    def analyze(
+        self,
+        business_id: int,
+        business_name: str,
+        category: Optional[str],
+        address: Optional[str],
+        opportunity_score: float,
+        raw_competitors: Optional[List[Dict[str, Any]]] = None,
+    ) -> CompetitorAnalysisResult:
         logger.info(f"[{business_name}] Analyzing competitor gaps in local area...")
         
         city = self._extract_city(address)
@@ -48,8 +56,12 @@ class CompetitorAnalyzer:
                 competitor_gap_summary="Could not run local competitor search: category or city location details are missing."
             )
 
-        # Query database for other businesses in same category and city
-        raw_competitors = self.repo.get_local_competitors(city, category, business_id)
+        # Query database for other businesses in same category and city if not pre-supplied
+        if raw_competitors is None:
+            if self.repo is not None:
+                raw_competitors = self.repo.get_local_competitors(city, category, business_id)
+            else:
+                raw_competitors = []
         
         comparisons: List[CompetitorComparison] = []
         for rc in raw_competitors:
