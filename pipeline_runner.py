@@ -64,6 +64,9 @@ try:
     from business_intelligence.trust_signal_detector import TrustSignalDetector
     from business_intelligence.opportunity_mapper import OpportunityMapper
     from business_intelligence.business_health_score import BusinessHealthScore
+    from ai.context_builder import ProspectContextBuilder
+    from ai.opportunity_reasoner import OpportunityReasoner
+    from ai.outreach_reasoner import OutreachReasoner
 except ImportError as e:
     logger.error(f"Failed to import modules. Ensure you run this script from the project root. Error: {e}")
     sys.exit(1)
@@ -130,6 +133,9 @@ class MVPPipeline:
         self.trust_signal_detector = TrustSignalDetector()
         self.opportunity_mapper = OpportunityMapper()
         self.business_health_score = BusinessHealthScore()
+        self.context_builder = ProspectContextBuilder()
+        self.opportunity_reasoner = OpportunityReasoner()
+        self.outreach_reasoner = OutreachReasoner()
         
         # Ensure database tables exist before we start processing
         logger.info("Verifying database schema...")
@@ -269,17 +275,16 @@ class MVPPipeline:
                 duration_ms=(time.time() - start_t) * 1000.0
             ))
 
-            # Step 4: Generate Human-Readable Report
-            start_t = time.time()
-            report_obj = self.report_generator.generate_report(analysis_dict, score_dict)
-            report_dict = asdict(report_obj)
-            self.repo.insert_business_report(business_id, report_dict)
-            stages_results.append(StageResult(
-                stage="report",
-                success=True,
-                duration_ms=(time.time() - start_t) * 1000.0
-            ))
-            
+            # Initialize enrichment & intelligence dictionaries to safe defaults
+            tech_dict = {}
+            email_dict = {}
+            decision_dict = {}
+            decision_maker_name = None
+            oc_dict = {}
+            social_dict = {}
+            fresh_dict = {}
+            hiring_dict = {}
+
             # Step 6: Tech Stack Detection
             if analysis_obj.website_url:
                 logger.info(f"[{b_name}] Scanning website tech stack for {analysis_obj.website_url}...")
@@ -460,16 +465,78 @@ class MVPPipeline:
             health_dict["opportunity_reasoning"] = opt_map_obj.opportunity_reasoning
             self.repo.insert_business_health_profile(business_id, health_dict)
 
-            # Step 5: Generate Outreach Drafts (moved to run after Business Intelligence Opportunity Mapping)
-            # Inject found decision-maker name & opportunity reasoning into analysis context for personalization
+            # Assemble unified ProspectContext
+            logger.info(f"[{b_name}] Assembling unified Prospect Evidence Context...")
+            prospect_context = self.context_builder.build_context(
+                business_data=b_dict,
+                analysis_data=analysis_dict,
+                seo_data=seo_dict,
+                scoring_data=score_dict,
+                tech_data=tech_dict,
+                email_data=email_dict,
+                decision_data=decision_dict,
+                social_data=social_dict,
+                registry_data=oc_dict,
+                freshness_data=fresh_dict,
+                hiring_data=hiring_dict,
+                review_trend_data=review_dict,
+                intent_data=intent_dict,
+                conversion_data=conversion_dict,
+                review_mine_data=asdict(review_mine_obj),
+                pain_data=pain_dict,
+                competitor_data=comp_dict,
+                trust_data=trust_dict,
+                health_data=health_dict,
+                opportunity_data=asdict(opt_map_obj),
+            )
+
+            # Step 14: AI Opportunity Reasoning
+            start_t = time.time()
+            logger.info(f"[{b_name}] Synthesizing AI Opportunity Reasoning...")
+            opportunity_analysis = self.opportunity_reasoner.reason(prospect_context)
+            prospect_context.opportunity_analysis = opportunity_analysis
+            stages_results.append(StageResult(
+                stage="opportunity_reasoning",
+                success=True,
+                duration_ms=(time.time() - start_t) * 1000.0
+            ))
+
+            # Step 14b: AI Outreach Strategy Reasoning
+            start_t = time.time()
+            logger.info(f"[{b_name}] Synthesizing AI Outreach Strategy Reasoning...")
+            outreach_strategy = self.outreach_reasoner.reason(prospect_context, opportunity_analysis)
+            prospect_context.outreach_strategy = outreach_strategy
+            stages_results.append(StageResult(
+                stage="outreach_reasoning",
+                success=True,
+                duration_ms=(time.time() - start_t) * 1000.0
+            ))
+
+            # Step 15: Generate Outreach Drafts (consuming rich ProspectContext & OutreachStrategy)
             start_t = time.time()
             analysis_dict["decision_maker_name"] = decision_maker_name
-            analysis_dict["opportunity_reasoning"] = opt_map_obj.opportunity_reasoning
-            outreach_obj = self.outreach_generator.generate_outreach(score_dict, analysis_dict)
+            analysis_dict["opportunity_reasoning"] = opportunity_analysis.executive_diagnosis
+            outreach_obj = self.outreach_generator.generate_outreach(
+                score_dict,
+                analysis_dict,
+                prospect_context=prospect_context,
+                outreach_strategy=outreach_strategy,
+            )
             outreach_dict = asdict(outreach_obj)
             self.repo.insert_outreach_draft(business_id, outreach_dict)
             stages_results.append(StageResult(
                 stage="outreach",
+                success=True,
+                duration_ms=(time.time() - start_t) * 1000.0
+            ))
+
+            # Step 16: Generate Human-Readable Report
+            start_t = time.time()
+            report_obj = self.report_generator.generate_report(analysis_dict, score_dict)
+            report_dict = asdict(report_obj)
+            self.repo.insert_business_report(business_id, report_dict)
+            stages_results.append(StageResult(
+                stage="report",
                 success=True,
                 duration_ms=(time.time() - start_t) * 1000.0
             ))

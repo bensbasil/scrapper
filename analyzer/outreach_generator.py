@@ -4,7 +4,6 @@ import os
 from pathlib import Path
 from dataclasses import dataclass, asdict
 from typing import List, Dict, Any, Optional
-import requests
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -16,6 +15,9 @@ load_dotenv()
 # 1. Structured Logging
 # ---------------------------------------------------------
 from scraper.utils.logger import get_scraper_logger
+from ai.client import LLMClient
+from ai.config import LLMConfig
+from schemas.ai import OutreachDraftResponse
 
 logger = get_scraper_logger(__name__)
 
@@ -38,97 +40,28 @@ class OutreachDrafts:
 class OutreachGenerator:
     """
     Generates non-spammy, highly contextual outreach drafts.
-    Uses Google's Gemini API or OpenAI API when available, falling back to rule-based templates otherwise.
+    Uses LLMClient (Gemini/OpenAI) when available, falling back to rule-based templates otherwise.
     """
+
+    def __init__(self, llm_client: Optional[LLMClient] = None):
+        self.llm_client = llm_client or LLMClient()
     
     def _generate_via_gemini(self, prompt: str, api_key: str) -> Optional[Dict[str, str]]:
-        """Calls Gemini API using structured JSON output to generate outreach drafts."""
-        model = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
-        headers = {
-            "Content-Type": "application/json"
-        }
-        
-        # Request JSON structured output
-        payload = {
-            "contents": [
-                {
-                    "parts": [
-                        {
-                            "text": prompt + "\n\nProvide the response strictly in JSON format as specified."
-                        }
-                    ]
-                }
-            ],
-            "generationConfig": {
-                "responseMimeType": "application/json",
-                "responseSchema": {
-                    "type": "OBJECT",
-                    "properties": {
-                        "cold_email_draft": {
-                            "type": "STRING",
-                            "description": "Personalized cold email under 120 words."
-                        },
-                        "whatsapp_draft": {
-                            "type": "STRING",
-                            "description": "Short WhatsApp message under 50 words."
-                        }
-                    },
-                    "required": ["cold_email_draft", "whatsapp_draft"]
-                }
-            }
-        }
-        
-        try:
-            logger.info(f"Sending request to Gemini API (model: {model})...")
-            response = requests.post(url, headers=headers, json=payload, timeout=12)
-            if response.status_code == 200:
-                res_data = response.json()
-                text_content = res_data["candidates"][0]["content"]["parts"][0]["text"]
-                parsed = json.loads(text_content)
-                if "cold_email_draft" in parsed and "whatsapp_draft" in parsed:
-                    return parsed
-                else:
-                    logger.warning("Gemini JSON response is missing required fields.")
-            else:
-                logger.warning(f"Gemini API returned status code {response.status_code}: {response.text}")
-        except Exception as e:
-            logger.error(f"Failed to generate outreach via Gemini API: {e}")
-        
+        """Deprecated compatibility method: calls Gemini API via LLMClient."""
+        config = LLMConfig(provider="gemini", api_key=api_key, model=os.getenv("GEMINI_MODEL", "gemini-1.5-flash"))
+        client = LLMClient(config=config)
+        result = client.generate_structured_safe(prompt, OutreachDraftResponse)
+        if result:
+            return result.model_dump()
         return None
 
     def _generate_via_openai(self, prompt: str, api_key: str) -> Optional[Dict[str, str]]:
-        """Calls OpenAI Chat Completion API to generate structured JSON outreach drafts."""
-        url = "https://api.openai.com/v1/chat/completions"
-        headers = {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json"
-        }
-        model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
-        payload = {
-            "model": model,
-            "response_format": {"type": "json_object"},
-            "messages": [
-                {
-                    "role": "system",
-                    "content": "You are a sales copywriter. Output JSON containing keys 'cold_email_draft' and 'whatsapp_draft'."
-                },
-                {"role": "user", "content": prompt}
-            ]
-        }
-        try:
-            logger.info(f"Sending request to OpenAI API (model: {model})...")
-            response = requests.post(url, headers=headers, json=payload, timeout=12)
-            if response.status_code == 200:
-                res_data = response.json()
-                text_content = res_data["choices"][0]["message"]["content"]
-                parsed = json.loads(text_content)
-                if "cold_email_draft" in parsed and "whatsapp_draft" in parsed:
-                    return parsed
-            else:
-                logger.warning(f"OpenAI API returned status code {response.status_code}: {response.text}")
-        except Exception as e:
-            logger.error(f"Failed to generate outreach via OpenAI API: {e}")
+        """Deprecated compatibility method: calls OpenAI API via LLMClient."""
+        config = LLMConfig(provider="openai", api_key=api_key, model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"))
+        client = LLMClient(config=config)
+        result = client.generate_structured_safe(prompt, OutreachDraftResponse)
+        if result:
+            return result.model_dump()
         return None
 
     def _generate_pain_point_positioning(self, pain_points: List[str], services: List[str]) -> str:
@@ -202,10 +135,11 @@ Best,
             
         return f"{salutation} I was just looking at your website and noticed an issue with {primary_pain.lower()}. It might be costing you some traffic. Mind if I send a quick screenshot of how to fix it?"
 
-    def _generate_ai_prompt(self, b_name: str, score: float, pain_points: List[str], services: List[str], contact_name: str = None, opp_reasoning: str = None) -> str:
+    def _generate_ai_prompt(self, b_name: str, score: float, pain_points: List[str], services: List[str], contact_name: str = None, opp_reasoning: str = None, additional_context: str = None) -> str:
         """Generates the structured prompt that can be sent to OpenAI/Anthropic later."""
         contact_line = f"- Contact Decision-Maker: {contact_name}" if contact_name else "- Contact Decision-Maker: Not found (use generic salutation)"
         reasoning_line = f"- Opportunity Reasoning: {opp_reasoning}" if opp_reasoning else ""
+        extra_line = f"\n- Additional Evidence Context:\n{additional_context}" if additional_context else ""
         return f"""You are an expert, consultative B2B sales copywriter. 
 Write a highly personalized, non-spammy cold email to '{b_name}'.
 
@@ -214,7 +148,7 @@ Context:
 - Key Pain Points Detected: {', '.join(pain_points)}
 - Suggested Services to Pitch: {', '.join(services)}
 {contact_line}
-{reasoning_line}
+{reasoning_line}{extra_line}
 
 Rules:
 1. Do not use fake statistics or hyperbolic claims.
@@ -222,11 +156,19 @@ Rules:
 3. Keep it under 100 words.
 4. End with a low-friction call to action (e.g., offering a free 2-minute audit video)."""
 
-    def generate_outreach(self, score_data: Dict[str, Any], analysis_data: Dict[str, Any] = {}) -> OutreachDrafts:
+    def generate_outreach(
+        self,
+        score_data: Dict[str, Any],
+        analysis_data: Dict[str, Any] = {},
+        prospect_context: Optional[Any] = None,
+        outreach_strategy: Optional[Any] = None,
+    ) -> OutreachDrafts:
         """
         Main orchestration function to generate all outreach materials.
         Takes data from scoring_engine and (optionally) basic scraper/analysis data.
+        If OutreachStrategy is provided (or in prospect_context), uses its structured angles and copy.
         If GEMINI_API_KEY is present in env, generates using Gemini; otherwise, falls back to static templates.
+        Optionally accepts ProspectContext to enrich prompt and angles with full intelligence.
         """
         b_name = score_data.get("business_name", "your business")
         category = analysis_data.get("category", "")
@@ -237,9 +179,14 @@ Rules:
         primary_pain = pain_points[0] if pain_points else "technical optimization opportunities"
         primary_service = services[0] if services else "digital consulting"
 
-        # Extract decision maker name from score_data or analysis_data
+        # Extract decision maker name from score_data, analysis_data, or prospect_context
         contact_name = analysis_data.get("decision_maker_name") or score_data.get("decision_maker_name")
+        if not contact_name and prospect_context and getattr(prospect_context, "enrichment", None):
+            contact_name = getattr(prospect_context.enrichment, "decision_maker_name", None)
+
         opp_reasoning = analysis_data.get("opportunity_reasoning")
+        if not opp_reasoning and prospect_context and getattr(prospect_context, "opportunity", None):
+            opp_reasoning = getattr(prospect_context.opportunity, "opportunity_reasoning", None)
 
         # 1. Strategy & Positioning
         positioning = self._generate_pain_point_positioning(pain_points, services)
@@ -253,17 +200,51 @@ Rules:
         else:
             angles.append("The 'Trust & Security' angle: Focus on technical errors making the business look unprofessional.")
 
-        # 2. AI Readiness (Always generate the template for database record)
-        ai_prompt = self._generate_ai_prompt(b_name, opp_score, pain_points, services, contact_name, opp_reasoning)
+        # Enrich angles from prospect_context if available
+        additional_summary = None
+        if prospect_context:
+            intel = getattr(prospect_context, "intelligence", None)
+            if intel and getattr(intel, "recurring_complaints", None):
+                angles.append(f"The 'Customer Voice' angle: Address verified customer complaints about {intel.recurring_complaints[0]}.")
+            if intel and getattr(intel, "competitor_gap_summary", None):
+                angles.append(f"The 'Competitor Pressure' angle: {intel.competitor_gap_summary}")
+            intent = getattr(prospect_context, "intent", None)
+            if intent and getattr(intent, "top_intent_signals", None):
+                angles.append(f"The 'Urgent Intent' angle: {intent.top_intent_signals[0]}")
+            if hasattr(prospect_context, "to_token_efficient_summary"):
+                additional_summary = prospect_context.to_token_efficient_summary()
 
-        # 3. Actionable Drafts (Gemini with Rule-based fallback)
+        # 2. AI Readiness (Always generate the template for database record)
+        ai_prompt = self._generate_ai_prompt(
+            b_name,
+            opp_score,
+            pain_points,
+            services,
+            contact_name,
+            opp_reasoning,
+            additional_context=additional_summary,
+        )
+
+        # 3. Actionable Drafts (OutreachStrategy / LLMClient / Rule-based fallback)
         email_draft = None
         wa_draft = None
-        
-        api_key = os.environ.get("GEMINI_API_KEY")
-        if api_key:
-            logger.info(f"[{b_name}] GEMINI_API_KEY found. Generating personalized outreach via AI...")
-            prompt = f"""You are an expert, consultative B2B sales copywriter.
+
+        effective_strategy = outreach_strategy or (
+            getattr(prospect_context, "outreach_strategy", None) if prospect_context else None
+        )
+        if effective_strategy:
+            logger.info(f"[{b_name}] Utilizing provided OutreachStrategy for outreach drafts.")
+            if getattr(effective_strategy, "positioning_summary", None):
+                positioning = effective_strategy.positioning_summary
+            if getattr(effective_strategy, "primary_angle", None) and effective_strategy.primary_angle not in angles:
+                angles.insert(0, effective_strategy.primary_angle)
+            email_draft = getattr(effective_strategy, "cold_email_body", None)
+            wa_draft = getattr(effective_strategy, "whatsapp_message", None)
+
+        if not email_draft or not wa_draft:
+            if self.llm_client.is_available:
+                logger.info(f"[{b_name}] LLM provider '{self.llm_client.config.provider}' available. Generating personalized outreach via AI...")
+                prompt = f"""You are an expert, consultative B2B sales copywriter.
 Write a highly personalized, professional, non-spammy cold email and a WhatsApp message for '{b_name}'.
 
 Context:
@@ -288,41 +269,23 @@ Requirements for WhatsApp Message:
 3. Briefly mention the most critical issue and ask if you can send a mockup or quick explanation.
 4. Must not sound like a broadcast or bulk spam message.
 """
-            gemini_drafts = self._generate_via_gemini(prompt, api_key)
-            if gemini_drafts:
-                email_draft = gemini_drafts.get("cold_email_draft")
-                wa_draft = gemini_drafts.get("whatsapp_draft")
-                logger.info(f"[{b_name}] Successfully generated AI personalized outreach drafts via Gemini.")
-
-        openai_key = os.environ.get("OPENAI_API_KEY")
-        if not email_draft and openai_key:
-            logger.info(f"[{b_name}] OPENAI_API_KEY found. Generating personalized outreach via OpenAI...")
-            prompt = f"""You are an expert, consultative B2B sales copywriter.
-Write a highly personalized, professional, non-spammy cold email and a WhatsApp message for '{b_name}'.
-
-Context:
-- Business Name: {b_name}
-- Industry/Category: {category if category else 'Local Business'}
-- Overall Opportunity Score: {opp_score}/100
-- Key Pain Points Detected: {', '.join(pain_points)}
-- Suggested Services to Pitch: {', '.join(services)}
-- Contact Decision-Maker: {contact_name if contact_name else 'Not found'}
-- Opportunity Analysis / Reasoning: {opp_reasoning if opp_reasoning else 'No detailed reasoning provided.'}
-
-Return JSON with keys 'cold_email_draft' and 'whatsapp_draft'.
-"""
-            openai_drafts = self._generate_via_openai(prompt, openai_key)
-            if openai_drafts:
-                email_draft = openai_drafts.get("cold_email_draft")
-                wa_draft = openai_drafts.get("whatsapp_draft")
-                logger.info(f"[{b_name}] Successfully generated AI personalized outreach drafts via OpenAI.")
-        
-        # If API keys are missing or generation fails, use the rule-based fallback
-        if not email_draft or not wa_draft:
-            if api_key or openai_key:
-                logger.warning(f"[{b_name}] AI generation failed. Falling back to rule-based templates.")
+                system_prompt = "You are an expert sales copywriter. Output JSON containing keys 'cold_email_draft' and 'whatsapp_draft'."
+                ai_result = self.llm_client.generate_structured_safe(
+                    prompt=prompt,
+                    response_model=OutreachDraftResponse,
+                    system_prompt=system_prompt,
+                )
+                if ai_result:
+                    email_draft = ai_result.cold_email_draft
+                    wa_draft = ai_result.whatsapp_draft
+                    logger.info(f"[{b_name}] Successfully generated AI personalized outreach drafts via {self.llm_client.config.provider}.")
+                else:
+                    logger.warning(f"[{b_name}] AI generation failed. Falling back to rule-based templates.")
             else:
                 logger.info(f"[{b_name}] No AI API key found. Using rule-based templates.")
+
+        # If API keys are missing or generation fails, use the rule-based fallback
+        if not email_draft or not wa_draft:
             email_draft = self._generate_cold_email(b_name, category, primary_pain, primary_service, contact_name, opp_reasoning)
             wa_draft = self._generate_whatsapp(b_name, primary_pain, contact_name)
 

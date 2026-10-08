@@ -29,6 +29,17 @@ from schemas.pipeline import (
     PipelineResult,
     StageExecution,
 )
+from schemas.context import (
+    EvidenceItem,
+    ScoreCard,
+    ProspectContext,
+)
+from schemas.ai import (
+    CommercialRecommendation,
+    OpportunityAnalysis,
+    OutreachStrategy,
+    OutreachDraftResponse,
+)
 
 __all__ = [
     "Business",
@@ -44,4 +55,13 @@ __all__ = [
     "OutreachDraft",
     "PipelineResult",
     "StageExecution",
+    "EvidenceItem",
+    "ScoreCard",
+    "ProspectContext",
+    "CommercialRecommendation",
+    "OpportunityAnalysis",
+    "OutreachStrategy",
+    "OutreachDraftResponse",
 ]
+
+
