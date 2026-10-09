@@ -37,6 +37,20 @@ class AuditWebsiteTechCapability:
         name = params.business_name.strip()
         logger.info(f"[Capability:{self.NAME}] Auditing website for '{name}': {url}")
 
+        from scraper.utils.ssrf import validate_url_for_ssrf, SSRFValidationError
+        try:
+            validate_url_for_ssrf(url, resolve_dns=True)
+        except SSRFValidationError as e:
+            logger.warning(f"[Capability:{self.NAME}] SSRF validation failed for '{url}': {e}")
+            return AuditWebsiteTechOutput(
+                business_name=name,
+                website_url=url,
+                is_active=False,
+                has_ssl=False,
+                is_mobile_friendly=False,
+                raw_details={"error": f"SSRF blocked: {e}"}
+            )
+
         w_analyzer = self._website_analyzer
         if w_analyzer is None:
             from scraper.connectors.public_web.company_website import WebsiteAnalyzer

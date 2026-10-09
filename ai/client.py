@@ -45,6 +45,13 @@ def _clean_json_text(text: str) -> str:
     return cleaned
 
 
+def _sanitize_secret(text: str, secret: Optional[str]) -> str:
+    """Scrubs sensitive API keys or credentials from messages and exception strings."""
+    if not secret or not text:
+        return text
+    return text.replace(secret, "[REDACTED]")
+
+
 class LLMClient:
     """
     Provider-agnostic LLM client for structured output generation.
@@ -143,8 +150,11 @@ class LLMClient:
         """Executes content generation via Google Gemini API."""
         model = self.config.model or "gemini-1.5-flash"
         api_key = self.config.api_key
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
-        headers = {"Content-Type": "application/json"}
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+        headers = {
+            "Content-Type": "application/json",
+            "x-goog-api-key": api_key,
+        }
 
         # Inject schema instruction into prompt
         schema_json = json.dumps(response_model.model_json_schema())
@@ -182,28 +192,34 @@ class LLMClient:
                 timeout=self.config.timeout,
             )
         except requests.exceptions.Timeout as e:
-            raise LLMProviderError(f"Gemini API request timed out after {self.config.timeout}s: {e}") from e
+            err_msg = _sanitize_secret(f"Gemini API request timed out after {self.config.timeout}s: {e}", api_key)
+            raise LLMProviderError(err_msg) from e
         except requests.exceptions.RequestException as e:
-            raise LLMProviderError(f"Gemini network connection error: {e}") from e
+            err_msg = _sanitize_secret(f"Gemini network connection error: {e}", api_key)
+            raise LLMProviderError(err_msg) from e
 
         if response.status_code != 200:
+            err_body = _sanitize_secret(response.text, api_key)
             raise LLMProviderError(
-                f"Gemini API returned HTTP {response.status_code}: {response.text}",
+                f"Gemini API returned HTTP {response.status_code}: {err_body}",
                 status_code=response.status_code,
-                response_body=response.text,
+                response_body=err_body,
             )
 
         try:
             res_data = response.json()
             candidates = res_data.get("candidates", [])
             if not candidates:
-                raise LLMResponseParsingError("Gemini response contained no candidates", raw_text=response.text)
+                raise LLMResponseParsingError("Gemini response contained no candidates", raw_text=_sanitize_secret(response.text, api_key))
             parts = candidates[0].get("content", {}).get("parts", [])
             if not parts:
-                raise LLMResponseParsingError("Gemini candidate contained no parts", raw_text=response.text)
+                raise LLMResponseParsingError("Gemini candidate contained no parts", raw_text=_sanitize_secret(response.text, api_key))
             return parts[0].get("text", "")
         except (KeyError, IndexError, ValueError) as e:
-            raise LLMResponseParsingError(f"Failed to extract text from Gemini response: {e}", raw_text=response.text) from e
+            raise LLMResponseParsingError(
+                _sanitize_secret(f"Failed to extract text from Gemini response: {e}", api_key),
+                raw_text=_sanitize_secret(response.text, api_key)
+            ) from e
 
     def _call_openai(
         self,
@@ -219,6 +235,7 @@ class LLMClient:
             "Content-Type": "application/json",
         }
         model = self.config.model or "gpt-4o-mini"
+        api_key = self.config.api_key
 
         schema_json = json.dumps(response_model.model_json_schema())
         sys_message = (
@@ -245,15 +262,18 @@ class LLMClient:
                 timeout=self.config.timeout,
             )
         except requests.exceptions.Timeout as e:
-            raise LLMProviderError(f"OpenAI API request timed out after {self.config.timeout}s: {e}") from e
+            err_msg = _sanitize_secret(f"OpenAI API request timed out after {self.config.timeout}s: {e}", api_key)
+            raise LLMProviderError(err_msg) from e
         except requests.exceptions.RequestException as e:
-            raise LLMProviderError(f"OpenAI network connection error: {e}") from e
+            err_msg = _sanitize_secret(f"OpenAI network connection error: {e}", api_key)
+            raise LLMProviderError(err_msg) from e
 
         if response.status_code != 200:
+            err_body = _sanitize_secret(response.text, api_key)
             raise LLMProviderError(
-                f"OpenAI API returned HTTP {response.status_code}: {response.text}",
+                f"OpenAI API returned HTTP {response.status_code}: {err_body}",
                 status_code=response.status_code,
-                response_body=response.text,
+                response_body=err_body,
             )
 
         try:

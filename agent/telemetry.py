@@ -7,6 +7,7 @@ Does NOT store business intelligence payloads, raw HTML, secrets, or large datab
 """
 
 from enum import Enum
+from collections import deque
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field
@@ -174,17 +175,37 @@ class AgentTelemetrySink:
 class InMemoryTelemetrySink(AgentTelemetrySink):
     """
     Lightweight, in-memory telemetry sink for local testing and inspection.
-    Stores traces in memory without database or external infrastructure dependencies.
+    Stores traces in memory with configurable, deterministic bounded retention limits (Phase 5B).
     """
 
-    def __init__(self):
+    def __init__(self, max_runs: int = 200, max_step_events: int = 2000):
+        self.max_runs = max_runs
+        self.max_step_events = max_step_events
         self._runs: Dict[str, AgentRunTrace] = {}
-        self._step_events: List[CapabilityTraceEvent] = []
+        self._run_order: deque = deque()
+        self._step_events: deque = deque(maxlen=self.max_step_events)
 
     def record_run(self, trace: AgentRunTrace) -> None:
+        """
+        Records an AgentRunTrace passively.
+        Evicts the oldest run trace if max_runs capacity is exceeded.
+        """
+        if trace.run_id in self._runs:
+            self._runs[trace.run_id] = trace
+            return
+
+        while len(self._run_order) >= self.max_runs:
+            oldest_id = self._run_order.popleft()
+            self._runs.pop(oldest_id, None)
+
+        self._run_order.append(trace.run_id)
         self._runs[trace.run_id] = trace
 
     def record_step(self, event: CapabilityTraceEvent) -> None:
+        """
+        Records a step trace event passively.
+        Oldest events are evicted automatically by the bounded deque.
+        """
         self._step_events.append(event)
 
     def get_run(self, run_id: str) -> Optional[AgentRunTrace]:
@@ -199,15 +220,16 @@ class InMemoryTelemetrySink(AgentTelemetrySink):
         prospect_id: Optional[str] = None,
         batch_id: Optional[str] = None
     ) -> List[CapabilityTraceEvent]:
-        events = self._step_events
+        events = list(self._step_events)
         if run_id:
             events = [e for e in events if e.run_id == run_id]
         if prospect_id:
             events = [e for e in events if e.prospect_id == prospect_id]
         if batch_id:
             events = [e for e in events if e.batch_id == batch_id]
-        return list(events)
+        return events
 
     def clear(self) -> None:
         self._runs.clear()
+        self._run_order.clear()
         self._step_events.clear()

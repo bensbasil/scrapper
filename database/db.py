@@ -1,5 +1,8 @@
 import os
 import json
+import time
+import threading
+from urllib.parse import urlparse, urlunparse
 from contextlib import contextmanager
 from typing import Dict, Any, List, Optional
 
@@ -25,41 +28,232 @@ from scraper.utils.logger import get_scraper_logger
 
 logger = get_scraper_logger(__name__)
 
+
+# ---------------------------------------------------------
+# Exceptions & Configuration Helpers (Phase 5C)
+# ---------------------------------------------------------
+
+class DatabaseConfigurationError(Exception):
+    """Raised when required database configuration is missing or invalid."""
+    pass
+
+
+class DatabaseConnectionError(Exception):
+    """Raised when a database connection cannot be established or pool cannot be created."""
+    pass
+
+
+class DatabasePoolTimeoutError(DatabaseConnectionError):
+    """Raised when connection pool acquisition times out under concurrent load."""
+    pass
+
+
+def sanitize_db_url(url: Optional[str]) -> str:
+    """Scrubs sensitive passwords/credentials from database URLs for logging and exceptions."""
+    if not url:
+        return ""
+    try:
+        parsed = urlparse(url)
+        if parsed.password:
+            user = parsed.username or ""
+            netloc = f"{user}:[REDACTED]@{parsed.hostname or ''}"
+            if parsed.port:
+                netloc += f":{parsed.port}"
+            return urlunparse((parsed.scheme, netloc, parsed.path, parsed.params, parsed.query, parsed.fragment))
+        return url
+    except Exception:
+        return "[DATABASE_URL_REDACTED]"
+
+
+def resolve_database_url(db_url: Optional[str] = None) -> str:
+    """
+    Resolves database connection URL from explicit parameter, DATABASE_URL,
+    or DB_* environment variables.
+    Fails closed if configuration is missing, with zero credential leakage.
+    """
+    if db_url and db_url.strip():
+        return db_url.strip()
+
+    env_url = os.getenv("DATABASE_URL")
+    if env_url and env_url.strip():
+        return env_url.strip()
+
+    # Check discrete DB_* environment variables
+    user = os.getenv("DB_USER")
+    password = os.getenv("DB_PASSWORD")
+    host = os.getenv("DB_HOST", "localhost")
+    port = os.getenv("DB_PORT", "5432")
+    dbname = os.getenv("DB_NAME")
+
+    if user and password and dbname:
+        return f"postgresql://{user}:{password}@{host}:{port}/{dbname}"
+
+    raise DatabaseConfigurationError(
+        "Missing required database configuration: 'DATABASE_URL' environment variable is not set."
+    )
+
+
+# ---------------------------------------------------------
+# Bounded Connection Pool (Phase 5C)
+# ---------------------------------------------------------
+
+class BoundedConnectionPool:
+    """
+    Thread-safe connection pool wrapper providing bounded waiting on exhaustion,
+    configurable checkout timeouts, and deterministic connection reclamation.
+    """
+
+    def __init__(
+        self,
+        minconn: int = 1,
+        maxconn: int = 10,
+        dsn: str = "",
+        timeout: float = 10.0,
+        pool_factory=None,
+    ):
+        self.minconn = minconn
+        self.maxconn = maxconn
+        self.dsn = dsn
+        self.timeout = timeout
+        factory = pool_factory or ThreadedConnectionPool
+        self._pool = factory(minconn, maxconn, dsn=dsn)
+        self._lock = threading.Condition(threading.Lock())
+        self._closed = False
+
+    def getconn(self, timeout: Optional[float] = None) -> Any:
+        """
+        Acquires a connection from the pool.
+        If the pool is currently exhausted, waits up to timeout seconds
+        before raising DatabasePoolTimeoutError.
+        """
+        wait_timeout = self.timeout if timeout is None else timeout
+        deadline = time.monotonic() + wait_timeout
+
+        with self._lock:
+            while True:
+                if self._closed:
+                    raise DatabaseConnectionError("Database connection pool has been closed.")
+                try:
+                    conn = self._pool.getconn()
+                    return conn
+                except psycopg2.pool.PoolError:
+                    remaining = deadline - time.monotonic()
+                    if remaining <= 0:
+                        raise DatabasePoolTimeoutError(
+                            f"Database connection pool exhausted. Timed out after {wait_timeout:.1f}s "
+                            f"(configured max {self.maxconn} connections)."
+                        )
+                    self._lock.wait(timeout=min(remaining, 0.2))
+
+    def putconn(self, conn: Any, close: bool = False) -> None:
+        """Releases a connection back to the pool and notifies waiting threads."""
+        with self._lock:
+            if not self._closed:
+                try:
+                    self._pool.putconn(conn, close=close)
+                except Exception as e:
+                    logger.warning(f"Error returning connection to pool: {e}")
+            self._lock.notify()
+
+    def closeall(self) -> None:
+        """Closes all connections in the underlying pool."""
+        with self._lock:
+            self._closed = True
+            try:
+                self._pool.closeall()
+            except Exception:
+                pass
+            self._lock.notify_all()
+
+
 # ---------------------------------------------------------
 # 2. Database Connection Manager
 # ---------------------------------------------------------
+
 class DatabaseManager:
     """
-    Manages PostgreSQL connections via a thread-safe connection pool.
-    Adheres to MVP rules by avoiding heavy ORM frameworks like SQLAlchemy.
-    Uses environment variables for secure connection string passing.
+    Manages PostgreSQL connections via a thread-safe bounded connection pool.
+    Supports lazy initialization so endpoints that do not require database access
+    (e.g. status and agent execution) do not fail when the database is unconfigured.
     """
-    def __init__(self):
-        # Default connection string, override in production via .env
-        self.db_url = os.getenv("DATABASE_URL", "postgresql://postgres:password@localhost:5432/scraper_db")
-        self.pool = None
-        try:
-            self.pool = ThreadedConnectionPool(1, 10, dsn=self.db_url)
-            logger.info("Thread-safe database connection pool initialized.")
-        except Exception as e:
-            logger.error(f"Failed to initialize database connection pool. Ensure PostgreSQL is running. Error: {e}")
+
+    def __init__(
+        self,
+        db_url: Optional[str] = None,
+        min_conn: Optional[int] = None,
+        max_conn: Optional[int] = None,
+        timeout: Optional[float] = None,
+        lazy: bool = True,
+        pool_factory=None,
+    ):
+        self._custom_db_url = db_url
+        self.min_conn = min_conn or int(os.getenv("DB_POOL_MIN", "1"))
+        self.max_conn = max_conn or int(os.getenv("DB_POOL_MAX", "10"))
+        self.timeout = timeout if timeout is not None else float(os.getenv("DB_POOL_TIMEOUT", "10.0"))
+        self._pool_factory = pool_factory
+        self.pool: Optional[BoundedConnectionPool] = None
+        self._init_lock = threading.Lock()
+
+        if not lazy:
+            self._ensure_pool()
+
+    @property
+    def db_url(self) -> str:
+        return resolve_database_url(self._custom_db_url)
+
+    def _ensure_pool(self) -> BoundedConnectionPool:
+        """Lazily initializes the thread-safe connection pool on first checkout."""
+        if self.pool is not None:
+            return self.pool
+
+        with self._init_lock:
+            if self.pool is not None:
+                return self.pool
+
+            url = self.db_url  # raises DatabaseConfigurationError if missing
+            sanitized = sanitize_db_url(url)
+            try:
+                self.pool = BoundedConnectionPool(
+                    minconn=self.min_conn,
+                    maxconn=self.max_conn,
+                    dsn=url,
+                    timeout=self.timeout,
+                    pool_factory=self._pool_factory,
+                )
+                logger.info(
+                    f"Thread-safe bounded database connection pool initialized "
+                    f"({self.min_conn}-{self.max_conn} connections, timeout={self.timeout}s)."
+                )
+                return self.pool
+            except DatabaseConfigurationError:
+                raise
+            except Exception as e:
+                logger.error(f"Failed to initialize database connection pool for {sanitized}: {e}")
+                raise DatabaseConnectionError(f"Could not connect to database at {sanitized}.") from e
 
     @contextmanager
-    def get_connection(self):
+    def get_connection(self, timeout: Optional[float] = None):
         """Context manager for safely acquiring and releasing database connections."""
-        if not self.pool:
-            raise Exception("Database pool is not initialized. Check connection credentials.")
-            
-        conn = self.pool.getconn()
+        pool = self._ensure_pool()
+        conn = pool.getconn(timeout=timeout)
         try:
             yield conn
             conn.commit()
         except Exception as e:
-            conn.rollback()
+            try:
+                conn.rollback()
+            except Exception as rb_err:
+                logger.warning(f"Failed to rollback connection: {rb_err}")
             logger.error(f"Database transaction failed: {e}")
             raise
         finally:
-            self.pool.putconn(conn)
+            pool.putconn(conn)
+
+    def close(self):
+        """Closes all connections in the pool."""
+        if self.pool is not None:
+            self.pool.closeall()
+            self.pool = None
 
     def execute_schema(self, schema_path: str = "database/schema.sql"):
         """Run the schema.sql file to initialize or update tables."""
@@ -1143,7 +1337,7 @@ class ScraperRepository:
 
         except Exception as e:
             logger.error(f"Error fetching dashboard businesses: {e}")
-            return []
+            raise
 
     def get_business_detail_for_dashboard(self, business_id: int) -> Optional[Dict[str, Any]]:
         """Queries full business details with health profiles, competitor gap analysis, and pain points."""
@@ -1249,7 +1443,7 @@ class ScraperRepository:
                     return None
         except Exception as e:
             logger.error(f"Error fetching dashboard business detail for id={business_id}: {e}")
-            return None
+            raise
 
     def get_outreach_drafts(self, business_id: int) -> Optional[Dict[str, Any]]:
         """Returns the most recent outreach drafts for a business."""
@@ -1269,7 +1463,7 @@ class ScraperRepository:
                     return dict(row) if row else None
         except Exception as e:
             logger.error(f"Error fetching outreach drafts for business {business_id}: {e}")
-            return None
+            raise
 
     def get_intent_profile(self, business_id: int) -> Optional[Dict[str, Any]]:
         """Returns the most recent intent profile for a business."""
@@ -1297,7 +1491,7 @@ class ScraperRepository:
                     return d
         except Exception as e:
             logger.error(f"Error fetching intent profile for business {business_id}: {e}")
-            return None
+            raise
 
     def get_pipeline_runs(self, limit: int = 20) -> List[Dict[str, Any]]:
         """Returns recent pipeline run summaries ordered by most recent first."""
@@ -1329,7 +1523,7 @@ class ScraperRepository:
                     return runs
         except Exception as e:
             logger.error(f"Error fetching pipeline runs: {e}")
-            return []
+            raise
 
     def get_pipeline_run_detail(self, run_id: str) -> Optional[Dict[str, Any]]:
         """Returns full detail of a specific pipeline run including per-business records."""
@@ -1361,7 +1555,7 @@ class ScraperRepository:
                     return d
         except Exception as e:
             logger.error(f"Error fetching pipeline run detail for run_id={run_id}: {e}")
-            return None
+            raise
 
 if __name__ == "__main__":
     # Test DB Setup Execution Context

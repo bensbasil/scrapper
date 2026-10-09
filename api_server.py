@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import secrets
 import asyncio
 import subprocess
 import traceback
@@ -16,7 +17,8 @@ if sys.platform == "win32" and sys.version_info < (3, 12):
     except AttributeError:
         pass  # Already default
 
-from fastapi import FastAPI, BackgroundTasks, HTTPException, Query
+from fastapi import FastAPI, BackgroundTasks, HTTPException, Query, Header, Security, Depends, status
+from fastapi.security.api_key import APIKeyHeader
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
@@ -34,9 +36,53 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Lead Intelligence Platform API")
 
+# Phase 5B: API Authentication dependency
+api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+
+
+def verify_api_key(
+    api_key_val: Optional[str] = Security(api_key_header),
+    auth_header: Optional[str] = Header(None, alias="Authorization"),
+) -> str:
+    """
+    Enforces API authentication using API_AUTH_TOKEN from environment.
+    Fails closed if API_AUTH_TOKEN is not configured on the server.
+    Safely compares credentials in constant time using secrets.compare_digest.
+    Never logs incoming API keys or credentials.
+    """
+    configured_token = os.getenv("API_AUTH_TOKEN")
+    if not configured_token or not configured_token.strip():
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication failed: server API authentication token is not configured.",
+        )
+
+    token = api_key_val
+    if not token and auth_header:
+        if auth_header.lower().startswith("bearer "):
+            token = auth_header[7:].strip()
+        else:
+            token = auth_header.strip()
+
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication failed: missing API key. Provide via 'X-API-Key' header.",
+        )
+
+    if not secrets.compare_digest(token, configured_token.strip()):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication failed: invalid API key.",
+        )
+
+    return token
+
+
 # Sig fix #9: CORS allow_origins=["*"] + allow_credentials=True is invalid
 # per the CORS spec — browsers silently reject credentialed cross-origin
 # requests when the origin is a wildcard. Use an explicit allowlist from env.
+# Note: CORS is a browser origin policy, not an authentication boundary.
 _raw_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")
 _allowed_origins = [o.strip() for o in _raw_origins.split(",") if o.strip()]
 
@@ -45,11 +91,41 @@ app.add_middleware(
     allow_origins=_allowed_origins,
     allow_credentials=False,
     allow_methods=["GET", "POST", "DELETE", "PATCH"],
-    allow_headers=["Content-Type", "Authorization"],
+    allow_headers=["Content-Type", "Authorization", "X-API-Key"],
 )
 
-db_manager = DatabaseManager()
-repo = ScraperRepository(db_manager)
+# Database & Repository dependency injection (Phase 5C)
+db_manager = DatabaseManager(lazy=True)
+_repo_instance: Optional[ScraperRepository] = None
+
+
+def get_repository() -> ScraperRepository:
+    """Dependency provider for the scraper repository."""
+    global _repo_instance
+    if _repo_instance is None:
+        _repo_instance = ScraperRepository(db_manager)
+    return _repo_instance
+
+
+def set_repository(custom_repo: Optional[ScraperRepository]) -> None:
+    """Dependency override helper for testing and isolation."""
+    global _repo_instance
+    _repo_instance = custom_repo
+
+
+repo = get_repository()
+
+
+def _resolve_repo(repo_dep: Any) -> ScraperRepository:
+    """
+    Resolves repository dependency. Falls back to module repo if called directly
+    without FastAPI dependency injection runner (e.g. legacy unit test invocation).
+    """
+    from fastapi.params import Depends
+    if repo_dep is None or isinstance(repo_dep, Depends):
+        return repo
+    return repo_dep
+
 
 # Significant fix #5: bounded deque buffer (O(1) pops) & concurrency lock
 log_history: deque = deque(maxlen=500)
@@ -273,8 +349,11 @@ def is_scraper_running() -> bool:
 
 
 @app.get("/api/status")
-def get_scraper_status():
-    """Returns the current status of the scraper pipeline."""
+def get_status():
+    """
+    Public health/status endpoint returning pipeline execution state.
+    Intentionally unauthenticated for health checks, heartbeat probes, and load balancers.
+    """
     running = is_scraper_running()
     return {"success": True, "is_running": running, "running_process": running}
 
@@ -296,51 +375,63 @@ async def shutdown_event():
 
 
 # ------------------------------------------------------------------
-# Business Endpoints
+# Business Endpoints (Protected)
 # ------------------------------------------------------------------
 
-@app.get("/api/businesses")
-def get_businesses(limit: Optional[int] = Query(None, ge=1, le=1000), offset: int = Query(0, ge=0)):
+@app.get("/api/businesses", dependencies=[Depends(verify_api_key)])
+def get_businesses(
+    limit: Optional[int] = Query(None, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+    repo_dep: ScraperRepository = Depends(get_repository),
+):
     """Returns processed businesses list for dashboard with optional pagination."""
+    active_repo = _resolve_repo(repo_dep)
     try:
-        biz_list = repo.get_businesses_for_dashboard(limit=limit, offset=offset)
+        biz_list = active_repo.get_businesses_for_dashboard(limit=limit, offset=offset)
         return {"success": True, "businesses": biz_list, "limit": limit, "offset": offset}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"[API] Error in get_businesses: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="An internal error occurred while retrieving businesses.")
 
 
-@app.get("/api/businesses/{business_id}")
-def get_business_detail(business_id: int):
+@app.get("/api/businesses/{business_id}", dependencies=[Depends(verify_api_key)])
+def get_business_detail(business_id: int, repo_dep: ScraperRepository = Depends(get_repository)):
     """Returns full enriched detail for a single business."""
+    active_repo = _resolve_repo(repo_dep)
     try:
-        detail = repo.get_business_detail_for_dashboard(business_id)
+        detail = active_repo.get_business_detail_for_dashboard(business_id)
         if not detail:
             raise HTTPException(status_code=404, detail="Business not found")
         return {"success": True, "business": detail}
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"[API] Error in get_business_detail for id={business_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="An internal error occurred while retrieving business details.")
 
 
-@app.get("/api/businesses/{business_id}/outreach")
-def get_outreach_drafts(business_id: int):
+@app.get("/api/businesses/{business_id}/outreach", dependencies=[Depends(verify_api_key)])
+def get_outreach_drafts(business_id: int, repo_dep: ScraperRepository = Depends(get_repository)):
     """Critical fix #2: Encapsulated repo call instead of inline SQL."""
+    active_repo = _resolve_repo(repo_dep)
     try:
-        outreach = repo.get_outreach_drafts(business_id)
+        outreach = active_repo.get_outreach_drafts(business_id)
         return {"success": True, "outreach": outreach}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"[API] Error in get_outreach_drafts for id={business_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="An internal error occurred while retrieving outreach drafts.")
 
 
-@app.get("/api/businesses/{business_id}/intent")
-def get_intent_profile(business_id: int):
+@app.get("/api/businesses/{business_id}/intent", dependencies=[Depends(verify_api_key)])
+def get_intent_profile(business_id: int, repo_dep: ScraperRepository = Depends(get_repository)):
     """Critical fix #2: Encapsulated repo call instead of inline SQL."""
+    active_repo = _resolve_repo(repo_dep)
     try:
-        intent = repo.get_intent_profile(business_id)
+        intent = active_repo.get_intent_profile(business_id)
         return {"success": True, "intent": intent}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"[API] Error in get_intent_profile for id={business_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="An internal error occurred while retrieving intent profile.")
 
 
 class UpdateBusinessRequest(BaseModel):
@@ -356,71 +447,79 @@ class BatchDeleteRequest(BaseModel):
     ids: List[str]
 
 
-@app.delete("/api/businesses")
-def delete_all_businesses():
+@app.delete("/api/businesses", dependencies=[Depends(verify_api_key)])
+def delete_all_businesses(repo_dep: ScraperRepository = Depends(get_repository)):
+    active_repo = _resolve_repo(repo_dep)
     try:
-        repo.delete_all_businesses()
+        active_repo.delete_all_businesses()
         log_history.clear()
         return {"success": True, "message": "Database cleared successfully."}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"[API] Error in delete_all_businesses: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="An internal error occurred while clearing businesses.")
 
 
-@app.delete("/api/businesses/{business_id}")
-def delete_single_business(business_id: str):
+@app.delete("/api/businesses/{business_id}", dependencies=[Depends(verify_api_key)])
+def delete_single_business(business_id: str, repo_dep: ScraperRepository = Depends(get_repository)):
     """Deletes a single business by ID."""
+    active_repo = _resolve_repo(repo_dep)
     try:
         numeric_id = int(business_id)
-        repo.delete_business(numeric_id)
+        active_repo.delete_business(numeric_id)
         return {"success": True, "id": business_id, "message": "Business deleted successfully."}
     except ValueError:
         # Mock ID or non-integer string — return success so frontend removes seamlessly
         return {"success": True, "id": business_id, "message": "Local item removed."}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"[API] Error in delete_single_business for id={business_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="An internal error occurred while deleting business.")
 
 
-@app.post("/api/businesses/batch-delete")
-def batch_delete_businesses(req: BatchDeleteRequest):
+@app.post("/api/businesses/batch-delete", dependencies=[Depends(verify_api_key)])
+def batch_delete_businesses(req: BatchDeleteRequest, repo_dep: ScraperRepository = Depends(get_repository)):
     """Deletes multiple businesses by list of string IDs."""
     if not req.ids:
         return {"success": True, "deleted_count": 0}
+    active_repo = _resolve_repo(repo_dep)
     try:
         # Convert IDs to integers safely
         int_ids = [int(i) for i in req.ids if i.isdigit()]
         if not int_ids:
             return {"success": True, "deleted_count": 0}
 
-        deleted_count = repo.batch_delete_businesses(int_ids)
+        deleted_count = active_repo.batch_delete_businesses(int_ids)
         return {"success": True, "deleted_count": deleted_count}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"[API] Error in batch_delete_businesses: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="An internal error occurred while batch deleting businesses.")
 
 
-@app.patch("/api/businesses/{business_id}")
-def update_business_field(business_id: int, req: UpdateBusinessRequest):
+@app.patch("/api/businesses/{business_id}", dependencies=[Depends(verify_api_key)])
+def update_business_field(business_id: int, req: UpdateBusinessRequest, repo_dep: ScraperRepository = Depends(get_repository)):
     """Updates one or more fields of a business."""
     updates = req.model_dump(exclude_none=True) if hasattr(req, "model_dump") else req.dict(exclude_none=True)
     if not updates:
         return {"success": True, "message": "No fields to update."}
 
+    active_repo = _resolve_repo(repo_dep)
     try:
-        updated = repo.update_business(business_id, updates)
+        updated = active_repo.update_business(business_id, updates)
         if not updated:
             raise HTTPException(status_code=404, detail="Business not found")
         return {"success": True, "id": business_id, "updated": updates}
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"[API] Error in update_business_field for id={business_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="An internal error occurred while updating business.")
 
 
 
 # ------------------------------------------------------------------
-# Scraping Endpoints
+# Scraping Endpoints (Protected)
 # ------------------------------------------------------------------
 
-@app.post("/api/scrape")
+@app.post("/api/scrape", dependencies=[Depends(verify_api_key)])
 async def trigger_scrape(req: ScrapeRequest, background_tasks: BackgroundTasks):
     """Critical fix #1: Lock-protected scrape trigger prevents process collision."""
     async with process_lock:
@@ -452,7 +551,7 @@ async def trigger_scrape(req: ScrapeRequest, background_tasks: BackgroundTasks):
         return {"success": True, "message": f"Scraper started successfully in background (source: {source})."}
 
 
-@app.post("/api/stop")
+@app.post("/api/stop", dependencies=[Depends(verify_api_key)])
 async def stop_scraper():
     """Terminates active running scraper process safely."""
     global running_process
@@ -470,12 +569,12 @@ async def stop_scraper():
             running_process = None
             return {"success": True, "message": "Scraper process terminated successfully."}
         except Exception as e:
-            logger.error(f"Error terminating process: {e}")
-            return {"success": False, "message": f"Error stopping scraper: {e}"}
+            logger.error(f"Error terminating process: {e}", exc_info=True)
+            return {"success": False, "message": "An error occurred while stopping the scraper process."}
 
 
 
-@app.post("/api/recrawl")
+@app.post("/api/recrawl", dependencies=[Depends(verify_api_key)])
 async def trigger_recrawl(background_tasks: BackgroundTasks, limit: int = Query(10, ge=1, le=200)):
     """Critical fix #1: Lock-protected recrawl trigger."""
     async with process_lock:
@@ -489,38 +588,42 @@ async def trigger_recrawl(background_tasks: BackgroundTasks, limit: int = Query(
 
 
 # ------------------------------------------------------------------
-# Pipeline Run History Endpoints
+# Pipeline Run History Endpoints (Protected)
 # ------------------------------------------------------------------
 
-@app.get("/api/runs")
-def get_pipeline_runs(limit: int = 20):
+@app.get("/api/runs", dependencies=[Depends(verify_api_key)])
+def get_pipeline_runs(limit: int = 20, repo_dep: ScraperRepository = Depends(get_repository)):
     """Critical fix #2: Encapsulated repo query for run history."""
+    active_repo = _resolve_repo(repo_dep)
     try:
-        runs = repo.get_pipeline_runs(limit=limit)
+        runs = active_repo.get_pipeline_runs(limit=limit)
         return {"success": True, "runs": runs}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error retrieving pipeline runs: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="An internal error occurred while retrieving pipeline runs.")
 
 
-@app.get("/api/runs/{run_id}")
-def get_pipeline_run_detail(run_id: str):
+@app.get("/api/runs/{run_id}", dependencies=[Depends(verify_api_key)])
+def get_pipeline_run_detail(run_id: str, repo_dep: ScraperRepository = Depends(get_repository)):
     """Critical fix #2: Encapsulated repo query for run detail."""
+    active_repo = _resolve_repo(repo_dep)
     try:
-        run = repo.get_pipeline_run_detail(run_id)
+        run = active_repo.get_pipeline_run_detail(run_id)
         if not run:
             raise HTTPException(status_code=404, detail="Run not found")
         return {"success": True, "run": run}
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error retrieving pipeline run detail: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="An internal error occurred while retrieving run details.")
 
 
 # ------------------------------------------------------------------
-# Log Streaming & Status
+# Log Streaming (Protected)
 # ------------------------------------------------------------------
 
-@app.get("/api/logs")
+@app.get("/api/logs", dependencies=[Depends(verify_api_key)])
 async def stream_logs():
     async def log_event_generator():
         queue = asyncio.Queue(maxsize=200)
@@ -542,18 +645,12 @@ async def stream_logs():
     return StreamingResponse(log_event_generator(), media_type="text/event-stream")
 
 
-@app.get("/api/status")
-def get_status():
-    """Returns whether the scraper is currently running."""
-    return {"is_running": is_scraper_running()}
-
-
 # ------------------------------------------------------------------
-# Autonomous Agent Endpoints (Phase 4E)
+# Autonomous Agent Endpoints (Phase 4E, Protected)
 # ------------------------------------------------------------------
 
-@app.post("/api/agent/run", response_model=AgentExecutionResponse)
-@app.post("/api/agent/execute", response_model=AgentExecutionResponse)
+@app.post("/api/agent/run", response_model=AgentExecutionResponse, dependencies=[Depends(verify_api_key)])
+@app.post("/api/agent/execute", response_model=AgentExecutionResponse, dependencies=[Depends(verify_api_key)])
 def execute_agent_goal(request: AgentExecutionRequest):
     """
     Submits a natural-language user goal to the autonomous agent.
@@ -601,7 +698,7 @@ def execute_agent_goal(request: AgentExecutionRequest):
         )
 
 
-@app.get("/api/agent/tasks/{task_id}", response_model=AgentExecutionResponse)
+@app.get("/api/agent/tasks/{task_id}", response_model=AgentExecutionResponse, dependencies=[Depends(verify_api_key)])
 def get_agent_task(task_id: str):
     """
     Retrieves the execution status and structured results of a previously executed agent task.

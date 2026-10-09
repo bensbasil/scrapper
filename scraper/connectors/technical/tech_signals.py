@@ -5,6 +5,7 @@ from typing import Any, Dict, Optional
 from scraper.base_scraper import BaseScraper
 from scraper.utils.logger import get_scraper_logger
 from scraper.utils.exceptions import SourceTimeoutError, ParseError
+from scraper.utils.ssrf import validate_url_for_ssrf, safe_fetch_url, SSRFValidationError
 
 logger = get_scraper_logger("TechSignalsScraper")
 
@@ -13,6 +14,17 @@ class TechSignalAnalyzer(BaseScraper):
     Checks DNS, MX, and SSL records for a given domain to detect technical maturity.
     """
     
+    def analyze(self, target: str, **kwargs) -> Dict[str, Any]:
+        """Convenience method matching capability contracts."""
+        raw = self.fetch_raw(target, **kwargs)
+        return {
+            "domain": raw.get("domain"),
+            "ssl_valid": raw.get("has_ssl", False),
+            "has_ssl": raw.get("has_ssl", False),
+            "dns_resolves": raw.get("resolves", False),
+            "has_mx": raw.get("has_mx", False),
+        }
+
     def fetch_raw(self, target: str, **kwargs) -> Dict[str, Any]:
         """
         Target should be a URL. Extracts domain and performs network requests.
@@ -22,7 +34,15 @@ class TechSignalAnalyzer(BaseScraper):
             return raw_data
             
         try:
-            parsed_url = urllib.parse.urlparse(target)
+            target_str = target if target.startswith(("http://", "https://")) else f"https://{target}"
+            # Preflight SSRF check
+            try:
+                validate_url_for_ssrf(target_str, resolve_dns=True)
+            except SSRFValidationError as e:
+                logger.warning(f"SSRF validation blocked target '{target}': {e}")
+                return raw_data
+
+            parsed_url = urllib.parse.urlparse(target_str)
             domain = parsed_url.netloc or parsed_url.path
             domain = domain.split(':')[0]  # Remove port if present
             domain = domain.replace('www.', '')
@@ -36,19 +56,17 @@ class TechSignalAnalyzer(BaseScraper):
                 logger.warning(f"Domain {domain} does not resolve.")
                 return raw_data
                 
-            # Check SSL
+            # Check SSL with SSRF redirect protection
             try:
-                response = requests.get(f"https://{domain}", timeout=5)
+                response = safe_fetch_url(f"https://{domain}", timeout=5)
                 raw_data["has_ssl"] = True
-            except requests.exceptions.SSLError:
+            except (requests.exceptions.SSLError, SSRFValidationError):
                 raw_data["has_ssl"] = False
             except requests.exceptions.RequestException:
                 # Might just be blocking requests or down, assume False for SSL
                 raw_data["has_ssl"] = False
                 
             # Check MX (Basic heuristic: does it have an email server?)
-            # Since we avoid heavy dependencies like dnspython for the MVP, 
-            # we'll skip rigorous MX checks here, but the structure is in place.
             raw_data["has_mx"] = True # Placeholder for actual MX check
 
         except Exception as e:

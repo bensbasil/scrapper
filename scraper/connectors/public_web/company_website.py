@@ -11,6 +11,7 @@ from bs4 import BeautifulSoup
 
 # Critical fix #3: use the shared logger utility instead of a copy-pasted StructuredLogger.
 from scraper.utils.logger import get_scraper_logger
+from scraper.utils.ssrf import validate_url_for_ssrf, safe_fetch_url, SSRFValidationError
 
 logger = get_scraper_logger(__name__)
 
@@ -93,11 +94,24 @@ class WebsiteAnalyzer:
         result.website_exists = True
         url = self._normalize_url(url)
         result.website_url = url
+
+        # Preflight SSRF validation boundary
+        try:
+            validate_url_for_ssrf(url, resolve_dns=True)
+        except SSRFValidationError as e:
+            logger.warning(f"SSRF validation blocked URL '{url}' for '{business_name}': {e}")
+            result.error = f"SSRF blocked: {e}"
+            result.website_exists = False
+            return result
+        except Exception as e:
+            logger.warning(f"Invalid URL '{url}' for '{business_name}': {e}")
+            result.error = f"Invalid URL: {e}"
+            result.website_exists = False
+            return result
         
         try:
-            # 1. Fetch & SSL Check
-            # TODO: If HTTPS fails, implement fallback to HTTP to check if site exists without SSL.
-            response = requests.get(url, headers=self.headers, timeout=self.timeout, verify=True)
+            # 1. Fetch & SSL Check with SSRF redirect protection
+            response = safe_fetch_url(url, headers=self.headers, timeout=self.timeout, verify=True)
             response.raise_for_status()
             
             # If we requested HTTPS and didn't get downgraded, SSL is active.
@@ -161,6 +175,10 @@ class WebsiteAnalyzer:
                         if href not in result.social_links_found:
                             result.social_links_found.append(href)
 
+        except SSRFValidationError as e:
+            logger.warning(f"SSRF protection blocked request to {url}: {e}")
+            result.error = f"SSRF blocked: {e}"
+            result.website_exists = False
         except requests.exceptions.SSLError:
             logger.warning(f"SSL Error for {url}. Site likely lacks valid HTTPS.")
             result.error = "SSL Certificate Invalid"
@@ -173,6 +191,10 @@ class WebsiteAnalyzer:
             result.error = f"Parsing error: {str(e)}"
             
         return result
+
+    def analyze(self, url: str) -> WebsiteAnalysisResult:
+        """Single-argument convenience alias matching capability contracts."""
+        return self.analyze_url(business_name="Unknown", url=url)
 
     def process_csv(self, input_csv_path: str) -> List[WebsiteAnalysisResult]:
         """

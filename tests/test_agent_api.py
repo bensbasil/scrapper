@@ -44,13 +44,22 @@ def anyio_backend():
 
 
 @pytest.fixture(autouse=True)
-def clean_agent_state():
-    """Ensure clean agent injection and task store between tests."""
+def clean_agent_state(monkeypatch):
+    """Ensure clean agent injection, auth token, and task store between tests."""
+    monkeypatch.setenv("API_AUTH_TOKEN", "test-agent-api-token")
+    from api_server import verify_api_key, get_repository
+    app.dependency_overrides[verify_api_key] = lambda: "test-agent-api-token"
+    mock_repo = MagicMock()
+    mock_repo.get_pipeline_runs.return_value = [{"run_id": "run-test-1", "search_query": "plumbers"}]
+    mock_repo.get_businesses_for_dashboard.return_value = [{"id": 1, "business_name": "Test Co"}]
+    app.dependency_overrides[get_repository] = lambda: mock_repo
     agent_task_store.clear()
     set_agent(None)
     yield
     agent_task_store.clear()
     set_agent(None)
+    app.dependency_overrides.pop(verify_api_key, None)
+    app.dependency_overrides.pop(get_repository, None)
 
 
 def _create_mock_context(business_name="Acme Dental"):
