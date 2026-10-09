@@ -6,6 +6,7 @@ import asyncio
 import subprocess
 import traceback
 import logging
+import time
 from collections import deque
 from typing import Dict, Any, List, Optional
 
@@ -17,7 +18,7 @@ if sys.platform == "win32" and sys.version_info < (3, 12):
     except AttributeError:
         pass  # Already default
 
-from fastapi import FastAPI, BackgroundTasks, HTTPException, Query, Header, Security, Depends, status
+from fastapi import FastAPI, BackgroundTasks, HTTPException, Query, Header, Security, Depends, status, Response
 from fastapi.security.api_key import APIKeyHeader
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
@@ -28,13 +29,16 @@ if hasattr(sys.stdout, 'reconfigure'):
 if hasattr(sys.stderr, 'reconfigure'):
     sys.stderr.reconfigure(encoding='utf-8')
 
-from database.db import DatabaseManager, ScraperRepository
+from database.db import DatabaseManager, ScraperRepository, resolve_database_url, DatabaseConfigurationError
 from agent.agent import Agent
 from schemas.api import AgentExecutionRequest, AgentExecutionResponse
 
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Lead Intelligence Platform API")
+
+# Phase 5E: Track server initialization time for liveness probe uptime
+_server_start_time = time.time()
 
 # Phase 5B: API Authentication dependency
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
@@ -348,30 +352,159 @@ def is_scraper_running() -> bool:
     return False
 
 
+# ------------------------------------------------------------------
+# Operational Health & Lifecycle Endpoints (Phase 5E)
+# ------------------------------------------------------------------
+
+@app.get("/api/health/live")
+def health_live():
+    """
+    Liveness probe endpoint.
+    Minimal, high-performance check verifying the API event loop and process are alive.
+    Does NOT touch PostgreSQL, external LLMs, or execute outbound network requests.
+    Intentionally unauthenticated for container engines (Docker HEALTHCHECK) and orchestrators.
+    """
+    uptime = round(time.time() - _server_start_time, 2)
+    return {
+        "status": "alive",
+        "uptime_seconds": uptime,
+    }
+
+
+@app.get("/api/health/ready")
+def health_ready(response: Response):
+    """
+    Readiness probe endpoint.
+    Determines whether the application can safely accept work given its current configuration.
+
+    Semantics:
+    1. Standalone Mode (DATABASE_URL unconfigured):
+       The application can safely execute agent reasoning, website audits, and deterministic
+       workflows without a database. Readiness returns 200 OK with database status 'unconfigured'.
+    2. Connected Mode (DATABASE_URL configured):
+       Performs a fast, bounded connectivity check (SELECT 1; with 2.0s timeout).
+       If PostgreSQL is reachable, returns 200 OK with database status 'connected'.
+       If unreachable, returns 503 Service Unavailable with database status 'unavailable'.
+       Zero credentials, connection strings, or internal exception details are exposed.
+    3. LLM Configuration:
+       Evaluated purely via configuration (GEMINI_API_KEY presence) with zero outbound network calls.
+       If unconfigured, reports 'fallback' mode (deterministic), which is fully supported and does
+       not degrade overall readiness.
+    4. Scraper Subsystem:
+       Reports 'idle' or 'busy' based on active subprocess status.
+    """
+    is_ready = True
+    components: Dict[str, Any] = {}
+
+    # 1. Database Dependency Check
+    configured_db = False
+    try:
+        resolve_database_url()
+        configured_db = True
+    except DatabaseConfigurationError:
+        configured_db = False
+
+    if not configured_db:
+        components["database"] = {
+            "status": "unconfigured",
+            "mode": "standalone",
+        }
+    else:
+        try:
+            with db_manager.get_connection(timeout=2.0) as conn:
+                with conn.cursor() as cur:
+                    cur.execute("SELECT 1;")
+                    cur.fetchone()
+            components["database"] = {"status": "connected"}
+        except Exception as e:
+            is_ready = False
+            logger.warning(f"[Readiness] Database connectivity check failed: {e}")
+            components["database"] = {
+                "status": "unavailable",
+                "message": "Configured database is unreachable.",
+            }
+
+    # 2. LLM Provider Status (in-memory config check only; no outbound network calls)
+    gemini_key = os.getenv("GEMINI_API_KEY")
+    if gemini_key and gemini_key.strip():
+        components["llm"] = {
+            "status": "configured",
+            "provider": "gemini",
+        }
+    else:
+        components["llm"] = {
+            "status": "fallback",
+            "provider": "deterministic",
+        }
+
+    # 3. Scraper State
+    components["scraper"] = {
+        "status": "busy" if is_scraper_running() else "idle"
+    }
+
+    if not is_ready:
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+        return {
+            "status": "not_ready",
+            "mode": "connected" if configured_db else "standalone",
+            "components": components,
+        }
+
+    return {
+        "status": "ready",
+        "mode": "connected" if configured_db else "standalone",
+        "components": components,
+    }
+
+
 @app.get("/api/status")
 def get_status():
     """
-    Public health/status endpoint returning pipeline execution state.
-    Intentionally unauthenticated for health checks, heartbeat probes, and load balancers.
+    Legacy public health/status endpoint returning pipeline execution state.
+    Preserved for backwards compatibility with existing UI dashboard and clients.
+    Intentionally unauthenticated.
     """
     running = is_scraper_running()
     return {"success": True, "is_running": running, "running_process": running}
 
 
-
-# Significant fix #6: Shutdown event handler to prevent orphan Playwright/Chrome processes
+# Graceful shutdown event handler (Phase 5E):
+# 1. Terminates active scraper/browser subprocesses to prevent orphaned processes.
+# 2. Safely closes the database connection pool.
 @app.on_event("shutdown")
 async def shutdown_event():
     global running_process
-    if running_process is not None and running_process.returncode is None:
+    # 1. Terminate any active scraper subprocess
+    if running_process is not None:
         try:
-            add_log("[System] API server shutting down. Terminating active scraper process...")
-            running_process.terminate()
-            await asyncio.sleep(1)
-            if running_process.returncode is None:
-                running_process.kill()
+            is_alive = False
+            if hasattr(running_process, "poll"):
+                is_alive = (running_process.poll() is None)
+            elif hasattr(running_process, "returncode"):
+                is_alive = (running_process.returncode is None)
+
+            if is_alive:
+                add_log("[System] API server shutting down. Terminating active scraper process...")
+                running_process.terminate()
+                await asyncio.sleep(1)
+                is_still_alive = False
+                if hasattr(running_process, "poll"):
+                    is_still_alive = (running_process.poll() is None)
+                elif hasattr(running_process, "returncode"):
+                    is_still_alive = (running_process.returncode is None)
+                if is_still_alive:
+                    running_process.kill()
         except Exception as e:
-            print(f"Error terminating scraper subprocess on shutdown: {e}")
+            logger.warning(f"Error terminating scraper subprocess on shutdown: {e}")
+        finally:
+            running_process = None
+
+    # 2. Close database connection pool safely and idempotently
+    try:
+        db_manager.close()
+        logger.info("[System] Database connection pool closed on server shutdown.")
+    except Exception as e:
+        logger.warning(f"Error closing database pool on shutdown: {e}")
 
 
 # ------------------------------------------------------------------

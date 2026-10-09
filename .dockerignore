@@ -1,0 +1,55 @@
+# ==============================================================================
+# Docker Build Ignore File
+# Excludes local environments, caches, secrets, test artifacts, and Git history
+# ==============================================================================
+
+# Git & CI/CD
+.git/
+.github/
+.gitignore
+
+# Secrets & Environment variables (NEVER bake into image)
+.env
+.env.*
+*.env
+*.pem
+*.key
+*.cert
+
+# Python Virtual Environments & Bytecode
+.venv/
+venv/
+ENV/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Local logs & Temporary files
+logs/
+*.log
+scratch/
+.DS_Store
+
+# Scraped raw data & local artifacts
+data/raw/
+data/processed/
+*.csv
+*.png
+*.jpg
+*.jpeg
+
+# Test suites (keep production runtime image minimal)
+tests/
+
+# Frontend dashboard (packaged and deployed independently)
+dashboard/
+
+# Documentation & AI memory
+AI_MEMORY/
+*.md
+
+# IDE configurations
+.vscode/
+.idea/

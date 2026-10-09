@@ -15,7 +15,8 @@ Phase 5 transitions the Business Opportunity Intelligence Platform from experime
 | **Phase 5A** | Production Readiness Audit | [`AI_MEMORY/PHASE_5A_PRODUCTION_READINESS_AUDIT.md`](file:///Users/bistto/This%20Mac/Bens%20Repository/scrapper/AI_MEMORY/PHASE_5A_PRODUCTION_READINESS_AUDIT.md) | **COMPLETE** |
 | **Phase 5B** | Security & Safeguards Remediation (P0) | [`AI_MEMORY/PHASE_5B_SECURITY_REMEDIATION.md`](file:///Users/bistto/This%20Mac/Bens%20Repository/scrapper/AI_MEMORY/PHASE_5B_SECURITY_REMEDIATION.md) | **COMPLETE** |
 | **Phase 5C** | Configuration, Error Handling & Test Isolation (P1) | [`AI_MEMORY/PHASE_5C_RELIABILITY_REMEDIATION.md`](file:///Users/bistto/This%20Mac/Bens%20Repository/scrapper/AI_MEMORY/PHASE_5C_RELIABILITY_REMEDIATION.md) | **COMPLETE** |
-| **Phase 5D** | Containerization & Deployment Packaging (P2) | `AI_MEMORY/PHASE_5D_PACKAGING_DEPLOYMENT.md` | *Pending* |
+| **Phase 5D** | Reproducible Builds & CI/CD Foundation (P2) | [`AI_MEMORY/PHASE_5D_BUILD_AND_CI.md`](file:///Users/bistto/This%20Mac/Bens%20Repository/scrapper/AI_MEMORY/PHASE_5D_BUILD_AND_CI.md) | **COMPLETE** |
+| **Phase 5E** | Operational Health & Deployment Readiness | [`AI_MEMORY/PHASE_5E_OPERATIONAL_READINESS.md`](file:///Users/bistto/This%20Mac/Bens%20Repository/scrapper/AI_MEMORY/PHASE_5E_OPERATIONAL_READINESS.md) | **COMPLETE** |
 
 ---
 
@@ -97,4 +98,70 @@ Phase 5 transitions the Business Opportunity Intelligence Platform from experime
    - Full test suite: **400 passed, 1 skipped in 6.29s** with PostgreSQL completely unreachable.
 7. **Documentation**:
    - Produced [`AI_MEMORY/PHASE_5C_RELIABILITY_REMEDIATION.md`](file:///Users/bistto/This%20Mac/Bens%20Repository/scrapper/AI_MEMORY/PHASE_5C_RELIABILITY_REMEDIATION.md).
+
+---
+
+## Phase 5D — Reproducible Builds & CI/CD Foundation Log
+
+### Key Deliverables Completed:
+1. **Dependency Reproducibility**:
+   - Explicitly added direct dependencies (`pydantic==2.13.5`, `anyio==4.15.1`) to [`requirements.txt`](file:///Users/bistto/This%20Mac/Bens%20Repository/scrapper/requirements.txt).
+   - Generated canonical locked dependency tree [`requirements.lock`](file:///Users/bistto/This%20Mac/Bens%20Repository/scrapper/requirements.lock) via `pip freeze`.
+   - Verified dependency tree with `pip check` (0 broken requirements) and `pip install --dry-run`.
+2. **Production Docker Packaging**:
+   - Created [`Dockerfile`](file:///Users/bistto/This%20Mac/Bens%20Repository/scrapper/Dockerfile) based on `python:3.11-slim`.
+   - Enforced non-root user execution (`appuser:appgroup`, UID 1000).
+   - Configured runtime permissions for `/app/logs` and `/app/data`.
+   - Added container health check targeting `/api/status`.
+   - Created [`.dockerignore`](file:///Users/bistto/This%20Mac/Bens%20Repository/scrapper/.dockerignore) preventing `.env`, `.venv`, Git history, test artifacts, and caches from entering image layers.
+3. **Continuous Integration (CI) Pipeline**:
+   - Created GitHub Actions workflow [`.github/workflows/ci.yml`](file:///Users/bistto/This%20Mac/Bens%20Repository/scrapper/.github/workflows/ci.yml).
+   - Job 1 (`test-offline`): Python 3.11, pip cache, locked dependency install, test-isolation check with intentionally dead `DATABASE_URL`.
+   - Job 2 (`test-postgres-integration`): Service-backed `postgres:15-alpine` container running `@pytest.mark.postgres_integration` tests.
+   - Job 3 (`docker-build`): Builds image via Docker Buildx and validates container startup smoke test.
+   - Job 4 (`frontend-build`): Node.js 20 Next.js build verification for `dashboard`.
+4. **Local Verification**:
+   - Verified offline test suite: **400 passed, 1 skipped in 6.25s** with unreachable `DATABASE_URL`.
+   - Built real Docker image `business-intelligence-api:test`.
+   - Ran live container smoke test: verified `whoami` (`appuser`), verified `.env`/`.git` absence, verified `200 OK` from `http://localhost:8000/api/status`, verified sanitized `500` error on unconfigured database endpoints.
+5. **Documentation**:
+   - Produced [`AI_MEMORY/PHASE_5D_BUILD_AND_CI.md`](file:///Users/bistto/This%20Mac/Bens%20Repository/scrapper/AI_MEMORY/PHASE_5D_BUILD_AND_CI.md).
+
+---
+
+## Phase 5E — Operational Health & Deployment Readiness Log
+
+### Key Deliverables Completed:
+1. **Health Check Endpoint Semantics**:
+   - Implemented `GET /api/health/live`: Fast, zero-dependency liveness probe reporting process status and uptime without touching PostgreSQL or LLMs.
+   - Implemented `GET /api/health/ready`: Subsystem readiness probe evaluating database connectivity with strict 2.0s bounded timeout, zero-outbound LLM config inspection, and scraper state.
+   - Enforced fail-safe information protection: Database connection failures return HTTP 503 with generic sanitized message (`Configured database is unreachable.`), leaking zero credentials, URLs, or tracebacks.
+   - Standalone mode support: Returns 200 OK ready when database is unconfigured for database-independent workloads.
+   - Supported deterministic LLM fallback without marking the application unready.
+   - Preserved exact `/api/status` contract for frontend dashboard compatibility.
+2. **Docker Container Probe Strategy**:
+   - Updated `Dockerfile` `HEALTHCHECK` to probe `/api/health/live`.
+   - Documented rationale: Docker daemon health monitors process liveness to prevent cascading container restart storms during remote database maintenance.
+3. **Server Lifecycle & Resource Cleanup**:
+   - Updated `shutdown_event` in [`api_server.py`](file:///Users/bistto/This%20Mac/Bens%20Repository/scrapper/api_server.py) to idempotently close the database connection pool (`db_manager.close()`).
+   - Hardened active scraper subprocess termination (`poll()` validation, `terminate()`, 1-second delay, fallback `kill()`, and reference cleanup).
+4. **Automated Container Deployment Smoke Tests**:
+   - Created [`tests/test_container_smoke.py`](file:///Users/bistto/This%20Mac/Bens%20Repository/scrapper/tests/test_container_smoke.py) marked with `@pytest.mark.docker`.
+   - Validated non-root user execution (`appuser`, UID 1000).
+   - Validated exclusion of sensitive development files (`.git`, `.env*`).
+   - Validated `/api/health/live`, `/api/health/ready`, and `/api/status` in running container.
+   - Validated HTTP 401 rejection for missing or invalid API authentication.
+   - Validated container degraded mode (HTTP 503 on unreachable DB with zero secret disclosure).
+   - Validated clean, hung-free container stop.
+5. **Continuous Integration Integration**:
+   - Updated [`.github/workflows/ci.yml`](file:///Users/bistto/This%20Mac/Bens%20Repository/scrapper/.github/workflows/ci.yml): isolated offline tests (`not postgres_integration and not docker`).
+   - Wired automated container deployment smoke test into `docker-build` CI job.
+6. **Testing & Verification**:
+   - Targeted operational health tests: **12 passed** in 1.25s.
+   - Container deployment smoke tests: **8 passed** in 2.45s against freshly built image.
+   - Full offline suite: **412 passed, 9 deselected** in 6.01s with dead `DATABASE_URL`.
+7. **Documentation**:
+   - Produced [`AI_MEMORY/PHASE_5E_OPERATIONAL_READINESS.md`](file:///Users/bistto/This%20Mac/Bens%20Repository/scrapper/AI_MEMORY/PHASE_5E_OPERATIONAL_READINESS.md).
+
+
 

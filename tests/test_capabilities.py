@@ -226,17 +226,19 @@ class TestApplicationCapabilities(unittest.TestCase):
         }
 
         from application.capabilities.website_audit import AuditWebsiteTechCapability
+        from unittest.mock import patch
         cap = AuditWebsiteTechCapability(
             website_analyzer=mock_w_analyzer,
             tech_analyzer=mock_t_analyzer
         )
 
-        output = cap.execute(
-            AuditWebsiteTechInput(
-                business_name="Apex Plumbing",
-                website_url="https://apex.com"
+        with patch("scraper.utils.ssrf.validate_url_for_ssrf", return_value=(True, "")):
+            output = cap.execute(
+                AuditWebsiteTechInput(
+                    business_name="Apex Plumbing",
+                    website_url="https://apex.com"
+                )
             )
-        )
         self.assertTrue(output.is_active)
         self.assertTrue(output.has_ssl)
         self.assertTrue(output.is_mobile_friendly)

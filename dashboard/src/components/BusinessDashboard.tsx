@@ -5,9 +5,9 @@ import BusinessCard from "./BusinessCard";
 import { ScoringResult } from "@/types";
 import { MOCK_BUSINESSES } from "@/lib/mockData";
 
-// Load categories & locations JSON using require to avoid type issues
-const categories = require("../data/categories.json") as Record<string, string[]>;
-const locations = require("../data/locations.json") as Record<string, string[]>;
+// Load categories & locations datasets
+import { categories } from "../data/categories";
+import { locations } from "../data/locations";
 
 const allCategoryValues = Object.values(categories).flat();
 const allStateNames = Object.keys(locations);

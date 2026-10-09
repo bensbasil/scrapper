@@ -1,19 +1,28 @@
 import { Pool } from 'pg';
 
-// Sig fix #10: Removed hardcoded fallback connection string.
-// If DATABASE_URL is not set the app should fail at startup with a clear
-// message — not silently connect using an insecure default password.
-if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL environment variable is not set. " +
-    "Add it to .env.local (development) or your deployment environment."
-  );
+// Lazy pool instantiation (Phase 5C & 6E):
+// Does not throw during build-time module resolution when DATABASE_URL is not set.
+// Fails closed at query runtime with an explicit error if DATABASE_URL is missing.
+let poolInstance: Pool | null = null;
+
+export function getPool(): Pool {
+  if (!poolInstance) {
+    if (!process.env.DATABASE_URL) {
+      throw new Error(
+        "DATABASE_URL environment variable is not set. " +
+        "Add it to .env.local (development) or your deployment environment."
+      );
+    }
+    poolInstance = new Pool({
+      connectionString: process.env.DATABASE_URL,
+    });
+  }
+  return poolInstance;
 }
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
+export const query = (text: string, params?: any[]) => {
+  const p = getPool();
+  return params !== undefined ? p.query(text, params) : p.query(text);
+};
 
-export const query = (text: string, params?: any[]) => pool.query(text, params);
-
-export default pool;
+export default getPool;

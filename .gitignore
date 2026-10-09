@@ -8,9 +8,15 @@ __pycache__/
 .venv/
 venv/
 ENV/
+env/
+
+# Test caches
+.pytest_cache/
 
 # Environment variables (contains database passwords, API keys)
 .env
+.env.*
+*.env
 
 # Application logs
 logs/
@@ -22,8 +28,10 @@ data/processed/
 *.csv
 *.json
 
-# IDE local configuration
+# IDE local configuration & OS files
 .vscode/
+.idea/
+.DS_Store
 
 # Local development / scratch files
 scratch/

@@ -1,0 +1,10 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - configmap.yaml
+  - deployment.yaml
+  - service.yaml
+
+# Note: secret.example.yaml is intentionally excluded from the kustomization build
+# to prevent empty/template credentials from overwriting the live bi-api-secret.

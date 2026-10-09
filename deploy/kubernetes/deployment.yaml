@@ -1,0 +1,116 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bi-api-deployment
+  labels:
+    app.kubernetes.io/name: business-intelligence-api
+    app.kubernetes.io/part-of: business-opportunity-platform
+    app.kubernetes.io/component: api
+spec:
+  # Phase 6B Pilot Model: Single replica deployment (replicas: 1).
+  # Architectural Rationale:
+  # The API server uses in-process host memory for agent task queries (/api/agent/tasks/{id}),
+  # log streaming (/api/logs), telemetry deques, and local subprocess tracking (running_process).
+  # Running multiple uncoordinated replicas behind a round-robin ClusterIP service causes
+  # task lookup 404s, fractured log streams, and duplicate uncoordinated scraping subprocesses.
+  # A single replica provides strong consistency, deterministic resource bounding, and full
+  # platform stability while still benefiting from Kubernetes container self-healing and rescheduling.
+  replicas: 1
+  # Phase 6C Rollout Strategy: Recreate
+  # Architectural Rationale:
+  # The application maintains process-local in-memory state and launches uncoordinated
+  # scraping subprocesses on the local host. A RollingUpdate with maxSurge: 1 would spin up
+  # a new pod while the old pod is still running, violating single-replica mutual exclusion
+  # during rollouts and risking split-brain scraping and dual database pool connections.
+  # The 'Recreate' strategy terminates the existing pod and waits for complete process
+  # exit and resource cleanup before creating the replacement pod.
+  # Trade-off: A brief, deterministic downtime window (~5-15 seconds) occurs during rollouts.
+  # Zero-downtime deployment is explicitly not claimed until external state coordination is introduced.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: business-intelligence-api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: business-intelligence-api
+        app.kubernetes.io/part-of: business-opportunity-platform
+        app.kubernetes.io/component: api
+    spec:
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: api
+          image: business-intelligence-api:latest
+          imagePullPolicy: IfNotPresent
+          command: ["uvicorn", "api_server:app", "--host", "0.0.0.0", "--port", "8000"]
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 1000m
+              memory: 512Mi
+          envFrom:
+            - configMapRef:
+                name: bi-api-config
+          env:
+            - name: API_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: bi-api-secret
+                  key: API_AUTH_TOKEN
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: bi-api-secret
+                  key: DATABASE_URL
+                  optional: true
+            - name: GEMINI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: bi-api-secret
+                  key: GEMINI_API_KEY
+                  optional: true
+          # Startup probe allows initial imports and warmup before liveness kicks in
+          startupProbe:
+            httpGet:
+              path: /api/health/live
+              port: http
+            initialDelaySeconds: 2
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 6
+          # Liveness probe monitors responsiveness without database or external network I/O
+          livenessProbe:
+            httpGet:
+              path: /api/health/live
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          # Readiness probe verifies application subsystem status for ingress traffic routing
+          readinessProbe:
+            httpGet:
+              path: /api/health/ready
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 2
