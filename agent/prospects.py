@@ -523,6 +523,30 @@ class ProspectBatchExecutor:
                     )
                 return None
 
+            if cap_name == "evaluate_ai_reasoning" and isinstance(res.data, EvaluationResult) and not res.data.passed:
+                failed_steps.append(cap_name)
+                issue_text = "; ".join(res.data.issues or ["Evaluation score failed quality gate"])
+                err_msg = f"Evaluation gate failed: {issue_text}"
+                errors.append(err_msg)
+                if self.telemetry_sink:
+                    self.telemetry_sink.record_step(
+                        CapabilityTraceEvent(
+                            run_id=run_id,
+                            batch_id=batch_id,
+                            prospect_id=p_id,
+                            step_id=step_id,
+                            capability_name=cap_name,
+                            capability_classification=desc.policy_class.value,
+                            status=StepEventStatus.FAILED,
+                            started_at=datetime.utcnow().isoformat(),
+                            completed_at=datetime.utcnow().isoformat(),
+                            duration_ms=dur_ms,
+                            error_type=ErrorCategory.EVALUATION_ERROR,
+                            error_message=err_msg,
+                        )
+                    )
+                return res.data
+
             completed_steps.append(cap_name)
             if self.telemetry_sink:
                 self.telemetry_sink.record_step(
@@ -608,6 +632,25 @@ class ProspectBatchExecutor:
                         {"context": prospect_ctx, "outreach_strategy": outreach_strat},
                         "step_draft"
                     )
+                elif eval_res and not eval_res.passed:
+                    if self.telemetry_sink:
+                        self.telemetry_sink.record_step(
+                            CapabilityTraceEvent(
+                                run_id=run_id,
+                                batch_id=batch_id,
+                                prospect_id=p_id,
+                                step_id="step_draft",
+                                capability_name="render_outreach_drafts",
+                                capability_classification=None,
+                                status=StepEventStatus.BLOCKED,
+                                started_at=datetime.utcnow().isoformat(),
+                                completed_at=datetime.utcnow().isoformat(),
+                                duration_ms=0.0,
+                                error_type=None,
+                                error_message="Prerequisite step 'step_eval' failed evaluation gate",
+                                dependency_status={"step_eval": "FAILED"},
+                            )
+                        )
 
         # Determine prospect status
         status = "COMPLETED" if (len(failed_steps) == 0 and prospect_ctx is not None) else "FAILED"

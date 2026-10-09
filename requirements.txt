@@ -7,3 +7,5 @@ rapidfuzz==3.6.2
 fastapi==0.110.0
 uvicorn==0.28.0
 python-dotenv==1.0.1
+pytest==9.1.1
+httpx==0.28.1

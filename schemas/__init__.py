@@ -40,6 +40,10 @@ from schemas.ai import (
     OutreachStrategy,
     OutreachDraftResponse,
 )
+from schemas.api import (
+    AgentExecutionRequest,
+    AgentExecutionResponse,
+)
 
 __all__ = [
     "Business",
@@ -62,6 +66,8 @@ __all__ = [
     "OpportunityAnalysis",
     "OutreachStrategy",
     "OutreachDraftResponse",
+    "AgentExecutionRequest",
+    "AgentExecutionResponse",
 ]
 
 

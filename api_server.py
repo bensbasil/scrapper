@@ -4,6 +4,7 @@ import json
 import asyncio
 import subprocess
 import traceback
+import logging
 from collections import deque
 from typing import Dict, Any, List, Optional
 
@@ -26,6 +27,10 @@ if hasattr(sys.stderr, 'reconfigure'):
     sys.stderr.reconfigure(encoding='utf-8')
 
 from database.db import DatabaseManager, ScraperRepository
+from agent.agent import Agent
+from schemas.api import AgentExecutionRequest, AgentExecutionResponse
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Lead Intelligence Platform API")
 
@@ -51,6 +56,25 @@ log_history: deque = deque(maxlen=500)
 log_queues: List[asyncio.Queue] = []
 running_process: Optional[asyncio.subprocess.Process] = None
 process_lock = asyncio.Lock()
+
+# Agent task store & dependency management (Phase 4E)
+agent_task_store: Dict[str, AgentExecutionResponse] = {}
+_task_id_order: deque = deque(maxlen=200)
+_agent_instance: Optional[Agent] = None
+
+
+def get_agent() -> Agent:
+    """Dependency provider for the autonomous agent."""
+    global _agent_instance
+    if _agent_instance is None:
+        _agent_instance = Agent()
+    return _agent_instance
+
+
+def set_agent(agent: Optional[Agent]) -> None:
+    """Dependency override for tests or custom agent configurations."""
+    global _agent_instance
+    _agent_instance = agent
 
 
 # Significant fix #7: Strict Pydantic input validations
@@ -522,6 +546,76 @@ async def stream_logs():
 def get_status():
     """Returns whether the scraper is currently running."""
     return {"is_running": is_scraper_running()}
+
+
+# ------------------------------------------------------------------
+# Autonomous Agent Endpoints (Phase 4E)
+# ------------------------------------------------------------------
+
+@app.post("/api/agent/run", response_model=AgentExecutionResponse)
+@app.post("/api/agent/execute", response_model=AgentExecutionResponse)
+def execute_agent_goal(request: AgentExecutionRequest):
+    """
+    Submits a natural-language user goal to the autonomous agent.
+
+    Synchronous Execution & Lifecycle Semantics:
+    - Execution is synchronous within this handler (executed in FastAPI threadpool).
+    - Result state is held in an in-memory ring-buffer (max 200 tasks).
+    - Task results do NOT survive process restarts or multi-worker process boundaries.
+    - Prospect limits are clamped to the platform safety ceiling (15).
+    - Client-supplied capability overrides or plan injections are strictly forbidden.
+    """
+    agent = get_agent()
+
+    # Map validated constraints and optional target entities into initial_params
+    params: Dict[str, Any] = {}
+    if request.limit is not None:
+        params["limit"] = min(request.limit, 15)
+    if request.business_name:
+        params["business_name"] = request.business_name
+    if request.website_url:
+        params["website_url"] = request.website_url
+    if request.location:
+        params["location"] = request.location
+    if request.category:
+        params["category"] = request.category
+
+    try:
+        state = agent.run(user_goal=request.goal, initial_params=params)
+        response = AgentExecutionResponse.from_state(state)
+
+        # Store in bounded in-memory registry
+        if len(_task_id_order) >= 200:
+            oldest = _task_id_order.popleft()
+            agent_task_store.pop(oldest, None)
+        _task_id_order.append(response.task_id)
+        agent_task_store[response.task_id] = response
+
+        return response
+    except Exception as e:
+        logger.error(f"[AgentAPI] Unhandled error during agent execution: {e}")
+        # Never leak raw stack traces or internal implementation details
+        raise HTTPException(
+            status_code=500,
+            detail="An error occurred while executing the agent goal. Please retry with a refined request."
+        )
+
+
+@app.get("/api/agent/tasks/{task_id}", response_model=AgentExecutionResponse)
+def get_agent_task(task_id: str):
+    """
+    Retrieves the execution status and structured results of a previously executed agent task.
+
+    Task Retention Semantics:
+    - Retained in process memory only (last 200 tasks).
+    - Does not persist across server restarts.
+    """
+    if task_id not in agent_task_store:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Task '{task_id}' not found in memory. Note: tasks reside in process memory and do not persist across restarts."
+        )
+    return agent_task_store[task_id]
 
 
 if __name__ == "__main__":

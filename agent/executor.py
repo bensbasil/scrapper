@@ -325,6 +325,10 @@ class AgentExecutor:
                 issue_text = "; ".join(result.data.issues or ["Evaluation score failed quality gate"])
                 gate_err = f"Evaluation gate failed: {issue_text}"
                 state.record_error(gate_err)
+                step.status = StepStatus.FAILED
+                if state.completed_steps:
+                    state.completed_steps[-1].status = StepStatus.FAILED
+                    state.completed_steps[-1].error = gate_err
                 if self.telemetry_sink:
                     self.telemetry_sink.record_step(
                         CapabilityTraceEvent(
