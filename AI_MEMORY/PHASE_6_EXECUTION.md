@@ -229,8 +229,13 @@ Phase 6 extends the hardened Business Opportunity Intelligence Platform into sca
    - Zero generated build caches or scratch files in working tree.
 5. **Exact Staging Manifest**:
    - Validated corrected staging sequence covering all 32 files with zero files left unstaged.
-6. **Documentation**:
+6. **Docker Smoke-Test CI Fix & Root Cause Analysis**:
+   - **Failure:** In the GitHub Actions job `Docker Packaging & Deployment Smoke Tests`, running `pytest -m "docker" -v` failed during test collection with `ModuleNotFoundError` (`pydantic`, `fastapi`, `psycopg2`).
+   - **Root Cause:** Pytest imports all test files discovered in `testpaths = tests` prior to applying marker filters (`-m "docker"`). The GitHub Actions runner previously executed only `pip install pytest anyio httpx`, leaving application dependencies absent from the host Python environment.
+   - **Remediation:** Updated [`.github/workflows/ci.yml`](file:///Users/bistto/This%20Mac/Bens%20Repository/scrapper/.github/workflows/ci.yml) in job `docker-build` to enable pip caching (`cache: 'pip'`, `cache-dependency-path: 'requirements.lock'`) and install `requirements.lock` via `pip install -r requirements.lock`. Because `docker-build` depends on `test-offline`, the pip cache is already populated on the runner, adding only ~3–4s.
+   - **Validation:**
+     - Clean venv simulation (`/tmp/test-ci-env` with `pip install -r requirements.lock`): `pytest -m "docker" -v` passed all 8 container smoke tests in 3.96s (425 deselected).
+     - Full offline unit test suite: `pytest -m "not postgres_integration and not docker" -v` passed all 424 tests in 4.88s (9 deselected).
+     - Non-regression: `test-postgres-integration` and `frontend-build` jobs remain completely untouched.
+7. **Documentation**:
    - Updated [`AI_MEMORY/PHASE_6E_1_RELEASE_HANDOFF.md`](file:///Users/bistto/This%20Mac/Bens%20Repository/scrapper/AI_MEMORY/PHASE_6E_1_RELEASE_HANDOFF.md) and [`AI_MEMORY/PHASE_6_EXECUTION.md`](file:///Users/bistto/This%20Mac/Bens%20Repository/scrapper/AI_MEMORY/PHASE_6_EXECUTION.md).
-
-
-
