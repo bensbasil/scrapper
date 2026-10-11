@@ -726,6 +726,39 @@ class ScraperRepository:
             logger.error(f"Error inserting change event for business {business_id}: {e}")
             return False
 
+    def get_change_events(self, business_id: int) -> List[Dict[str, Any]]:
+        """Returns detected website change events for a business ordered by most recent first."""
+        query = """
+            SELECT id, business_id, changes, previous_snapshot_at, current_snapshot_at,
+                   change_summary, detected_at
+            FROM change_events
+            WHERE business_id = %s
+            ORDER BY detected_at DESC, id DESC;
+        """
+        try:
+            with self.db.get_connection() as conn:
+                with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                    cur.execute(query, (business_id,))
+                    rows = cur.fetchall()
+                    events = []
+                    for row in rows:
+                        d = dict(row)
+                        if isinstance(d.get("changes"), str):
+                            try:
+                                d["changes"] = json.loads(d["changes"])
+                            except Exception:
+                                d["changes"] = []
+                        elif d.get("changes") is None:
+                            d["changes"] = []
+                        for dt_field in ("previous_snapshot_at", "current_snapshot_at", "detected_at"):
+                            if d.get(dt_field) and hasattr(d[dt_field], "isoformat"):
+                                d[dt_field] = d[dt_field].isoformat()
+                        events.append(d)
+                    return events
+        except Exception as e:
+            logger.error(f"Error fetching change events for business {business_id}: {e}")
+            raise
+
     def get_latest_website_analysis(self, business_id: int) -> Optional[Dict[str, Any]]:
         """Retrieves the most recent website analysis for a business."""
         query = """
@@ -1226,12 +1259,19 @@ class ScraperRepository:
             return False
 
     def get_businesses_for_dashboard(
-        self, limit: Optional[int] = None, offset: int = 0
+        self, limit: Optional[int] = None, offset: int = 0, sort_by: Optional[str] = None
     ) -> List[Dict[str, Any]]:
         """Queries processed businesses with scoring, emails, tech stacks, and intent joined.
-        Supports pagination via optional limit and offset.
+        Supports pagination via optional limit and offset, and sorting via sort_by.
         """
-        query = """
+        if sort_by == "opportunity":
+            order_clause = "ORDER BY s.opportunity_score DESC NULLS LAST, b.id DESC"
+        elif sort_by in (None, "default", "id"):
+            order_clause = "ORDER BY b.id DESC"
+        else:
+            raise ValueError(f"Invalid sort_by: '{sort_by}'. Allowed values: 'opportunity', 'default', 'id'.")
+
+        query = f"""
             SELECT 
               b.id::text, 
               b.business_name, 
@@ -1283,7 +1323,7 @@ class ScraperRepository:
               FROM intent_profiles
               ORDER BY business_id, evaluated_at DESC
             ) i ON b.id = i.business_id
-            ORDER BY b.id DESC
+            {order_clause}
         """
         params = []
         if limit is not None:
@@ -1498,7 +1538,8 @@ class ScraperRepository:
         query_sql = """
             SELECT run_id, search_query, started_at, finished_at,
                    total_businesses, successful_businesses, failed_businesses,
-                   success_rate, high_opportunity_count, notes, created_at
+                   success_rate, high_opportunity_count, stage_failure_counts,
+                   notes, created_at
             FROM pipeline_runs
             ORDER BY created_at DESC
             LIMIT %s;
@@ -1516,6 +1557,13 @@ class ScraperRepository:
                                 d["notes"] = json.loads(d["notes"])
                             except Exception:
                                 d["notes"] = []
+                        if isinstance(d.get("stage_failure_counts"), str):
+                            try:
+                                d["stage_failure_counts"] = json.loads(d["stage_failure_counts"])
+                            except Exception:
+                                d["stage_failure_counts"] = {}
+                        elif d.get("stage_failure_counts") is None:
+                            d["stage_failure_counts"] = {}
                         for dt_field in ("started_at", "finished_at", "created_at"):
                             if d.get(dt_field) and hasattr(d[dt_field], "isoformat"):
                                 d[dt_field] = d[dt_field].isoformat()

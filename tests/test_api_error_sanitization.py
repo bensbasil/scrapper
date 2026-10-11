@@ -35,6 +35,10 @@ def mock_failing_repo():
     repo.get_business_detail_for_dashboard.side_effect = DatabaseConnectionError(
         "Could not connect to database at postgresql://admin:secret_pass_999@internal.db:5432/main."
     )
+    repo.get_business_by_id.return_value = {"id": 1, "business_name": "Acme Dental"}
+    repo.get_change_events.side_effect = psycopg2.OperationalError(
+        "server closed the connection unexpectedly while querying change_events at internal-db-secret:5432"
+    )
     repo.get_outreach_drafts.side_effect = psycopg2.ProgrammingError(
         "relation 'secret_internal_salaries' does not exist at character 42"
     )
@@ -94,6 +98,16 @@ async def test_get_business_detail_sanitizes_db_error():
         assert data["detail"] == "An internal error occurred while retrieving business details."
         assert "secret_pass_999" not in resp.text
         assert "internal.db" not in resp.text
+
+
+@pytest.mark.anyio
+async def test_get_change_events_sanitizes_db_error():
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://testserver", headers={"X-API-Key": TEST_API_KEY}) as client:
+        resp = await client.get("/api/businesses/1/changes")
+        assert resp.status_code == 500
+        data = resp.json()
+        assert data["detail"] == "An internal error occurred while retrieving change events."
+        assert "internal-db-secret" not in resp.text
 
 
 @pytest.mark.anyio

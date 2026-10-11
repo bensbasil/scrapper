@@ -60,3 +60,41 @@ export interface ScoringResult {
   intent_score?: number | null;
   outreach_urgency?: string | null;
 }
+
+export interface ChangeEvent {
+  id: number;
+  business_id: number;
+  changes: any[];
+  previous_snapshot_at: string | null;
+  current_snapshot_at: string | null;
+  change_summary: string | null;
+  detected_at: string;
+}
+
+export interface OutreachDraft {
+  id?: number;
+  pain_point_positioning?: string | null;
+  concise_audit_summary?: string | null;
+  cold_email_draft?: string | null;
+  whatsapp_draft?: string | null;
+  ai_prompt_template?: string | null;
+  generated_at?: string | null;
+}
+
+export interface PipelineRun {
+  id: string;
+  run_id: string;
+  search_query: string;
+  started_at: string | Date;
+  finished_at: string | Date | null;
+  total_businesses: number;
+  successful_businesses: number;
+  failed_businesses: number;
+  success_rate: number;
+  high_opportunity_count: number;
+  stage_failure_counts: Record<string, number>;
+  business_records?: any[];
+  notes?: string[];
+  created_at?: string;
+}
+

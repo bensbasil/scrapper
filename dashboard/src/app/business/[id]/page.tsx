@@ -1,54 +1,8 @@
-import { query } from "@/lib/db";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import StatusSelect from "@/components/StatusSelect";
-// Critical fix #1: import normalizeEmails from its single source of truth.
-// Critical fix #2: import the data-fetching logic from its dedicated lib.
-// Critical fix #4 & #6 are applied inside businessDetail.ts.
 import { getBusinessDetail } from "@/lib/businessDetail";
-
-async function getChangeEvents(businessId: string): Promise<any[]> {
-  // Validate id before querying (mirrors the same guard in businessDetail.ts).
-  const numericId = parseInt(businessId, 10);
-  if (isNaN(numericId) || numericId <= 0) return [];
-  try {
-    const res = await query(
-      `SELECT id, changes, previous_snapshot_at, current_snapshot_at, change_summary, detected_at
-       FROM change_events
-       WHERE business_id = $1
-       ORDER BY detected_at DESC`,
-      [numericId]
-    );
-    return res.rows.map((row) => ({
-      ...row,
-      changes: typeof row.changes === "string" ? JSON.parse(row.changes) : (row.changes || []),
-    }));
-  } catch (err) {
-    console.error("Error fetching change events:", err);
-    return [];
-  }
-}
-
-async function getOutreachDrafts(businessId: string): Promise<any | null> {
-  const numericId = parseInt(businessId, 10);
-  if (isNaN(numericId) || numericId <= 0) return null;
-  try {
-    const res = await query(
-      `SELECT pain_point_positioning, concise_audit_summary,
-              cold_email_draft, whatsapp_draft, ai_prompt_template, generated_at
-       FROM outreach_drafts
-       WHERE business_id = $1
-       ORDER BY generated_at DESC
-       LIMIT 1`,
-      [numericId]
-    );
-    if (res.rows.length === 0) return null;
-    return res.rows[0];
-  } catch (err) {
-    console.error("Error fetching outreach drafts:", err);
-    return null;
-  }
-}
+import { getChangeEvents, getOutreachDrafts } from "@/lib/apiClient";
 
 export default async function BusinessDetail({
   params,

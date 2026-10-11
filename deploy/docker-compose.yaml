@@ -1,0 +1,109 @@
+# ==============================================================================
+# Business Opportunity Intelligence Platform — Docker Compose Deployment
+# Reproducible Local Multi-Container Architecture (Phase 6I-A)
+#
+# Services:
+#   1. postgres — PostgreSQL 15 database with persistent volume and schema init
+#   2. backend  — FastAPI REST API server (port 8000)
+#   3. frontend — Next.js 16 standalone dashboard with server API proxy (port 3000)
+# ==============================================================================
+
+services:
+  # ----------------------------------------------------------------------------
+  # 1. PostgreSQL Persistence Layer
+  # ----------------------------------------------------------------------------
+  postgres:
+    image: postgres:15-alpine
+    container_name: bi-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-bi_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-bi_password}
+      POSTGRES_DB: ${POSTGRES_DB:-bi_db}
+    volumes:
+      # Named persistent volume to retain application data across restarts
+      - postgres_data:/var/lib/postgresql/data
+      # Initialize schema on initial startup when data directory is empty
+      - ../database/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-bi_user} -d ${POSTGRES_DB:-bi_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - bi-network
+
+  # ----------------------------------------------------------------------------
+  # 2. FastAPI Backend Service
+  # ----------------------------------------------------------------------------
+  backend:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    image: business-intelligence-api:local
+    container_name: bi-backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-bi_user}:${POSTGRES_PASSWORD:-bi_password}@postgres:5432/${POSTGRES_DB:-bi_db}
+      API_AUTH_TOKEN: ${API_AUTH_TOKEN:-dev-secret-token-change-in-prod}
+      PORT: 8000
+      ALLOWED_ORIGINS: http://localhost:3000,http://127.0.0.1:3000,http://frontend:3000
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/api/health/live || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - bi-network
+
+  # ----------------------------------------------------------------------------
+  # 3. Next.js Frontend Dashboard Service
+  # ----------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ../dashboard
+      dockerfile: Dockerfile
+    image: business-intelligence-frontend:local
+    container_name: bi-frontend
+    restart: unless-stopped
+    environment:
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+      # Server-side API proxy upstream target via internal Docker DNS
+      API_INTERNAL_URL: http://backend:8000
+      # Shared secret injected server-side by Next.js API proxy and server components into X-API-Key
+      API_AUTH_TOKEN: ${API_AUTH_TOKEN:-dev-secret-token-change-in-prod}
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:3000/ || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - bi-network
+
+# ------------------------------------------------------------------------------
+# Networks & Persistent Volumes
+# ------------------------------------------------------------------------------
+networks:
+  bi-network:
+    driver: bridge
+    name: bi_network
+
+volumes:
+  postgres_data:
+    name: bi_postgres_data

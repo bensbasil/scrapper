@@ -74,6 +74,23 @@ def mock_repository():
         "outreach_urgency": "high",
     } if bid == 1 else None
 
+    repo.get_business_by_id.side_effect = lambda bid: {
+        "id": bid,
+        "business_name": "Acme Dental",
+    } if bid in (1, 2) else None
+
+    repo.get_change_events.side_effect = lambda bid: [
+        {
+            "id": 10,
+            "business_id": bid,
+            "changes": [{"field": "phone", "old": "123", "new": "456"}],
+            "previous_snapshot_at": "2026-10-08T10:00:00Z",
+            "current_snapshot_at": "2026-10-09T10:00:00Z",
+            "change_summary": "Phone number updated",
+            "detected_at": "2026-10-09T10:00:00Z",
+        }
+    ] if bid == 1 else []
+
     repo.update_business.side_effect = lambda bid, fields: bid == 1
     repo.delete_business.side_effect = lambda bid: bid == 1
     repo.batch_delete_businesses.return_value = 2
@@ -86,6 +103,7 @@ def mock_repository():
             "started_at": "2026-10-09T10:00:00Z",
             "total_businesses": 10,
             "success_rate": 0.9,
+            "stage_failure_counts": {"scraping": 0, "enrichment": 1},
         }
     ]
     repo.get_pipeline_run_detail.side_effect = lambda rid: {
@@ -203,6 +221,96 @@ async def test_api_business_intent_profile(mock_repository):
 
 
 @pytest.mark.anyio
+async def test_api_business_changes_found(mock_repository):
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app),
+        base_url="http://testserver",
+        headers={"X-API-Key": TEST_API_KEY}
+    ) as client:
+        response = await client.get("/api/businesses/1/changes")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is True
+        assert data["business_id"] == 1
+        assert len(data["changes"]) == 1
+        assert data["changes"][0]["change_summary"] == "Phone number updated"
+
+
+@pytest.mark.anyio
+async def test_api_business_changes_empty(mock_repository):
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app),
+        base_url="http://testserver",
+        headers={"X-API-Key": TEST_API_KEY}
+    ) as client:
+        response = await client.get("/api/businesses/2/changes")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is True
+        assert data["business_id"] == 2
+        assert data["changes"] == []
+
+
+@pytest.mark.anyio
+async def test_api_business_changes_not_found(mock_repository):
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app),
+        base_url="http://testserver",
+        headers={"X-API-Key": TEST_API_KEY}
+    ) as client:
+        response = await client.get("/api/businesses/999/changes")
+        assert response.status_code == 404
+        assert response.json()["detail"] == "Business not found"
+
+
+@pytest.mark.anyio
+async def test_api_business_changes_invalid_id(mock_repository):
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app),
+        base_url="http://testserver",
+        headers={"X-API-Key": TEST_API_KEY}
+    ) as client:
+        # <= 0 returns 400
+        resp_zero = await client.get("/api/businesses/0/changes")
+        assert resp_zero.status_code == 400
+        assert "positive integer" in resp_zero.json()["detail"]
+
+        resp_neg = await client.get("/api/businesses/-1/changes")
+        assert resp_neg.status_code == 400
+
+        # non-int returns 422
+        resp_str = await client.get("/api/businesses/abc/changes")
+        assert resp_str.status_code == 422
+
+
+@pytest.mark.anyio
+async def test_api_businesses_sort_by_opportunity(mock_repository):
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app),
+        base_url="http://testserver",
+        headers={"X-API-Key": TEST_API_KEY}
+    ) as client:
+        response = await client.get("/api/businesses?sort_by=opportunity&limit=10")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is True
+        assert data["sort_by"] == "opportunity"
+        mock_repository.get_businesses_for_dashboard.assert_called_with(limit=10, offset=0, sort_by="opportunity")
+
+
+@pytest.mark.anyio
+async def test_api_businesses_invalid_sort(mock_repository):
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app),
+        base_url="http://testserver",
+        headers={"X-API-Key": TEST_API_KEY}
+    ) as client:
+        response = await client.get("/api/businesses?sort_by=malicious_injection")
+        assert response.status_code == 400
+        assert "Invalid sort_by" in response.json()["detail"]
+
+
+@pytest.mark.anyio
 async def test_api_update_business(mock_repository):
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app),
@@ -287,6 +395,8 @@ async def test_api_runs(mock_repository):
         assert data["success"] is True
         assert len(data["runs"]) == 1
         assert data["runs"][0]["run_id"] == "run-001"
+        assert data["runs"][0]["stage_failure_counts"] == {"scraping": 0, "enrichment": 1}
+        mock_repository.get_pipeline_runs.assert_called_with(limit=5)
 
 
 @pytest.mark.anyio

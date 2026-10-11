@@ -1,0 +1,17 @@
+node_modules
+.next
+.env*
+!.env.example
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.git
+.gitignore
+.dockerignore
+Dockerfile*
+README.md
+AGENTS.md
+CLAUDE.md
+tests
+coverage
+.DS_Store

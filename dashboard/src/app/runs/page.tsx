@@ -1,56 +1,8 @@
-import { query } from "@/lib/db";
 import Link from "next/link";
+import { getPipelineRuns } from "@/lib/apiClient";
+import type { PipelineRun } from "@/types";
 
 export const dynamic = 'force-dynamic';
-
-interface PipelineRun {
-  id: string;
-  run_id: string;
-  search_query: string;
-  started_at: Date;
-  finished_at: Date | null;
-  total_businesses: number;
-  successful_businesses: number;
-  failed_businesses: number;
-  success_rate: number;
-  high_opportunity_count: number;
-  stage_failure_counts: Record<string, number> | string;
-  business_records: any[] | string;
-  notes: string[] | string;
-}
-
-async function getPipelineRuns(): Promise<PipelineRun[]> {
-  try {
-    const res = await query(`
-      SELECT 
-        id::text,
-        run_id,
-        search_query,
-        started_at,
-        finished_at,
-        total_businesses,
-        successful_businesses,
-        failed_businesses,
-        success_rate,
-        high_opportunity_count,
-        stage_failure_counts,
-        business_records,
-        notes
-      FROM pipeline_runs
-      ORDER BY started_at DESC
-    `);
-    
-    return res.rows.map(row => ({
-      ...row,
-      stage_failure_counts: typeof row.stage_failure_counts === 'string' ? JSON.parse(row.stage_failure_counts) : (row.stage_failure_counts || {}),
-      business_records: typeof row.business_records === 'string' ? JSON.parse(row.business_records) : (row.business_records || []),
-      notes: typeof row.notes === 'string' ? JSON.parse(row.notes) : (row.notes || []),
-    }));
-  } catch (err) {
-    console.error("Error fetching pipeline runs:", err);
-    return [];
-  }
-}
 
 export default async function RunsHistoryPage() {
   const runs = await getPipelineRuns();

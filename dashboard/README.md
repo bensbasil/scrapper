@@ -18,7 +18,6 @@ cp .env.example .env.local
 | :--- | :--- | :--- | :--- |
 | `API_INTERNAL_URL` | Upstream FastAPI backend base URL | `http://127.0.0.1:8000` | In Kubernetes, set to `http://bi-api-service:8000`. In Docker Compose, set to `http://api:8000`. |
 | `API_AUTH_TOKEN` | Shared secret token for backend authentication | *None* | Must match the backend's `API_AUTH_TOKEN`. Strictly server-side; never exposed to browser bundles. |
-| `DATABASE_URL` | PostgreSQL connection string | *None* | Used by server-side query routes. If omitted, falls back safely to mock data for static building. |
 
 ---
 
@@ -52,3 +51,42 @@ npm test
 ```bash
 npm run build
 ```
+
+---
+
+## 4. Production Container Packaging (Phase 6G)
+
+The dashboard is packaged as an optimized, multi-stage, non-root Alpine container image using Next.js standalone output:
+
+### Build Container Image:
+```bash
+docker build -t business-intelligence-frontend:latest dashboard
+```
+
+### Run Container:
+```bash
+docker run -d \
+  --name bi-dashboard \
+  -p 3000:3000 \
+  -e PORT=3000 \
+  -e HOSTNAME=0.0.0.0 \
+  -e API_INTERNAL_URL="http://bi-api-service:8000" \
+  -e API_AUTH_TOKEN="your-shared-secret-token" \
+  business-intelligence-frontend:latest
+```
+
+### Run Container Deployment Smoke Tests:
+```bash
+# Node.js smoke test:
+npm run test:smoke
+
+# Python / pytest smoke test (from repository root):
+pytest tests/test_frontend_container_smoke.py -v
+```
+
+### Container Security & Operational Highlights:
+- **Multi-Stage Build:** Dependencies installed via `npm ci` in builder stage; only standalone runtime assets copied to final image.
+- **Minimal Footprint:** Alpine base image (`node:20-alpine`) producing a lean ~74 MB content footprint.
+- **Unprivileged Non-Root User:** Runs as `nextjs:nodejs` (UID 1001, GID 1001).
+- **Zero Secret Baking:** `API_INTERNAL_URL` and `API_AUTH_TOKEN` are resolved dynamically at runtime and are never baked into image layers or client JavaScript bundles.
+- **Container Health Check:** Built-in Busybox `wget -q --spider http://127.0.0.1:3000/ || exit 1`.

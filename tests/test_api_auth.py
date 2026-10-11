@@ -120,6 +120,7 @@ async def test_public_status_endpoint_unauthenticated(monkeypatch):
     ("/api/runs/test-run-123", "GET", None),
     ("/api/businesses", "GET", None),
     ("/api/businesses/1", "GET", None),
+    ("/api/businesses/1/changes", "GET", None),
     ("/api/businesses/1", "DELETE", None),
     ("/api/businesses/1", "PATCH", {"outreach_status": "contacted"}),
 ])

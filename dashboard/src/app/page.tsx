@@ -1,6 +1,8 @@
 import BusinessDashboard from "@/components/BusinessDashboard";
 import { getBusinesses } from "@/lib/businesses";
 
+export const dynamic = 'force-dynamic';
+
 export default async function Home() {
   const businesses = await getBusinesses();
   

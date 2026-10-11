@@ -515,13 +515,27 @@ async def shutdown_event():
 def get_businesses(
     limit: Optional[int] = Query(None, ge=1, le=1000),
     offset: int = Query(0, ge=0),
+    sort_by: Optional[str] = Query(None, description="Optional sort order: 'opportunity', 'id', or 'default'"),
     repo_dep: ScraperRepository = Depends(get_repository),
 ):
-    """Returns processed businesses list for dashboard with optional pagination."""
+    """Returns processed businesses list for dashboard with optional pagination and opportunity sorting."""
+    if sort_by is not None and sort_by not in ("opportunity", "id", "default"):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid sort_by parameter '{sort_by}'. Allowed values: 'opportunity', 'default', 'id'."
+        )
     active_repo = _resolve_repo(repo_dep)
     try:
-        biz_list = active_repo.get_businesses_for_dashboard(limit=limit, offset=offset)
-        return {"success": True, "businesses": biz_list, "limit": limit, "offset": offset}
+        if sort_by is not None:
+            biz_list = active_repo.get_businesses_for_dashboard(limit=limit, offset=offset, sort_by=sort_by)
+        else:
+            biz_list = active_repo.get_businesses_for_dashboard(limit=limit, offset=offset)
+        res = {"success": True, "businesses": biz_list, "limit": limit, "offset": offset}
+        if sort_by is not None:
+            res["sort_by"] = sort_by
+        return res
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"[API] Error in get_businesses: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="An internal error occurred while retrieving businesses.")
@@ -541,6 +555,25 @@ def get_business_detail(business_id: int, repo_dep: ScraperRepository = Depends(
     except Exception as e:
         logger.error(f"[API] Error in get_business_detail for id={business_id}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="An internal error occurred while retrieving business details.")
+
+
+@app.get("/api/businesses/{business_id}/changes", dependencies=[Depends(verify_api_key)])
+def get_business_change_events(business_id: int, repo_dep: ScraperRepository = Depends(get_repository)):
+    """Returns change history timeline events for a business."""
+    if business_id <= 0:
+        raise HTTPException(status_code=400, detail="Business ID must be a positive integer.")
+    active_repo = _resolve_repo(repo_dep)
+    try:
+        business = active_repo.get_business_by_id(business_id)
+        if not business:
+            raise HTTPException(status_code=404, detail="Business not found")
+        changes = active_repo.get_change_events(business_id)
+        return {"success": True, "business_id": business_id, "changes": changes}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"[API] Error in get_business_change_events for id={business_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="An internal error occurred while retrieving change events.")
 
 
 @app.get("/api/businesses/{business_id}/outreach", dependencies=[Depends(verify_api_key)])
