@@ -177,6 +177,12 @@ kubectl rollout undo deployment/bi-api-deployment
 kubectl rollout restart deployment/bi-api-deployment
 ```
 
+## Frontend Dashboard Integration (Phase 6F.1)
+
+When running the Next.js frontend (`dashboard/`) against the Kubernetes deployment:
+1. **Configurable Internal Address:** Set `API_INTERNAL_URL="http://bi-api-service:8000"` in the frontend's environment. The server-side proxy route (`src/app/api/[[...path]]/route.ts`) resolves this target URL and forwards client requests over cluster DNS.
+2. **Server-Side Secret Injection:** Set `API_AUTH_TOKEN` in the frontend's server environment matching `bi-api-secret`. The Next.js server automatically injects the `X-API-Key` header on all protected upstream requests (`/api/businesses`, `/api/scrape`, `/api/stop`, `/api/logs`). The token is strictly server-side and is **never** leaked to client browsers.
+
 ---
 
 ## Teardown & Cleanup

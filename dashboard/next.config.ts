@@ -1,15 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  async rewrites() {
-    return [
-      {
-        // Exclude /api/logs — handled natively by src/app/api/logs/route.ts (SSE streaming)
-        source: "/api/:path((?!logs$).*)",
-        destination: "http://127.0.0.1:8000/api/:path*",
-      },
-    ];
-  },
+  // Hardcoded rewrites removed (Phase 6F.1):
+  // All /api/* traffic is securely handled by src/app/api/[[...path]]/route.ts,
+  // which dynamically routes to API_INTERNAL_URL and injects API_AUTH_TOKEN server-side.
 };
 
 export default nextConfig;
