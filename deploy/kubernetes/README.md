@@ -37,10 +37,13 @@ This directory contains minimal, production-minded Kubernetes manifests for runn
 ```
 
 ### Components:
-- **`bi-api-config` (ConfigMap):** Non-sensitive application configuration (`PORT`, `PYTHONUNBUFFERED`, `ALLOWED_ORIGINS`, connection pool settings).
-- **`bi-api-secret` (Secret):** Sensitive credentials (`API_AUTH_TOKEN`, `DATABASE_URL`, `GEMINI_API_KEY`).
-- **`bi-api-deployment` (Deployment):** Single-replica deployment (`replicas: 1`) for consistent pilot operation. Configured with unprivileged security context (`appuser` UID 1000), CPU/memory bounds (100m–1000m CPU, 256Mi–512Mi RAM), startup/liveness/readiness probes, and 30-second graceful termination.
-- **`bi-api-service` (Service):** Internal `ClusterIP` load balancer directing traffic to the ready pod on port 8000.
+- **`bi-api-config` (ConfigMap):** Non-sensitive API configuration (`PORT`, `PYTHONUNBUFFERED`, `ALLOWED_ORIGINS`, connection pool settings).
+- **`bi-api-secret` (Secret):** Sensitive credentials (`API_AUTH_TOKEN`, `DATABASE_URL`, `GEMINI_API_KEY`). Shared with frontend for `API_AUTH_TOKEN`.
+- **`bi-api-deployment` (Deployment):** Single-replica backend API (`replicas: 1`, `Recreate` rollout strategy, non-root `appuser` UID 1000).
+- **`bi-api-service` (Service):** Internal `ClusterIP` load balancer directing traffic to the ready API pod on port 8000.
+- **`bi-frontend-config` (ConfigMap):** Non-sensitive frontend configuration (`PORT`, `HOSTNAME`, `NODE_ENV`, `API_INTERNAL_URL="http://bi-api-service:8000"`).
+- **`bi-frontend-deployment` (Deployment):** Stateless Next.js standalone frontend (`replicas: 1`, `RollingUpdate` strategy, non-root `nextjs` UID 1001, zero database access).
+- **`bi-frontend-service` (Service):** Internal `ClusterIP` directing traffic to the frontend pod on port 3000.
 
 ### Note on Multi-Replica Safety & Rollout Strategy (Phases 6B & 6C):
 The API application utilizes in-memory process state for:
@@ -177,11 +180,20 @@ kubectl rollout undo deployment/bi-api-deployment
 kubectl rollout restart deployment/bi-api-deployment
 ```
 
-## Frontend Dashboard Integration (Phase 6F.1)
+## Frontend Dashboard Deployment (Phase 6K.2)
 
-When running the Next.js frontend (`dashboard/`) against the Kubernetes deployment:
-1. **Configurable Internal Address:** Set `API_INTERNAL_URL="http://bi-api-service:8000"` in the frontend's environment. The server-side proxy route (`src/app/api/[[...path]]/route.ts`) resolves this target URL and forwards client requests over cluster DNS.
-2. **Server-Side Secret Injection:** Set `API_AUTH_TOKEN` in the frontend's server environment matching `bi-api-secret`. The Next.js server automatically injects the `X-API-Key` header on all protected upstream requests (`/api/businesses`, `/api/scrape`, `/api/stop`, `/api/logs`). The token is strictly server-side and is **never** leaked to client browsers.
+The Next.js frontend is deployed alongside the API via `bi-frontend-deployment` and `bi-frontend-service`:
+1. **In-Cluster Backend Address:** `bi-frontend-config` automatically sets `API_INTERNAL_URL="http://bi-api-service:8000"`. Next.js Server Components and the server-side API proxy communicate directly with the backend over internal Kubernetes DNS.
+2. **Server-Side Secret Injection:** `API_AUTH_TOKEN` is injected into the frontend container from `bi-api-secret`. Next.js attaches `X-API-Key` to upstream requests server-side without exposing credentials to browser bundles.
+3. **Zero Database Credentials:** The frontend has zero direct connection to PostgreSQL; `DATABASE_URL` is completely absent from its manifests.
+4. **Accessing the Dashboard:**
+   ```bash
+   # Forward frontend port 3000 to localhost
+   kubectl port-forward svc/bi-frontend-service 3000:3000
+
+   # Open dashboard in browser
+   open http://localhost:3000
+   ```
 
 ---
 

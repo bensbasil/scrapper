@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bi-frontend-config
+  labels:
+    app.kubernetes.io/name: business-intelligence-frontend
+    app.kubernetes.io/part-of: business-opportunity-platform
+    app.kubernetes.io/component: frontend
+data:
+  PORT: "3000"
+  HOSTNAME: "0.0.0.0"
+  NODE_ENV: "production"
+  # Internal ClusterIP Service DNS for in-cluster communication to FastAPI backend
+  API_INTERNAL_URL: "http://bi-api-service:8000"

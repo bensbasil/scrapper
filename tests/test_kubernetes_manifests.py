@@ -29,14 +29,24 @@ def load_yaml(filename: str):
 
 
 def test_manifest_directory_and_files_exist():
-    """Verify that deploy/kubernetes directory and required files exist."""
+    """Verify that deploy/kubernetes directory and required backend/frontend files exist."""
     assert os.path.isdir(MANIFEST_DIR)
-    for fname in ["deployment.yaml", "service.yaml", "configmap.yaml", "kustomization.yaml", "secret.example.yaml"]:
+    expected_files = [
+        "deployment.yaml",
+        "service.yaml",
+        "configmap.yaml",
+        "frontend-deployment.yaml",
+        "frontend-service.yaml",
+        "frontend-configmap.yaml",
+        "kustomization.yaml",
+        "secret.example.yaml",
+    ]
+    for fname in expected_files:
         assert os.path.isfile(os.path.join(MANIFEST_DIR, fname)), f"Missing {fname}"
 
 
 def test_kubectl_kustomize_execution():
-    """Validates that kubectl kustomize can build the resource stream."""
+    """Validates that kubectl kustomize builds both backend and frontend resource streams."""
     kubectl_bin = shutil.which("kubectl")
     if not kubectl_bin:
         pytest.skip("kubectl not found in environment PATH")
@@ -48,10 +58,15 @@ def test_kubectl_kustomize_execution():
     )
     assert result.returncode == 0, f"kubectl kustomize failed: {result.stderr}"
     docs = list(yaml.safe_load_all(result.stdout))
-    kinds = [d["kind"] for d in docs if d and "kind" in d]
-    assert "ConfigMap" in kinds
-    assert "Deployment" in kinds
-    assert "Service" in kinds
+    names = [d.get("metadata", {}).get("name") for d in docs if d and "metadata" in d]
+
+    # Verify both backend and frontend components are rendered
+    assert "bi-api-config" in names
+    assert "bi-frontend-config" in names
+    assert "bi-api-service" in names
+    assert "bi-frontend-service" in names
+    assert "bi-api-deployment" in names
+    assert "bi-frontend-deployment" in names
 
 
 def test_no_secrets_in_manifests():
@@ -246,4 +261,149 @@ def test_multi_replica_state_isolation_risk_demonstration():
     assert pod_b_running_process is None
 
     # Conclusion: Single replica deployment (replicas: 1) is mandatory until external state store is introduced.
+
+
+def test_frontend_deployment_spec_and_strategy():
+    """Validates Frontend Deployment replica count, labels, and RollingUpdate strategy."""
+    doc = load_yaml("frontend-deployment.yaml")
+    assert doc["apiVersion"] == "apps/v1"
+    assert doc["kind"] == "Deployment"
+    assert doc["metadata"]["name"] == "bi-frontend-deployment"
+
+    spec = doc["spec"]
+    assert spec["replicas"] == 1
+    assert spec["strategy"]["type"] == "RollingUpdate"
+    rolling = spec["strategy"].get("rollingUpdate", {})
+    assert rolling.get("maxSurge") == 1
+    assert rolling.get("maxUnavailable") == 0
+
+    selector = spec["selector"]["matchLabels"]
+    assert selector["app.kubernetes.io/name"] == "business-intelligence-frontend"
+
+
+def test_frontend_pod_and_container_security():
+    """Validates that frontend pod and container security contexts enforce non-root execution (UID 1001)."""
+    doc = load_yaml("frontend-deployment.yaml")
+    pod_spec = doc["spec"]["template"]["spec"]
+
+    # Pod-level security context (must match nextjs UID 1001 from dashboard/Dockerfile)
+    pod_sc = pod_spec.get("securityContext", {})
+    assert pod_sc.get("runAsNonRoot") is True
+    assert pod_sc.get("runAsUser") == 1001
+    assert pod_sc.get("runAsGroup") == 1001
+    assert pod_sc.get("fsGroup") == 1001
+
+    # Container-level security context
+    container = pod_spec["containers"][0]
+    c_sc = container.get("securityContext", {})
+    assert c_sc.get("allowPrivilegeEscalation") is False
+    assert "ALL" in c_sc.get("capabilities", {}).get("drop", [])
+
+
+def test_frontend_resources_and_ports():
+    """Validates frontend container port (3000) and resource requests/limits."""
+    doc = load_yaml("frontend-deployment.yaml")
+    container = doc["spec"]["template"]["spec"]["containers"][0]
+
+    port = container["ports"][0]
+    assert port["containerPort"] == 3000
+    assert port["name"] == "http"
+
+    resources = container.get("resources", {})
+    requests = resources.get("requests", {})
+    limits = resources.get("limits", {})
+
+    assert requests.get("cpu") == "100m"
+    assert requests.get("memory") == "128Mi"
+    assert limits.get("cpu") == "500m"
+    assert limits.get("memory") == "384Mi"
+
+
+def test_frontend_probes_contract():
+    """Validates frontend startup, liveness, and readiness probes on root HTTP endpoint."""
+    doc = load_yaml("frontend-deployment.yaml")
+    container = doc["spec"]["template"]["spec"]["containers"][0]
+
+    # Startup probe
+    startup = container.get("startupProbe", {})
+    assert startup.get("httpGet", {}).get("path") == "/"
+    assert startup.get("httpGet", {}).get("port") == "http"
+    assert startup.get("failureThreshold") == 6
+
+    # Liveness probe
+    liveness = container.get("livenessProbe", {})
+    assert liveness.get("httpGet", {}).get("path") == "/"
+    assert liveness.get("httpGet", {}).get("port") == "http"
+    assert liveness.get("periodSeconds") == 15
+
+    # Readiness probe
+    readiness = container.get("readinessProbe", {})
+    assert readiness.get("httpGet", {}).get("path") == "/"
+    assert readiness.get("httpGet", {}).get("port") == "http"
+    assert readiness.get("periodSeconds") == 10
+    assert readiness.get("failureThreshold") == 2
+
+
+def test_frontend_env_and_secret_wiring():
+    """Validates frontend ConfigMap and Secret wiring, and verifies absence of DATABASE_URL."""
+    doc = load_yaml("frontend-deployment.yaml")
+    container = doc["spec"]["template"]["spec"]["containers"][0]
+
+    # ConfigMap reference
+    env_from = container.get("envFrom", [])
+    cm_names = [item["configMapRef"]["name"] for item in env_from if "configMapRef" in item]
+    assert "bi-frontend-config" in cm_names
+
+    # Secret reference for API_AUTH_TOKEN
+    envs = container.get("env", [])
+    env_map = {e["name"]: e.get("valueFrom", {}).get("secretKeyRef", {}) for e in envs}
+
+    assert "API_AUTH_TOKEN" in env_map
+    assert env_map["API_AUTH_TOKEN"]["name"] == "bi-api-secret"
+    assert env_map["API_AUTH_TOKEN"]["key"] == "API_AUTH_TOKEN"
+
+    # Strict boundary check: DATABASE_URL must NOT be present in frontend
+    assert "DATABASE_URL" not in env_map, "DATABASE_URL must not be injected into frontend container!"
+
+    # Raw file content check: ensure no postgres or database references in frontend deployment
+    path = os.path.join(MANIFEST_DIR, "frontend-deployment.yaml")
+    with open(path, "r", encoding="utf-8") as f:
+        raw_text = f.read()
+    assert "DATABASE_URL" not in raw_text or "strictly omitted" in raw_text.lower()
+
+
+def test_frontend_configmap_values():
+    """Validates frontend ConfigMap data keys and in-cluster backend URL."""
+    doc = load_yaml("frontend-configmap.yaml")
+    assert doc["apiVersion"] == "v1"
+    assert doc["kind"] == "ConfigMap"
+    assert doc["metadata"]["name"] == "bi-frontend-config"
+
+    data = doc["data"]
+    assert data["PORT"] == "3000"
+    assert data["HOSTNAME"] == "0.0.0.0"
+    assert data["NODE_ENV"] == "production"
+    assert data["API_INTERNAL_URL"] == "http://bi-api-service:8000"
+
+    # Must not contain credentials or database URLs
+    assert "API_AUTH_TOKEN" not in data
+    assert "DATABASE_URL" not in data
+
+
+def test_frontend_service_spec_and_port_alignment():
+    """Validates frontend Service definition and alignment with container ports."""
+    doc = load_yaml("frontend-service.yaml")
+    assert doc["apiVersion"] == "v1"
+    assert doc["kind"] == "Service"
+    assert doc["metadata"]["name"] == "bi-frontend-service"
+
+    spec = doc["spec"]
+    assert spec["type"] == "ClusterIP"
+    assert spec["selector"]["app.kubernetes.io/name"] == "business-intelligence-frontend"
+
+    port_entry = spec["ports"][0]
+    assert port_entry["port"] == 3000
+    assert port_entry["targetPort"] == "http"
+    assert port_entry["name"] == "http"
+
 

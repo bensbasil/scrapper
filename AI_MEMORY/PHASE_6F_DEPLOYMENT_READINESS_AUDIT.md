@@ -262,3 +262,4 @@
 | **P2-3** | **P2** | Docker | [`Dockerfile:48`](file:///Users/bistto/This%20Mac/Bens%20Repository/scrapper/Dockerfile#L48) | `CMD` hardcodes port `8000` in exec form, ignoring dynamic `$PORT` environment variable. | Use shell form or entrypoint script to expand `${PORT:-8000}`. |
 | **P3-1** | **P3** | Documentation | [`deploy/kubernetes/README.md`](file:///Users/bistto/This%20Mac/Bens%20Repository/scrapper/deploy/kubernetes/README.md) | Guide details backend API deployment only; omits frontend dashboard deployment. | Document frontend architecture, environment variables, and deployment options. |
 | **P3-2** | **P3** | CI/CD | [`.github/workflows/ci.yml:125-147`](file:///Users/bistto/This%20Mac/Bens%20Repository/scrapper/.github/workflows/ci.yml#L125-L147) | CI builds frontend statically but does not test frontend-to-backend proxying or auth. | Add integration test verifying frontend API client against authenticated backend. |
+  

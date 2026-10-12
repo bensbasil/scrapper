@@ -5,6 +5,9 @@ resources:
   - configmap.yaml
   - deployment.yaml
   - service.yaml
+  - frontend-configmap.yaml
+  - frontend-deployment.yaml
+  - frontend-service.yaml
 
 # Note: secret.example.yaml is intentionally excluded from the kustomization build
 # to prevent empty/template credentials from overwriting the live bi-api-secret.
