@@ -1,208 +1,231 @@
-# Kubernetes Deployment Guide: Business Opportunity Intelligence API
+# Kubernetes Deployment Guide: Business Opportunity Intelligence Platform
 
-This directory contains minimal, production-minded Kubernetes manifests for running the Business Opportunity Intelligence API in a containerized cluster environment.
+This directory contains declarative Kubernetes manifests for the Business Opportunity Intelligence Platform, organized into a standard Kustomize **Base + Overlays** architecture.
 
 ---
 
-## Architecture Overview
+## Architecture & Layout Overview
 
-```
-                      +---------------------------------------+
-                      |       Ingress / Port-Forward          |
-                      +-------------------+-------------------+
-                                          |
-                                          v
-                      +-------------------+-------------------+
-                      |   ClusterIP Service: bi-api-service   |
-                      |               (Port 8000)             |
-                      +-------------------+-------------------+
-                                          |
-                                          v
-                              +-----------------------+
-                              | Pod: bi-api-dep-...   |
-                              |  - Uvicorn (Non-root) |
-                              |  - Liveness: /live    |
-                              |  - Readiness: /ready  |
-                              |  - Host In-Memory:    |
-                              |    - Scraper process  |
-                              |    - Task lookup      |
-                              |    - SSE log buffer   |
-                              +-----------+-----------+
-                                          |
-                                          v
-                      +-------------------+-------------------+
-                      | External PostgreSQL Database (Cloud / |
-                      |    Dedicated Managed Instance)        |
-                      +---------------------------------------+
+```text
+deploy/kubernetes/
+├── README.md                          # Platform operations and deployment guide
+├── kustomization.yaml                 # Root backward-compatible alias (points to base/)
+├── base/                              # Shared application workloads (core 6 resources)
+│   ├── kustomization.yaml
+│   ├── deployment.yaml                # FastAPI backend Deployment (bi-api-deployment)
+│   ├── service.yaml                   # FastAPI backend Service (bi-api-service, port 8000)
+│   ├── configmap.yaml                 # FastAPI backend ConfigMap (bi-api-config)
+│   ├── frontend-deployment.yaml      # Next.js standalone Deployment (bi-frontend-deployment)
+│   ├── frontend-service.yaml         # Next.js frontend Service (bi-frontend-service, port 3000)
+│   ├── frontend-configmap.yaml       # Next.js frontend ConfigMap (bi-frontend-config)
+│   └── secret.example.yaml           # Operator template for bi-api-secret
+└── overlays/
+    ├── local/                         # Local cluster target (Kind, Minikube, Docker Desktop)
+    │   ├── kustomization.yaml         # In-cluster PostgreSQL + Dev Secret + Schema mount
+    │   ├── postgres-deployment.yaml   # PostgreSQL 15 single-replica Deployment
+    │   ├── postgres-service.yaml      # PostgreSQL ClusterIP Service (bi-postgres-service, port 5432)
+    │   ├── postgres-pvc.yaml          # PersistentVolumeClaim (1Gi ReadWriteOnce)
+    │   └── 01_schema.sql              # Schema initialization SQL sourced from database/schema.sql
+    └── prod/                          # Production cluster target (EKS, GKE, AKS, Bare-Metal)
+        ├── kustomization.yaml         # Production overlay (Managed external DB, no in-cluster DB)
+        └── patches/
+            └── resource-tuning.yaml   # Minimal production resource tuning patch
 ```
 
-### Components:
-- **`bi-api-config` (ConfigMap):** Non-sensitive API configuration (`PORT`, `PYTHONUNBUFFERED`, `ALLOWED_ORIGINS`, connection pool settings).
-- **`bi-api-secret` (Secret):** Sensitive credentials (`API_AUTH_TOKEN`, `DATABASE_URL`, `GEMINI_API_KEY`). Shared with frontend for `API_AUTH_TOKEN`.
-- **`bi-api-deployment` (Deployment):** Single-replica backend API (`replicas: 1`, `Recreate` rollout strategy, non-root `appuser` UID 1000).
-- **`bi-api-service` (Service):** Internal `ClusterIP` load balancer directing traffic to the ready API pod on port 8000.
-- **`bi-frontend-config` (ConfigMap):** Non-sensitive frontend configuration (`PORT`, `HOSTNAME`, `NODE_ENV`, `API_INTERNAL_URL="http://bi-api-service:8000"`).
+### Layer Responsibilities:
+
+| Layer | Path | Responsibility & Workloads |
+| :--- | :--- | :--- |
+| **Root (Compat)** | `deploy/kubernetes/` | Backward-compatibility forwarder to `base/`. Guarantees existing scripts/CI running `kubectl kustomize deploy/kubernetes` continue to build the 6 core resources. |
+| **Base** | `deploy/kubernetes/base/` | Declarative definitions for the core FastAPI backend and Next.js frontend workloads. Strictly excludes database workloads and plaintext credentials. |
+| **Local Overlay** | `deploy/kubernetes/overlays/local/` | Developer/demo harness. Provisions an in-cluster single-replica `postgres:15-alpine` deployment with a 1Gi PVC, auto-seeds `01_schema.sql` via ConfigMap on first boot, and generates development `bi-api-secret`. |
+| **Production Overlay**| `deploy/kubernetes/overlays/prod/` | Hardened production target. Relies strictly on externally managed PostgreSQL (AWS RDS, GCP Cloud SQL) and external cluster secret management. Strictly omits in-cluster DB and PVCs. |
+
+---
+
+## Component Inventory
+
+- **`bi-api-config` (ConfigMap):** Non-sensitive backend configuration (`PORT: "8000"`, `PYTHONUNBUFFERED`, `ALLOWED_ORIGINS`, pool parameters).
+- **`bi-api-service` (Service):** Internal `ClusterIP` proxying traffic to backend pods on port 8000.
+- **`bi-api-deployment` (Deployment):** Single-replica backend API (`replicas: 1`, `Recreate` strategy, non-root `appuser` UID 1000).
+- **`bi-frontend-config` (ConfigMap):** Non-sensitive frontend configuration (`PORT: "3000"`, `API_INTERNAL_URL="http://bi-api-service:8000"`).
+- **`bi-frontend-service` (Service):** Internal `ClusterIP` proxying traffic to frontend pods on port 3000.
 - **`bi-frontend-deployment` (Deployment):** Stateless Next.js standalone frontend (`replicas: 1`, `RollingUpdate` strategy, non-root `nextjs` UID 1001, zero database access).
-- **`bi-frontend-service` (Service):** Internal `ClusterIP` directing traffic to the frontend pod on port 3000.
-
-### Note on Multi-Replica Safety & Rollout Strategy (Phases 6B & 6C):
-The API application utilizes in-memory process state for:
-1. Agent task result lookup (`/api/agent/tasks/{task_id}`).
-2. Scraper process management (`running_process`, `/api/scrape`, `/api/stop`, `/api/status`).
-3. Real-time log streaming (`/api/logs` via process-local queues).
-4. Telemetry traces (`InMemoryTelemetrySink`).
-
-#### 1. Why the Pilot Uses One Replica:
-Running multiple uncoordinated replicas behind a round-robin Service causes state fragmentation:
-- 50% chance of `HTTP 404` when polling `/api/agent/tasks/{id}`.
-- Contradictory scraper status and broken SSE log streams across pods.
-- Risk of concurrent uncoordinated scraping subprocesses on identical search queries.
-A single replica (`replicas: 1`) guarantees strict state consistency, deterministic connection pool limits (1–10 DB connections), and eliminates race conditions.
-
-#### 2. Why the Rollout Strategy is 'Recreate':
-Standard Kubernetes `RollingUpdate` with `maxSurge: 1` spins up the replacement pod while the old pod is still running. For an application with host-bound subprocesses and in-memory state, this surge window breaks single-replica safety during updates (dual scraper executions, split-brain task lookups, and double DB connection pool allocations).
-The `Recreate` strategy terminates the old pod first, allowing its `@app.on_event("shutdown")` handler to cleanly stop active scraper processes and close connection pools before the new pod is created.
-
-#### 3. Expected Downtime During Updates:
-With `strategy: type: Recreate`, there is a brief, deterministic downtime window of **~5–15 seconds** while the existing pod terminates, the new pod is scheduled, and the new container passes its startup probe. Zero-downtime deployment is explicitly not claimed until external state brokers and worker queues are implemented.
-
-#### 4. What Happens to In-Memory Tasks & Telemetry on Restart:
-- **In-Memory State:** `agent_task_store` (last 200 agent results), `log_history` buffer, and `InMemoryTelemetrySink` ring buffers reside strictly in container RAM and are reset upon pod termination.
-- **Persistent State:** Enriched business entities, discovery sources, outreach drafts, and pipeline run logs stored in PostgreSQL survive pod restarts and remain fully accessible via protected endpoints.
+- **`bi-postgres-service` (Local only):** Internal `ClusterIP` proxying port 5432 to local PostgreSQL.
+- **`bi-postgres-deployment` (Local only):** `postgres:15-alpine` pod running non-root (UID 70).
+- **`bi-postgres-pvc` (Local only):** Local `ReadWriteOnce` persistent disk storage.
 
 ---
 
-## Prerequisites
+## Single-Replica Safety & Strategy Rationale
 
-1. Kubernetes cluster (v1.24+) accessible via `kubectl`.
-2. Built container image tagged and pushed to an accessible registry (e.g. `business-intelligence-api:latest`).
+### 1. Why the Backend Uses One Replica (`replicas: 1`):
+The backend utilizes process-local in-memory state for:
+- Agent task results (`/api/agent/tasks/{task_id}`).
+- Subprocess scraper management (`running_process`, `/api/scrape`, `/api/stop`, `/api/status`).
+- SSE log broadcasting (`/api/logs`).
+- Bounded telemetry sink ring buffers.
+Running multiple uncoordinated backend replicas behind a round-robin Service causes split-brain task lookup 404s and duplicate simultaneous scraping runs.
+
+### 2. Why the Backend Strategy is `Recreate`:
+A standard `RollingUpdate` with `maxSurge: 1` spins up a replacement pod while the old pod is still terminating. This surge window violates single-replica mutual exclusion, causing split-brain scraping and duplicate database connections. The `Recreate` strategy terminates the existing pod first, allowing clean process termination before launching the replacement pod. (Downtime window: ~5–15s).
 
 ---
 
-## Deployment Steps
+## Local / Demo Cluster Quickstart (Kind / Minikube)
 
-### 1. Provision Secrets
-Never commit secrets into git. Generate and create the `bi-api-secret` out-of-band:
+### 1. Prerequisites:
+- `kubectl` v1.24+
+- Local Kubernetes cluster (e.g., Kind or Minikube)
+- Docker daemon (for building container images)
 
+### 2. Build and Load Images into Cluster:
 ```bash
-# 1. Generate strong API auth token
-AUTH_TOKEN=$(openssl rand -hex 32)
+# Build backend container image
+docker build -t business-intelligence-api:latest .
 
-# 2. Create the Kubernetes Secret (Standalone Mode - no database)
-kubectl create secret generic bi-api-secret \
-  --from-literal=API_AUTH_TOKEN="${AUTH_TOKEN}"
+# Build frontend container image
+docker build -t business-intelligence-frontend:latest dashboard
 
-# OR: Create with external PostgreSQL and Gemini LLM provider credentials
-kubectl create secret generic bi-api-secret \
-  --from-literal=API_AUTH_TOKEN="${AUTH_TOKEN}" \
-  --from-literal=DATABASE_URL="postgresql://bi_user:strong_pass@postgres-host:5432/bi_db" \
-  --from-literal=GEMINI_API_KEY="AIzaSyYourSecretKey"
+# For Kind clusters, load the local images into the cluster nodes:
+kind load docker-image business-intelligence-api:latest
+kind load docker-image business-intelligence-frontend:latest
+
+# For Minikube clusters:
+# minikube image load business-intelligence-api:latest
+# minikube image load business-intelligence-frontend:latest
 ```
 
-### 2. Apply Kubernetes Manifests
-
+### 3. Render and Apply Local Overlay:
 ```bash
-# Apply using Kustomize
-kubectl apply -k deploy/kubernetes/
+# Render the local overlay to inspect KRM manifests
+kubectl kustomize deploy/kubernetes/overlays/local
+
+# Apply the complete 3-tier platform (App + Frontend + Postgres)
+kubectl apply -k deploy/kubernetes/overlays/local
 ```
 
-### 3. Verify Deployment & Pod Status
-
+### 4. Verify Rollout & Readiness:
 ```bash
-# Check rollout status
+# Wait for PostgreSQL to become ready
+kubectl rollout status deployment/bi-postgres-deployment
+
+# Wait for Backend API rollout
 kubectl rollout status deployment/bi-api-deployment
 
-# Inspect pods, labels, and readiness
-kubectl get pods -l app.kubernetes.io/name=business-intelligence-api -o wide
+# Wait for Frontend Dashboard rollout
+kubectl rollout status deployment/bi-frontend-deployment
 
-# Check service endpoint resolution
-kubectl get endpoints bi-api-service
+# Inspect all workloads
+kubectl get pods,services,pvc -o wide
 ```
 
----
-
-## Health Check & Probe Semantics
-
-| Probe | Path | Port | Interval | Failure Threshold | Behavioral Contract |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **Startup** | `/api/health/live` | `http` (8000) | 5s (delay 2s) | 6 | Protects slow cold starts during module loading. |
-| **Liveness** | `/api/health/live` | `http` (8000) | 10s | 3 | Checks process responsiveness. Zero database/LLM dependencies. Restarts hung processes. |
-| **Readiness** | `/api/health/ready` | `http` (8000) | 10s | 2 | Checks subsystem status. Returns 200 in standalone mode. Returns 503 if configured DB fails. Pulls unready pods out of service endpoints without restarting the container. |
-
----
-
-## Local Verification & Port-Forwarding
-
+### 5. Access the Platform via Port-Forwarding:
 ```bash
-# Forward local port 8000 to the service
+# Forward Frontend Dashboard (Port 3000)
+kubectl port-forward svc/bi-frontend-service 3000:3000
+
+# In a separate terminal, forward Backend API (Port 8000)
 kubectl port-forward svc/bi-api-service 8000:8000
 
-# Test Liveness probe
-curl -i http://localhost:8000/api/health/live
-
-# Test Readiness probe
-curl -i http://localhost:8000/api/health/ready
-
-# Test Protected Endpoint without token (Expect 401 Unauthorized)
-curl -i http://localhost:8000/api/businesses
-
-# Test Protected Endpoint with token
-curl -i -H "X-API-Key: ${AUTH_TOKEN}" http://localhost:8000/api/businesses
+# Open Dashboard in your browser:
+# http://localhost:3000
 ```
 
 ---
 
-## Inspection & Troubleshooting
+## Local Database Lifecycle & Data Reset
+
+### 1. Schema Initialization Semantics:
+- The local overlay packages `database/schema.sql` into the `bi-postgres-schema` ConfigMap.
+- Mounted read-only at `/docker-entrypoint-initdb.d/`.
+- PostgreSQL executes this script **strictly once**, during initial cluster boot when `/var/lib/postgresql/data/pgdata` is empty.
+- Pod restarts detect an existing database directory and safely bypass initialization.
+
+> [!IMPORTANT]
+> **Schema Migrations:** Modifying `01_schema.sql` or `database/schema.sql` will **NOT** automatically update an existing, populated database. To apply schema changes locally, follow the data reset procedure below.
+
+### 2. How to Reset Local Database Data Safely:
+To wipe all test entities, scrapers, and task records and return to a pristine state:
+```bash
+# Delete the local PersistentVolumeClaim
+kubectl delete pvc bi-postgres-pvc
+
+# Restart the PostgreSQL deployment to trigger re-creation with clean schema
+kubectl rollout restart deployment/bi-postgres-deployment
+```
+
+### 3. Limitations of Local In-Cluster PostgreSQL:
+- **No Production HA:** Lacks automated WAL archiving, streaming replication, read replicas, or automated backups.
+- **RWO Bound:** Storage is bound to a single cluster node (`ReadWriteOnce`).
+- Intended strictly for local development, integration testing, and offline demonstration.
+
+---
+
+## Hardened Production Deployment
+
+### 1. Secret Provisioning (Out-of-Band):
+Production credentials must **NEVER** be committed into git or placed in ConfigMaps. In production, provision `bi-api-secret` prior to deployment:
 
 ```bash
-# Inspect pod events and probe failures
-kubectl describe pod -l app.kubernetes.io/name=business-intelligence-api
+# Generate a cryptographically secure auth token
+API_AUTH_TOKEN=$(openssl rand -hex 32)
 
-# View streaming logs
+# Provision secret targeting external managed PostgreSQL (RDS, Cloud SQL)
+kubectl create secret generic bi-api-secret \
+  --from-literal=API_AUTH_TOKEN="${API_AUTH_TOKEN}" \
+  --from-literal=DATABASE_URL="postgresql://prod_user:SECURE_PASSWORD@managed-db.internal:5432/prod_db" \
+  --from-literal=GEMINI_API_KEY="AIzaSyYourProductionApiKey"
+```
+*(Or configure the External Secrets Operator / SealedSecrets to sync from your cloud secret vault).*
+
+### 2. Configure Production Container Images:
+In your CI/CD release pipeline, configure the tagged production container image repositories:
+```bash
+cd deploy/kubernetes/overlays/prod
+kustomize edit set image business-intelligence-api=registry.example.com/org/bi-api:v1.2.0
+kustomize edit set image business-intelligence-frontend=registry.example.com/org/bi-frontend:v1.2.0
+```
+
+### 3. Apply Production Overlay:
+```bash
+# Render to inspect
+kubectl kustomize deploy/kubernetes/overlays/prod
+
+# Apply to cluster
+kubectl apply -k deploy/kubernetes/overlays/prod
+```
+
+---
+
+## Diagnostic & Inspection Commands
+
+```bash
+# View backend live logs
 kubectl logs -l app.kubernetes.io/name=business-intelligence-api -c api -f
+
+# View frontend live logs
+kubectl logs -l app.kubernetes.io/name=business-intelligence-frontend -c frontend -f
+
+# View local postgres logs
+kubectl logs -l app.kubernetes.io/name=business-intelligence-postgres -c postgres -f
+
+# Check probe events or failures
+kubectl describe pod -l app.kubernetes.io/name=business-intelligence-api
+kubectl describe pod -l app.kubernetes.io/name=business-intelligence-frontend
 ```
 
 ---
 
-## Rollout Management & Rollback
+## Verification & Manifest Testing
+
+All manifests across root, base, local, and production overlays are continuously verified via automated tests:
 
 ```bash
-# Check rollout status and progress
-kubectl rollout status deployment/bi-api-deployment
+# Run complete manifest validation test suite (30 assertions)
+pytest tests/test_kubernetes_manifests.py -v
 
-# View deployment rollout revision history
-kubectl rollout history deployment/bi-api-deployment
-
-# Roll back to previous revision if an update fails or regresses
-kubectl rollout undo deployment/bi-api-deployment
-
-# Trigger a restart (terminates old pod, executes graceful shutdown, starts replacement)
-kubectl rollout restart deployment/bi-api-deployment
+# Run full Python offline test suite
+pytest -m "not postgres_integration and not docker" -q
 ```
-
-## Frontend Dashboard Deployment (Phase 6K.2)
-
-The Next.js frontend is deployed alongside the API via `bi-frontend-deployment` and `bi-frontend-service`:
-1. **In-Cluster Backend Address:** `bi-frontend-config` automatically sets `API_INTERNAL_URL="http://bi-api-service:8000"`. Next.js Server Components and the server-side API proxy communicate directly with the backend over internal Kubernetes DNS.
-2. **Server-Side Secret Injection:** `API_AUTH_TOKEN` is injected into the frontend container from `bi-api-secret`. Next.js attaches `X-API-Key` to upstream requests server-side without exposing credentials to browser bundles.
-3. **Zero Database Credentials:** The frontend has zero direct connection to PostgreSQL; `DATABASE_URL` is completely absent from its manifests.
-4. **Accessing the Dashboard:**
-   ```bash
-   # Forward frontend port 3000 to localhost
-   kubectl port-forward svc/bi-frontend-service 3000:3000
-
-   # Open dashboard in browser
-   open http://localhost:3000
-   ```
-
----
-
-## Teardown & Cleanup
-
-```bash
-# Delete all resources created by manifests
-kubectl delete -k deploy/kubernetes/
-
-# Delete the secret
-kubectl delete secret bi-api-secret
-```
+*(Note: Automated tests validate KRM schema conformance, security profiles, probe contracts, and Kustomize generation. Live cluster rollouts require an active running cluster).*

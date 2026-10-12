@@ -1,0 +1,21 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Inherit core application workloads from shared base
+resources:
+  - ../../base
+
+# Explicit production container image tagging
+# Real registry names can be set via 'kustomize edit set image' in CI/CD pipelines
+images:
+  - name: business-intelligence-api
+    newTag: v1.0.0
+  - name: business-intelligence-frontend
+    newTag: v1.0.0
+
+# Minimal, justified resource tuning for production workloads
+patches:
+  - path: patches/resource-tuning.yaml
+    target:
+      kind: Deployment
+      name: bi-api-deployment

@@ -1,0 +1,110 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bi-postgres-deployment
+  labels:
+    app.kubernetes.io/name: business-intelligence-postgres
+    app.kubernetes.io/part-of: business-opportunity-platform
+    app.kubernetes.io/component: database
+spec:
+  # Single replica is mandatory for local in-cluster storage attached to a single RWO volume
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: business-intelligence-postgres
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: business-intelligence-postgres
+        app.kubernetes.io/part-of: business-opportunity-platform
+        app.kubernetes.io/component: database
+    spec:
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 70
+        runAsGroup: 70
+        fsGroup: 70
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: postgres
+              containerPort: 5432
+              protocol: TCP
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          env:
+            - name: POSTGRES_USER
+              value: "bi_user"
+            - name: POSTGRES_PASSWORD
+              value: "bi_password"
+            - name: POSTGRES_DB
+              value: "bi_db"
+            - name: PGDATA
+              value: "/var/lib/postgresql/data/pgdata"
+          startupProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - bi_user
+                - -d
+                - bi_db
+            initialDelaySeconds: 2
+            periodSeconds: 3
+            timeoutSeconds: 3
+            failureThreshold: 10
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - bi_user
+                - -d
+                - bi_db
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          readinessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - bi_user
+                - -d
+                - bi_db
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+            - name: postgres-schema
+              mountPath: /docker-entrypoint-initdb.d
+              readOnly: true
+      volumes:
+        - name: postgres-data
+          persistentVolumeClaim:
+            claimName: bi-postgres-pvc
+        - name: postgres-schema
+          configMap:
+            name: bi-postgres-schema

@@ -41,9 +41,21 @@ jobs:
         run: |
           pytest -m "not postgres_integration and not docker" -v
 
-      - name: Validate Kubernetes Manifests (KRM & Kustomize)
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'v1.30.0'
+
+      - name: Validate All Kustomize Targets (Root, Base, Local, Prod)
         run: |
           kubectl kustomize deploy/kubernetes
+          kubectl kustomize deploy/kubernetes/base
+          kubectl kustomize deploy/kubernetes/overlays/local
+          kubectl kustomize deploy/kubernetes/overlays/prod
+
+      - name: Run Kubernetes Manifest Security & Specification Test Suite
+        run: |
+          pytest tests/test_kubernetes_manifests.py -v
 
   test-postgres-integration:
     name: PostgreSQL Integration Tests (Service-Backed)
@@ -112,13 +124,22 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build Docker image
+      - name: Build Backend Docker image
         run: |
           docker build -t business-intelligence-api:ci .
 
-      - name: Run Automated Container Deployment Smoke Tests
+      - name: Build Frontend Docker image
+        run: |
+          docker build -t business-intelligence-frontend:ci dashboard
+
+      - name: Verify Docker Daemon Health
+        run: |
+          docker info > /dev/null || (echo "FATAL: Docker daemon is unresponsive" && exit 1)
+
+      - name: Run Automated Container Deployment Smoke Tests (Backend & Frontend)
         env:
           DOCKER_IMAGE_TAG: "business-intelligence-api:ci"
+          FRONTEND_IMAGE_TAG: "business-intelligence-frontend:ci"
         run: |
           pytest -m "docker" -v
 
