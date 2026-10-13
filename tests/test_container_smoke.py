@@ -190,6 +190,33 @@ def test_container_rejects_invalid_api_key(standalone_container):
     assert exc_info.value.code == 401
 
 
+@pytest.mark.docker
+def test_container_rejects_browser_scrape_when_unavailable(standalone_container):
+    """
+    When the container image lacks Chromium browser binaries,
+    POST /api/scrape must be rejected with HTTP 501 and BrowserScrapingDisabled,
+    without spawning a background process or crashing the container.
+    """
+    url = f"{standalone_container['base_url']}/api/scrape"
+    payload = json.dumps({"category": "Dentists", "city": "Austin", "limit": 5}).encode("utf-8")
+    req = urllib.request.Request(
+        url,
+        data=payload,
+        headers={
+            "X-API-Key": standalone_container["token"],
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+    with pytest.raises(urllib.error.HTTPError) as exc_info:
+        urllib.request.urlopen(req, timeout=5.0)
+
+    assert exc_info.value.code == 501
+    body = json.loads(exc_info.value.read().decode())
+    assert "detail" in body
+    assert body["detail"]["code"] == "BrowserScrapingDisabled"
+
+
 # ==============================================================================
 # Container Degraded Mode (Unreachable Database)
 # ==============================================================================

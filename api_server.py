@@ -157,6 +157,43 @@ def set_agent(agent: Optional[Agent]) -> None:
     _agent_instance = agent
 
 
+# Browser scraping capability management (Phase 6N-D)
+_browser_scraping_checker: Optional[Any] = None
+
+
+def set_browser_scraping_checker(checker: Optional[Any]) -> None:
+    """Override capability checker for tests or custom environments."""
+    global _browser_scraping_checker
+    _browser_scraping_checker = checker
+
+
+def is_browser_scraping_available() -> bool:
+    """
+    Determines whether browser-dependent scraping (Playwright/Chromium) is available.
+
+    Capability Resolution Order:
+    1. Check if a programmatic override is set via set_browser_scraping_checker.
+    2. Check BROWSER_SCRAPING_ENABLED env var ('true'/'1'/'yes' vs 'false'/'0'/'no').
+    3. Check runtime presence and executability of the Chromium binary via Playwright.
+    """
+    global _browser_scraping_checker
+    if _browser_scraping_checker is not None:
+        return bool(_browser_scraping_checker())
+
+    override = os.getenv("BROWSER_SCRAPING_ENABLED")
+    if override is not None:
+        return override.strip().lower() in ("true", "1", "yes", "enabled")
+
+    try:
+        from playwright.sync_api import sync_playwright
+        with sync_playwright() as p:
+            exec_path = p.chromium.executable_path
+            return bool(exec_path and os.path.isfile(exec_path) and os.access(exec_path, os.X_OK))
+    except Exception as e:
+        logger.debug(f"Browser capability check failed: {e}")
+        return False
+
+
 # Significant fix #7: Strict Pydantic input validations
 class ScrapeRequest(BaseModel):
     query: Optional[str] = Field(None, max_length=250)
@@ -688,6 +725,24 @@ def update_business_field(business_id: int, req: UpdateBusinessRequest, repo_dep
 @app.post("/api/scrape", dependencies=[Depends(verify_api_key)])
 async def trigger_scrape(req: ScrapeRequest, background_tasks: BackgroundTasks):
     """Critical fix #1: Lock-protected scrape trigger prevents process collision."""
+    source = req.source or "gmaps"
+
+    # Deterministic capability guard (Phase 6N-D):
+    # Reject browser-dependent scrapers before acquiring locks or spawning subprocesses
+    if source in ("gmaps", "justdial", "indiamart") and not is_browser_scraping_available():
+        raise HTTPException(
+            status_code=status.HTTP_501_NOT_IMPLEMENTED,
+            detail={
+                "code": "BrowserScrapingDisabled",
+                "error": "BrowserScrapingDisabled",
+                "message": (
+                    f"Live browser-dependent scraping (source: '{source}') is disabled in this deployment "
+                    "because browser binaries (Chromium) are unavailable. "
+                    "Pre-load business prospects or deploy a dedicated scraping worker."
+                ),
+            },
+        )
+
     async with process_lock:
         if is_scraper_running():
             return {"success": False, "message": "Scraper is already running in background."}
@@ -708,7 +763,6 @@ async def trigger_scrape(req: ScrapeRequest, background_tasks: BackgroundTasks):
         if req.limit is not None:
             args += ["--limit", str(req.limit)]
 
-        source = req.source or "gmaps"
         if source in ("justdial", "indiamart"):
             args += ["--source", source]
 

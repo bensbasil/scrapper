@@ -235,7 +235,28 @@ In the backend container ([`Dockerfile`](file:///Users/bistto/This%20Mac/Bens%20
 
 ---
 
-## 5. Is Browser Scraping Essential to the Current MVP Workflow?
+## 5. Confirmed Findings versus Unverified Risks
+
+To maintain architectural rigor, the investigation explicitly categorizes all findings into empirically confirmed facts versus unverified/refuted risks:
+
+### Confirmed Findings (Empirically Verified)
+1. **Missing Browser Binaries in Container:** [`Dockerfile`](file:///Users/bistto/This%20Mac/Bens%20Repository/scrapper/Dockerfile) omits `playwright install --with-deps chromium`. The container cache `/home/appuser/.cache/ms-playwright/` is empty.
+2. **Deterministic Playwright Launch Failure:** When `sync_playwright().start().chromium.launch()` is called without binaries, it immediately raises `playwright._impl._errors.Error: Executable doesn't exist...` (empirically reproduced with isolated cache path).
+3. **Asynchronous Request Dynamics:** `POST /api/scrape` returns `200 OK` immediately to the caller via FastAPI `BackgroundTasks`. The failure is asynchronous inside the spawned child process (`pipeline_runner.py`).
+4. **Subprocess Failure Isolation:** When `p.chromium.launch()` fails, `pipeline_runner.py` catches the exception in its top-level `try/except` block, logs the critical error, marks the telemetry run as finished, and terminates without crashing the parent FastAPI web server.
+5. **Zero Playwright Dependency in Core Intelligence:** Website analysis, SEO auditing, tech stack detection, email extraction, decision-maker discovery, OpenCorporates enrichment, social reachability, conversion analysis, trust detection, business health scoring, AI opportunity reasoning, outreach drafting, and autonomous agent planning rely exclusively on `requests`, `BeautifulSoup`, and PostgreSQL. None of them use Playwright.
+6. **Graceful Fallback in Deep Social Scraping:** `SocialScraper` attempts `requests` Open Graph parsing first, and wraps its Playwright fallback in a `try/except` block that safely returns requests data if Playwright fails.
+7. **CI Blind Spot:** Existing test suites (`test_api_auth.py`, `test_container_smoke.py`, `test_frontend_container_smoke.py`) only test unauthenticated 401s on `/api/scrape` or verify health/readiness endpoints; no test ever triggers authenticated scraping in a container.
+
+### Unverified or Refuted Risks
+1. **API Web Server Crashing (Refuted):** The API web server does *not* crash when scraping fails. The scraper runs in an isolated subprocess (`pipeline_runner.py`), and stdout/stderr are safely drained into the SSE buffer.
+2. **Database Corruption / Dirty Data (Refuted):** Incomplete scrape attempts do not write corrupted business records to PostgreSQL. Pre-population and DB inserts only occur *after* listings are returned by the scraper. When the scraper fails at launch, 0 businesses are returned, so no partial records are written.
+3. **Autonomous Agent Failure (Refuted):** The autonomous Agent does *not* fail due to missing Playwright binaries. The Agent operates on existing database records and explicitly forbids raw network/infrastructure calls.
+4. **Memory Exhaustion Under Current State (Refuted for Current Baseline):** In the current container baseline, because Chromium fails to launch, memory usage remains modest (~150 MiB). However, if Chromium binaries were installed without increasing Kubernetes memory limits (Option B), OOMKilled evictions would become a confirmed critical risk.
+
+---
+
+## 6. Is Browser Scraping Essential to the Current MVP Workflow?
 
 To determine the operational impact of this defect, the platform's core user journey was analyzed:
 
@@ -252,7 +273,7 @@ Browser scraping is **only essential for cold, on-demand harvesting of un-ingest
 
 ---
 
-## 6. Evaluation of Remediation Options
+## 7. Evaluation of Remediation Options
 
 ### Option A: Disable / Gate Browser-Dependent Scraping in the API Container (Smallest Safe Remediation)
 
@@ -296,7 +317,7 @@ Maintain the lightweight API container (Option A) for web serving, agent executi
 
 ---
 
-## 7. Comparative Decision Matrix
+## 8. Comparative Decision Matrix
 
 | Dimension | Option A: Gate/Disable in API Container | Option B: "Fat" API Container with Chromium | Option C: Dedicated Worker Image |
 |---|---|---|---|
@@ -313,7 +334,7 @@ Maintain the lightweight API container (Option A) for web serving, agent executi
 
 ---
 
-## 8. Test Inspection & Regression Test Plan
+## 9. Test Inspection & Regression Test Plan
 
 ### Inspection of Existing Tests
 1. [`tests/test_api_auth.py`](file:///Users/bistto/This%20Mac/Bens%20Repository/scrapper/tests/test_api_auth.py): Verifies that `POST /api/scrape` returns 401 without authentication. Never submits an authenticated request.
@@ -334,7 +355,7 @@ Maintain the lightweight API container (Option A) for web serving, agent executi
 
 ---
 
-## 9. Final Recommendation and Evidence-Based Justification
+## 10. Final Recommendation and Evidence-Based Justification
 
 ### Primary Recommendation: **Option A (Disable / Gate in API Container with Clear Error Response)**
 
