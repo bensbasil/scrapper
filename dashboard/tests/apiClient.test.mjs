@@ -597,3 +597,25 @@ test("Runs page explicitly exports dynamic = 'force-dynamic' to prevent static d
     "Runs page missing dynamic = 'force-dynamic'"
   );
 });
+
+test("package.json test script isolates unit tests from container deployment smoke tests", () => {
+  const pkgPath = path.resolve(process.cwd(), "package.json");
+  const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
+  assert.ok(pkg.scripts?.test, "package.json must define a 'test' script");
+  assert.ok(pkg.scripts?.["test:smoke"], "package.json must define a 'test:smoke' script");
+  assert.doesNotMatch(
+    pkg.scripts.test,
+    /containerSmoke/,
+    "npm test must not execute containerSmoke directly"
+  );
+  assert.doesNotMatch(
+    pkg.scripts.test,
+    /tests\/\*\.test\.mjs/,
+    "npm test must not blindly glob tests/*.test.mjs to avoid executing container smoke tests before Docker image is built"
+  );
+  assert.match(
+    pkg.scripts["test:smoke"],
+    /containerSmoke\.test\.mjs/,
+    "npm run test:smoke must execute containerSmoke.test.mjs"
+  );
+});
