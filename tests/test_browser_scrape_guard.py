@@ -166,31 +166,64 @@ async def test_scrape_accepted_when_browser_available(monkeypatch):
 
 
 @pytest.mark.anyio
-async def test_health_and_status_endpoints_unaffected():
+async def test_health_and_status_endpoints_unaffected(monkeypatch):
     """
-    Disabling browser scraping must not affect liveness, readiness,
+    Disabling browser scraping must not affect liveness, readiness (with healthy DB),
     or status endpoints.
     """
     set_browser_scraping_checker(lambda: False)
 
-    async with httpx.AsyncClient(
-        transport=httpx.ASGITransport(app=app), base_url="http://testserver"
-    ) as client:
-        # Liveness
-        resp_live = await client.get("/api/health/live")
-        assert resp_live.status_code == 200
-        assert resp_live.json()["status"] == "alive"
+    # Mock database connectivity as healthy to verify readiness returns 200 deterministically
+    mock_cursor = MagicMock()
+    mock_cursor.fetchone.return_value = (1,)
+    mock_conn = MagicMock()
+    mock_conn.cursor.return_value.__enter__.return_value = mock_cursor
+    mock_cm = MagicMock()
+    mock_cm.__enter__.return_value = mock_conn
+    mock_cm.__exit__.return_value = None
 
-        # Readiness (standalone mode without DB)
-        resp_ready = await client.get("/api/health/ready")
-        assert resp_ready.status_code == 200
-        assert resp_ready.json()["status"] == "ready"
+    monkeypatch.setenv("DATABASE_URL", "postgresql://mock_user:mock_pass@127.0.0.1:5432/mock_db")
 
-        # Status
-        resp_status = await client.get("/api/status")
-        assert resp_status.status_code == 200
-        assert resp_status.json()["success"] is True
-        assert resp_status.json()["is_running"] is False
+    with patch("api_server.db_manager.get_connection", return_value=mock_cm):
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=app), base_url="http://testserver"
+        ) as client:
+            # Liveness
+            resp_live = await client.get("/api/health/live")
+            assert resp_live.status_code == 200
+            assert resp_live.json()["status"] == "alive"
+
+            # Readiness (healthy database)
+            resp_ready = await client.get("/api/health/ready")
+            assert resp_ready.status_code == 200
+            assert resp_ready.json()["status"] == "ready"
+            assert resp_ready.json()["components"]["database"]["status"] == "connected"
+
+            # Status
+            resp_status = await client.get("/api/status")
+            assert resp_status.status_code == 200
+            assert resp_status.json()["success"] is True
+            assert resp_status.json()["is_running"] is False
+
+
+@pytest.mark.anyio
+async def test_readiness_returns_503_when_database_unavailable(monkeypatch):
+    """
+    When database connectivity is unavailable, /api/health/ready returns 503 Service Unavailable.
+    Verifies readiness failure semantics are preserved while browser scraping is disabled.
+    """
+    set_browser_scraping_checker(lambda: False)
+    monkeypatch.setenv("DATABASE_URL", "postgresql://ci_isolated:invalid_pass@127.0.0.1:59999/nonexistent")
+
+    with patch("api_server.db_manager.get_connection", side_effect=Exception("Database connection refused")):
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=app), base_url="http://testserver"
+        ) as client:
+            resp_ready = await client.get("/api/health/ready")
+            assert resp_ready.status_code == 503
+            data = resp_ready.json()
+            assert data["status"] == "not_ready"
+            assert data["components"]["database"]["status"] == "unavailable"
 
 
 @pytest.mark.anyio

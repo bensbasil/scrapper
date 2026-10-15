@@ -54,7 +54,7 @@ All four sub-phases (Investigation, Remediation, Independent Review, and Hardeni
 
 ### C. Test Suite Coverage & Regression Validation
 - **Location:** [`tests/test_browser_scrape_guard.py`](file:///Users/bistto/This%20Mac/Bens%20Repository/scrapper/tests/test_browser_scrape_guard.py).
-- **Verification:** 29 tests fully cover:
+- **Verification:** 30 tests fully cover:
   1. Default un-mocked behavior when Chromium is missing (`test_capability_missing_chromium_returns_false_unmocked`).
   2. Physical executable validation (`test_capability_existing_executable_returns_true`).
   3. Inaccessible/non-executable binaries with mode `0o644` (`test_capability_missing_or_inaccessible_executable_returns_false`).
@@ -64,15 +64,14 @@ All four sub-phases (Investigation, Remediation, Independent Review, and Hardeni
   7. Process-lifetime caching and clean cache reset (`test_cached_behavior_and_cache_reset`).
   8. Environment disable independence without cache pollution (`test_environment_disable_not_cached_improperly`).
   9. End-to-end endpoint rejection via `POST /api/scrape` with un-mocked capability detection (`test_endpoint_scrape_rejected_with_unmocked_missing_browser`).
-  10. Authentication precedence, background task prevention, health/status preservation, recrawl preservation, and social scraper fallback.
+  10. Authentication precedence, background task prevention, health/status preservation with healthy DB mock (`test_health_and_status_endpoints_unaffected`), readiness 503 on database failure (`test_readiness_returns_503_when_database_unavailable`), recrawl preservation, and social scraper fallback.
 
 ---
 
 ## 3. Scope & Unrelated Changes Inspection
 
 - **Git Status:**
-  - Modified code files: `api_server.py`, `tests/test_browser_scrape_guard.py`.
-  - Untracked documentation files: `AI_MEMORY/PHASE_6N_D_BROWSER_GUARD_REVIEW.md`, `AI_MEMORY/PHASE_6N_D_BROWSER_GUARD_HARDENING.md`, `AI_MEMORY/PHASE_6N_D_FINAL_REVIEW.md`.
+  - Modified code files: `tests/test_browser_scrape_guard.py`.
 - **Cleanliness:**
   - Zero unrelated source code files modified.
   - Zero frontend files modified (`dashboard/` remains clean).
@@ -88,8 +87,8 @@ In accordance with strict verification rules, the exact status of all test suite
 
 | Test Suite | Command | Execution Status | Actual Results | Notes |
 |---|---|---|---|---|
-| **Focused Browser Guard** | `pytest tests/test_browser_scrape_guard.py -v` | **ACTUALLY RAN & PASSED** | **29 passed** in 0.45s | 100% pass rate across all guard and hardening tests. |
-| **Full Offline Python Suite** | `pytest -m "not postgres_integration and not docker" -v` | **ACTUALLY RAN & PASSED** | **489 passed, 15 deselected** in 9.60s | 0 failures, 0 regressions against baseline. |
+| **Focused Browser Guard** | `pytest tests/test_browser_scrape_guard.py -v` | **ACTUALLY RAN & PASSED** | **30 passed** in 0.45s | 100% pass rate across all guard, readiness, and hardening tests. |
+| **Full Offline Python Suite** | `pytest -m "not postgres_integration and not docker" -v` | **ACTUALLY RAN & PASSED** | **490 passed, 15 deselected** in 8.91s | 0 failures, 0 regressions in both local and CI (`DATABASE_URL=...:59999`) environments. |
 | **Frontend Unit Tests** | `npm test` in `dashboard/` | **ACTUALLY RAN & PASSED** | **45 passed** in 152ms | API client and proxy unit tests 100% passing. |
 | **PostgreSQL Integration Tests** | `pytest -m "postgres_integration"` | **SKIPPED (Not Run)** | **2 skipped, 502 deselected** in 0.95s | Skipped because local PostgreSQL service is not running on port 5432. Executed in CI via GitHub Actions service container. |
 | **Docker Smoke Tests** | `pytest tests/test_container_smoke.py -v` | **SKIPPED (Not Run)** | **9 skipped** in 0.24s | Skipped via `skipif(not is_docker_available())` because local Docker daemon socket is not available on host. Executed in CI job `docker-build`. |
@@ -98,7 +97,7 @@ In accordance with strict verification rules, the exact status of all test suite
 
 ## 5. Remaining Defects & Known Limitations
 
-- **Remaining Defects:** **NONE.** All confirmed defects identified in Phase 6N-C and Phase 6N-D.3 have been remediated, hardened, and verified.
+- **Remaining Defects:** **NONE.** All confirmed defects identified in Phase 6N-C, Phase 6N-D.3, and Phase 6N-D.6 have been remediated, hardened, and verified.
 - **Architectural Scope Limitations:**
   1. *Backend Container Chromium Omission:* The backend container intentionally does not bundle Chromium binaries (`playwright install chromium`), maintaining a lightweight (~250MB) unprivileged image. Live Google Maps, JustDial, and IndiaMART scraping remains disabled in the API container pod by design.
   2. *Live Scraping Production Roadmap:* When live browser harvesting is needed in production, deploy a dedicated asynchronous worker pod (`business-intelligence-scraper`) backed by a Redis/PostgreSQL queue (Option C roadmap).
@@ -108,24 +107,9 @@ In accordance with strict verification rules, the exact status of all test suite
 
 ## 6. Exact File List for Commit
 
-### Option 1: Incremental Commit on top of current HEAD (`4540826`)
+### Working Tree Files to Include:
 ```
-api_server.py
 tests/test_browser_scrape_guard.py
-AI_MEMORY/PHASE_6N_D_BROWSER_GUARD_REVIEW.md
-AI_MEMORY/PHASE_6N_D_BROWSER_GUARD_HARDENING.md
-AI_MEMORY/PHASE_6N_D_FINAL_REVIEW.md
-```
-
-### Option 2: Consolidated Phase 6N-D Release Commit (from baseline `0c61d28`)
-```
-api_server.py
-tests/test_browser_scrape_guard.py
-tests/test_container_smoke.py
-AI_MEMORY/PHASE_6N_D_BROWSER_SCRAPING_INVESTIGATION.md
-AI_MEMORY/PHASE_6N_D_BROWSER_SCRAPING_REMEDIATION.md
-AI_MEMORY/PHASE_6N_D_BROWSER_GUARD_REVIEW.md
-AI_MEMORY/PHASE_6N_D_BROWSER_GUARD_HARDENING.md
 AI_MEMORY/PHASE_6N_D_FINAL_REVIEW.md
 ```
 
@@ -139,5 +123,6 @@ AI_MEMORY/PHASE_6N_D_FINAL_REVIEW.md
 1. The capability guard deterministically protects the API from crashing when Chromium is absent.
 2. Configuration safety is guaranteed: `BROWSER_SCRAPING_ENABLED=true` cannot bypass missing binaries.
 3. Process-lifetime memoization eliminates event-loop blocking and repeated driver overhead.
-4. Test suites demonstrate 100% pass rate with zero regressions across offline Python (489 passed) and frontend (45 passed) tests.
-5. Codebase hygiene is verified: `git diff --check` passes cleanly with zero unrelated modifications.
+4. Readiness probe semantics in tests cleanly distinguish healthy DB (200 OK) from unreachable DB (503 Service Unavailable), passing in both local standalone mode and CI's isolated database environment.
+5. Test suites demonstrate 100% pass rate with zero regressions across offline Python (490 passed) and frontend (45 passed) tests.
+6. Codebase hygiene is verified: `git diff --check` passes cleanly with zero unrelated modifications.
