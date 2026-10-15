@@ -159,6 +159,7 @@ def set_agent(agent: Optional[Agent]) -> None:
 
 # Browser scraping capability management (Phase 6N-D)
 _browser_scraping_checker: Optional[Any] = None
+_browser_executable_available: Optional[bool] = None
 
 
 def set_browser_scraping_checker(checker: Optional[Any]) -> None:
@@ -167,31 +168,66 @@ def set_browser_scraping_checker(checker: Optional[Any]) -> None:
     _browser_scraping_checker = checker
 
 
-def is_browser_scraping_available() -> bool:
+def reset_browser_scraping_cache() -> None:
+    """Reset cached capability check result for testing or dynamic environment reconfiguration."""
+    global _browser_executable_available
+    _browser_executable_available = None
+
+
+def clear_browser_capability_cache() -> None:
+    """Alias for reset_browser_scraping_cache."""
+    reset_browser_scraping_cache()
+
+
+def _check_chromium_executable_available() -> bool:
     """
-    Determines whether browser-dependent scraping (Playwright/Chromium) is available.
-
-    Capability Resolution Order:
-    1. Check if a programmatic override is set via set_browser_scraping_checker.
-    2. Check BROWSER_SCRAPING_ENABLED env var ('true'/'1'/'yes' vs 'false'/'0'/'no').
-    3. Check runtime presence and executability of the Chromium binary via Playwright.
+    Inspects whether Chromium binary is installed and executable via Playwright.
+    Fails closed on any import, driver startup, or path detection error.
     """
-    global _browser_scraping_checker
-    if _browser_scraping_checker is not None:
-        return bool(_browser_scraping_checker())
-
-    override = os.getenv("BROWSER_SCRAPING_ENABLED")
-    if override is not None:
-        return override.strip().lower() in ("true", "1", "yes", "enabled")
-
     try:
         from playwright.sync_api import sync_playwright
         with sync_playwright() as p:
             exec_path = p.chromium.executable_path
             return bool(exec_path and os.path.isfile(exec_path) and os.access(exec_path, os.X_OK))
     except Exception as e:
-        logger.debug(f"Browser capability check failed: {e}")
+        logger.debug(f"Chromium executable capability check failed: {e}")
         return False
+
+
+def is_browser_scraping_available() -> bool:
+    """
+    Determines whether browser-dependent scraping (Playwright/Chromium) is available.
+
+    Capability Resolution Order:
+    1. Programmatic override via set_browser_scraping_checker (for unit test isolation).
+    2. Administrative kill-switch via BROWSER_SCRAPING_ENABLED env var:
+       - If explicitly disabled ('false', '0', 'no', 'off', 'disabled'), returns False immediately.
+       - NOTE: Setting BROWSER_SCRAPING_ENABLED to 'true'/'1'/'yes' does NOT bypass the
+         physical binary check; the Chromium binary must actually exist and be executable.
+    3. Cached Chromium executable detection:
+       - Checks runtime presence (os.path.isfile) and execute permissions (os.access X_OK).
+       - Result is cached in-memory during process lifetime to avoid repeated synchronous
+         Playwright driver IPC calls on every request.
+       - Fails closed (False) on any error during Playwright initialization or path check.
+    """
+    global _browser_scraping_checker, _browser_executable_available
+
+    # 1. Programmatic test hook takes highest precedence
+    if _browser_scraping_checker is not None:
+        return bool(_browser_scraping_checker())
+
+    # 2. Administrative kill-switch check
+    override = os.getenv("BROWSER_SCRAPING_ENABLED")
+    if override is not None:
+        normalized = override.strip().lower()
+        if normalized in ("false", "0", "no", "off", "disabled"):
+            return False
+
+    # 3. Cached physical binary presence & executability
+    if _browser_executable_available is None:
+        _browser_executable_available = _check_chromium_executable_available()
+
+    return _browser_executable_available
 
 
 # Significant fix #7: Strict Pydantic input validations
