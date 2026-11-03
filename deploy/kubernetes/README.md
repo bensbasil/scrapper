@@ -48,6 +48,7 @@ deploy/kubernetes/
 - **`bi-api-config` (ConfigMap):** Non-sensitive backend configuration (`PORT: "8000"`, `PYTHONUNBUFFERED`, `ALLOWED_ORIGINS`, pool parameters).
 - **`bi-api-service` (Service):** Internal `ClusterIP` proxying traffic to backend pods on port 8000.
 - **`bi-api-deployment` (Deployment):** Single-replica backend API (`replicas: 1`, `Recreate` strategy, non-root `appuser` UID 1000).
+- **`bi-db-migration` (Job):** Dedicated database migration job running `python -m database.migrate` (UID 1000, `backoffLimit: 3`, `activeDeadlineSeconds: 120`).
 - **`bi-frontend-config` (ConfigMap):** Non-sensitive frontend configuration (`PORT: "3000"`, `API_INTERNAL_URL="http://bi-api-service:8000"`).
 - **`bi-frontend-service` (Service):** Internal `ClusterIP` proxying traffic to frontend pods on port 3000.
 - **`bi-frontend-deployment` (Deployment):** Stateless Next.js standalone frontend (`replicas: 1`, `RollingUpdate` strategy, non-root `nextjs` UID 1001, zero database access).
@@ -182,19 +183,42 @@ kubectl create secret generic bi-api-secret \
 ### 2. Configure Production Container Images:
 In your CI/CD release pipeline, configure the tagged production container image repositories:
 ```bash
-cd deploy/kubernetes/overlays/prod
-kustomize edit set image business-intelligence-api=registry.example.com/org/bi-api:v1.2.0
-kustomize edit set image business-intelligence-frontend=registry.example.com/org/bi-frontend:v1.2.0
+(cd deploy/kubernetes/overlays/prod && kustomize edit set image business-intelligence-api=registry.example.com/org/bi-api:v1.2.0)
+(cd deploy/kubernetes/overlays/prod && kustomize edit set image business-intelligence-frontend=registry.example.com/org/bi-frontend:v1.2.0)
 ```
 
-### 3. Apply Production Overlay:
+### 3. Production Release-Gating Sequence (Lifecycle Ordering):
+
+> [!IMPORTANT]
+> **Kubernetes Lifecycle Ordering:** Applying a Job and Deployment simultaneously with `kubectl apply` does **not** sequence execution; Kubernetes launches pods concurrently. To guarantee that database migrations complete successfully **before** promoting or starting the new API Deployment version, production release pipelines must follow this staged gating sequence:
+
 ```bash
-# Render to inspect
-kubectl kustomize deploy/kubernetes/overlays/prod
+# Step 1: Pre-Migration Cleanup (remove completed Job from prior release if present)
+kubectl delete job bi-db-migration --ignore-not-found --wait=true
 
-# Apply to cluster
+# Step 2: Deploy & Execute Migration Job First
+# Render production overlay and apply strictly the migration Job
+kubectl kustomize deploy/kubernetes/overlays/prod | kubectl apply -l app.kubernetes.io/component=migration -f -
+
+# Wait for migration Job completion with finite timeout (matching activeDeadlineSeconds: 120s)
+echo "Awaiting database migration Job completion..."
+kubectl wait --for=condition=complete --timeout=120s job/bi-db-migration
+
+# RELEASE GATE: If migration fails or times out, kubectl wait exits with a non-zero code.
+# The CI/CD release pipeline halts immediately.
+# The new API Deployment is NEVER rolled out, and the live application continues running safely.
+
+# Step 3: Rollout Application Workloads (Executed ONLY after migration success)
 kubectl apply -k deploy/kubernetes/overlays/prod
+
+# Verify rollout status of application pods
+kubectl rollout status deployment/bi-api-deployment --timeout=180s
+kubectl rollout status deployment/bi-frontend-deployment --timeout=180s
 ```
+
+### 4. Rollback and Failure Behavior:
+- **Application Rollback:** If a deployed application version encounters runtime issues after successful migration, execute `kubectl rollout undo deployment/bi-api-deployment`. The platform's forward-compatible, additive database schema (`IF NOT EXISTS`, additive columns) ensures compatibility with prior application code.
+- **Migration Failure Rollback:** If migration DDL fails during Job execution, `database/migrate.py` automatically executes a transactional database rollback (`conn.rollback()`), cleans up session advisory locks, and exits with code 1. The database remains in its pre-migration state, preventing partial or corrupt schema states.
 
 ---
 

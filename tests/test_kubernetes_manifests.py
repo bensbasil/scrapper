@@ -81,6 +81,7 @@ def test_manifest_directory_and_files_exist():
         "frontend-configmap.yaml",
         "kustomization.yaml",
         "secret.example.yaml",
+        "migration-job.yaml",
     ]
     for fname in expected_base_files:
         assert os.path.isfile(os.path.join(BASE_DIR, fname)), f"Missing {fname} in base"
@@ -101,12 +102,13 @@ def test_kubectl_kustomize_execution():
     assert "bi-frontend-service" in names
     assert "bi-api-deployment" in names
     assert "bi-frontend-deployment" in names
+    assert "bi-db-migration" in names
 
 
-def test_base_kustomize_renders_six_core_resources_without_postgres():
-    """Base must render exactly 6 core application resources with zero PostgreSQL resources."""
+def test_base_kustomize_renders_core_resources_and_migration_job_without_postgres():
+    """Base must render exactly 7 application resources (including migration Job) with zero PostgreSQL resources."""
     docs = render_kustomize(BASE_DIR)
-    assert len(docs) == 6, f"Expected 6 base resources, got {len(docs)}"
+    assert len(docs) == 7, f"Expected 7 base resources, got {len(docs)}"
 
     names = [d.get("metadata", {}).get("name") for d in docs]
     kinds = [d.get("kind") for d in docs]
@@ -117,6 +119,8 @@ def test_base_kustomize_renders_six_core_resources_without_postgres():
     assert "bi-frontend-service" in names
     assert "bi-api-deployment" in names
     assert "bi-frontend-deployment" in names
+    assert "bi-db-migration" in names
+    assert kinds[names.index("bi-db-migration")] == "Job"
 
     # Strictly no PostgreSQL resources in base
     for d in docs:
@@ -127,18 +131,19 @@ def test_base_kustomize_renders_six_core_resources_without_postgres():
 
 
 def test_local_overlay_renders_application_and_postgres_resources():
-    """Local overlay must render backend, frontend, and PostgreSQL (Deployment, Service, PVC, ConfigMap, Secret)."""
+    """Local overlay must render backend, frontend, migration Job, and PostgreSQL (Deployment, Service, PVC, ConfigMap, Secret)."""
     docs = render_kustomize(LOCAL_OVERLAY_DIR)
     names = [d.get("metadata", {}).get("name") for d in docs]
     kinds = {d.get("metadata", {}).get("name"): d.get("kind") for d in docs}
 
-    # Core workloads
+    # Core workloads & migration Job
     assert "bi-api-config" in names
     assert "bi-frontend-config" in names
     assert "bi-api-service" in names
     assert "bi-frontend-service" in names
     assert "bi-api-deployment" in names
     assert "bi-frontend-deployment" in names
+    assert "bi-db-migration" in names
 
     # Local PostgreSQL workloads
     assert "bi-postgres-service" in names
@@ -157,18 +162,80 @@ def test_local_overlay_renders_application_and_postgres_resources():
     assert kinds.get("bi-api-secret") == "Secret"
 
 
-def test_prod_overlay_renders_six_resources_strictly_without_postgres_or_pvc():
-    """Production overlay must strictly exclude all PostgreSQL workloads and PVCs."""
+def test_prod_overlay_renders_core_resources_and_migration_job_without_postgres():
+    """Production overlay must render 7 application resources and strictly exclude all PostgreSQL workloads and PVCs."""
     docs = render_kustomize(PROD_OVERLAY_DIR)
-    assert len(docs) == 6, f"Expected 6 production resources, got {len(docs)}"
+    assert len(docs) == 7, f"Expected 7 production resources, got {len(docs)}"
 
     names = [d.get("metadata", {}).get("name") for d in docs]
+    assert "bi-db-migration" in names
     for d in docs:
         name = d.get("metadata", {}).get("name", "")
         kind = d.get("kind", "")
         assert "postgres" not in name.lower(), f"PostgreSQL resource leaked into prod overlay: {name}"
         assert kind != "PersistentVolumeClaim", "PersistentVolumeClaim must not exist in prod overlay"
         assert kind != "Secret", "Plaintext Secrets must not be generated in prod overlay"
+
+
+def test_migration_job_spec_and_security_contract():
+    """Validates migration Job execution limits, non-root security context, and image tagging."""
+    docs = render_kustomize(BASE_DIR)
+    job_doc = next((d for d in docs if d.get("kind") == "Job" and d.get("metadata", {}).get("name") == "bi-db-migration"), None)
+    assert job_doc is not None, "bi-db-migration Job not found in base"
+
+    # Execution limits & restart policy
+    spec = job_doc["spec"]
+    assert spec["backoffLimit"] == 3
+    assert spec["activeDeadlineSeconds"] == 120
+    assert spec["ttlSecondsAfterFinished"] == 300
+
+    template = spec["template"]
+    pod_spec = template["spec"]
+    assert pod_spec["restartPolicy"] == "OnFailure"
+    assert pod_spec["terminationGracePeriodSeconds"] == 30
+
+    # Pod security context
+    pod_sec = pod_spec["securityContext"]
+    assert pod_sec["runAsNonRoot"] is True
+    assert pod_sec["runAsUser"] == 1000
+    assert pod_sec["runAsGroup"] == 1000
+    assert pod_sec["fsGroup"] == 1000
+    assert pod_sec["seccompProfile"]["type"] == "RuntimeDefault"
+
+    # Container spec
+    assert len(pod_spec["containers"]) == 1
+    container = pod_spec["containers"][0]
+    assert container["name"] == "db-migration"
+    assert container["command"] == ["python", "-m", "database.migrate"]
+
+    # Container security context
+    c_sec = container["securityContext"]
+    assert c_sec["allowPrivilegeEscalation"] is False
+    assert c_sec["readOnlyRootFilesystem"] is False
+    assert "ALL" in c_sec["capabilities"]["drop"]
+
+    # Resources
+    res = container["resources"]
+    assert res["requests"]["cpu"] == "100m"
+    assert res["requests"]["memory"] == "128Mi"
+    assert res["limits"]["cpu"] == "500m"
+    assert res["limits"]["memory"] == "256Mi"
+
+    # Secret & config wiring
+    env_from = container.get("envFrom", [])
+    assert any(ef.get("configMapRef", {}).get("name") == "bi-api-config" for ef in env_from)
+    envs = container.get("env", [])
+    db_env = next((e for e in envs if e.get("name") == "DATABASE_URL"), None)
+    assert db_env is not None
+    assert db_env["valueFrom"]["secretKeyRef"]["name"] == "bi-api-secret"
+    assert db_env["valueFrom"]["secretKeyRef"]["key"] == "DATABASE_URL"
+
+    # Verify prod overlay transforms container image to tagged release version
+    prod_docs = render_kustomize(PROD_OVERLAY_DIR)
+    prod_job = next((d for d in prod_docs if d.get("kind") == "Job" and d.get("metadata", {}).get("name") == "bi-db-migration"), None)
+    assert prod_job is not None
+    prod_container = prod_job["spec"]["template"]["spec"]["containers"][0]
+    assert prod_container["image"] == "business-intelligence-api:v1.0.0"
 
 
 # ==============================================================================

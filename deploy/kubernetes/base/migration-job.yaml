@@ -1,0 +1,58 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: bi-db-migration
+  labels:
+    app.kubernetes.io/name: business-intelligence-api
+    app.kubernetes.io/part-of: business-opportunity-platform
+    app.kubernetes.io/component: migration
+spec:
+  # Finite retry limit on transient failure (e.g. temporary DB connection blip)
+  backoffLimit: 3
+  # Finite execution deadline: prevents hanging migrations from indefinitely blocking releases
+  activeDeadlineSeconds: 120
+  # Automatically clean up completed Job resources after 5 minutes
+  ttlSecondsAfterFinished: 300
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: business-intelligence-api
+        app.kubernetes.io/part-of: business-opportunity-platform
+        app.kubernetes.io/component: migration
+    spec:
+      restartPolicy: OnFailure
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: db-migration
+          image: business-intelligence-api:latest
+          imagePullPolicy: IfNotPresent
+          command: ["python", "-m", "database.migrate"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          envFrom:
+            - configMapRef:
+                name: bi-api-config
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: bi-api-secret
+                  key: DATABASE_URL

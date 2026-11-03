@@ -92,11 +92,17 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.lock
 
-      - name: Apply canonical database schema
+      - name: Apply database migrations
         env:
-          PGPASSWORD: test_password
+          DATABASE_URL: "postgresql://test_user:test_password@localhost:5432/test_db"
         run: |
-          psql -h localhost -U test_user -d test_db -v ON_ERROR_STOP=1 -f database/schema.sql
+          python -m database.migrate
+
+      - name: Verify migration idempotency and clean status
+        env:
+          DATABASE_URL: "postgresql://test_user:test_password@localhost:5432/test_db"
+        run: |
+          python -m database.migrate --check
 
       - name: Run PostgreSQL integration tests
         env:
